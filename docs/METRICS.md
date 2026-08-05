@@ -26,6 +26,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 20 | Agent harness ≥6/10 | external eval | **green** | `harness run --suite agent10` (scripted) |
 | 21 | OCCT live topology inspect | faces/normals from B-rep | **green** | mesh-clustered topology |
 | 22 | OCCT parity lane parts1-4 | expect.occt.json suite | **green** | `parts1-4-occt` (feature occt) |
+| 23 | inspect align/frame/diff | CLI polish | **green** | `inspect align|frame|diff` |
 
 **v1 ship bar (this table):** rows 1–16 green; 17–20 may remain amber/red with honesty notes.
 
