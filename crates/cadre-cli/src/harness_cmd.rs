@@ -1,6 +1,6 @@
 //! `cadre harness`
 
-use cadre_harness::{run_suite, RunOpts};
+use cadre_harness::{run_suite, LiveOpts, RunOpts};
 use serde_json::json;
 
 use crate::cli::{Cli, HarnessArgs, HarnessCmd};
@@ -9,8 +9,15 @@ use crate::output::{emit, ExitCode};
 pub fn run(cli: &Cli, args: &HarnessArgs) -> ExitCode {
     match &args.cmd {
         HarnessCmd::Run(a) => {
+            let live = a.cmd.as_ref().map(|cmd| LiveOpts {
+                cmd: cmd.clone(),
+                timeout_secs: a.timeout,
+                part_rel: "part.cad.star".into(),
+                snapshot: !a.no_snapshot,
+            });
             let opts = RunOpts {
                 tasks_root: a.tasks_root.clone(),
+                live,
             };
             match run_suite(&a.suite, &opts) {
                 Ok(card) => {
@@ -21,8 +28,9 @@ pub fn run(cli: &Cli, args: &HarnessArgs) -> ExitCode {
                     emit(cli.json, &body, card.meets_target);
                     if !cli.json && !cli.quiet {
                         eprintln!(
-                            "harness {}: {:.1}/10 (target ≥ {:.0}) — {}/{} tasks, median_loops={:.1}, {} ms",
+                            "harness {} [{}]: {:.1}/10 (target ≥ {:.0}) — {}/{} tasks, median_loops={:.1}, {} ms",
                             card.suite,
+                            card.mode,
                             card.score_over_10,
                             card.target,
                             card.passed,

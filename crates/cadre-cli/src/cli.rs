@@ -258,6 +258,16 @@ pub struct HarnessRunArgs {
     /// Path to harness/tasks (auto-detect by default).
     #[arg(long)]
     pub tasks_root: Option<PathBuf>,
+    /// Live agent driver: shell command (`sh -c`). When set, runs live mode
+    /// (prompt-only; agent must write part.cad.star). See harness/README.md.
+    #[arg(long)]
+    pub cmd: Option<String>,
+    /// Per-loop agent timeout seconds (live mode; 0 = wait forever).
+    #[arg(long, default_value_t = 300)]
+    pub timeout: u64,
+    /// Skip snapshot after live build (faster; fails tasks needing snapshot_ok).
+    #[arg(long, default_value_t = false)]
+    pub no_snapshot: bool,
 }
 
 #[derive(Debug, clap::Args)]
