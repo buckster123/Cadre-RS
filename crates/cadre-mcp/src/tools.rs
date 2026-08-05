@@ -341,13 +341,15 @@ fn topo_from_ir(ir: &cadre_lang::FeatureIr) -> Result<cadre_inspect::TopologySna
                     vertices: sa.vertices.clone(),
                 }
             }
-            IrNode::Fillet { of, .. } | IrNode::Chamfer { of, .. } | IrNode::Label { of, .. } => {
-                solids
-                    .get(of.0 as usize)
-                    .and_then(|s| s.as_ref())
-                    .ok_or_else(|| ToolError::msg("bad IR node"))?
-                    .clone()
-            }
+            IrNode::Fillet { of, .. }
+            | IrNode::Chamfer { of, .. }
+            | IrNode::Label { of, .. }
+            | IrNode::Translate { of, .. }
+            | IrNode::Rotate { of, .. } => solids
+                .get(of.0 as usize)
+                .and_then(|s| s.as_ref())
+                .ok_or_else(|| ToolError::msg("bad IR node"))?
+                .clone(),
         };
         solids[idx] = Some(rec);
     }

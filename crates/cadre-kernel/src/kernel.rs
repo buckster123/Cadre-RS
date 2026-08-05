@@ -104,4 +104,22 @@ pub trait GeomKernel: Send {
     fn cylinder_at(&mut self, radius: f64, height: f64, at: Point3) -> KernelResult<ShapeId> {
         self.cylinder(radius, height, Placement::at(at))
     }
+
+    /// Translate a shape by `(dx,dy,dz)` mm. Default: unsupported.
+    fn translate(&mut self, shape: ShapeId, dx: f64, dy: f64, dz: f64) -> KernelResult<ShapeId> {
+        let _ = (shape, dx, dy, dz);
+        Err(crate::error::KernelError::unsupported(
+            self.backend_id(),
+            "translate",
+        ))
+    }
+
+    /// Rotate a shape about world origin axis (`x`|`y`|`z`) by `deg` degrees. Default: unsupported.
+    fn rotate_about_axis(&mut self, shape: ShapeId, axis: &str, deg: f64) -> KernelResult<ShapeId> {
+        let _ = (shape, axis, deg);
+        Err(crate::error::KernelError::unsupported(
+            self.backend_id(),
+            "rotate_about_axis",
+        ))
+    }
 }

@@ -19,3 +19,9 @@ pub const SUITE_PARTS_1_4: &str = "parts1-4";
 
 /// Same parts under OCCT with expect.occt.json (optional local / feature).
 pub const SUITE_PARTS_1_4_OCCT: &str = "parts1-4-occt";
+
+/// Parts 5–10 (stdlib rotate/translate era).
+pub const SUITE_PARTS_5_10: &str = "parts5-10";
+
+/// Full Parity-10 mock suite.
+pub const SUITE_PARTS_1_10: &str = "parts1-10";

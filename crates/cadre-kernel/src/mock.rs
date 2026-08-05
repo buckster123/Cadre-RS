@@ -329,6 +329,181 @@ impl GeomKernel for MockKernel {
         let _ = self.get(shape)?;
         Err(KernelError::unsupported("mock", "tessellate"))
     }
+
+    fn translate(&mut self, shape: ShapeId, dx: f64, dy: f64, dz: f64) -> KernelResult<ShapeId> {
+        let s = self.get(shape)?.clone();
+        Ok(self.alloc(Self::translate_solid(s, dx, dy, dz)))
+    }
+
+    fn rotate_about_axis(&mut self, shape: ShapeId, axis: &str, deg: f64) -> KernelResult<ShapeId> {
+        if !deg.is_finite() {
+            return Err(KernelError::invalid_arg("deg must be finite"));
+        }
+        let ax = axis.to_ascii_lowercase();
+        if ax != "x" && ax != "y" && ax != "z" {
+            return Err(KernelError::invalid_arg(
+                "axis must be \"x\", \"y\", or \"z\"",
+            ));
+        }
+        let s = self.get(shape)?.clone();
+        Ok(self.alloc(Self::rotate_solid(s, &ax, deg)))
+    }
+}
+
+impl MockKernel {
+    fn translate_solid(s: Solid, dx: f64, dy: f64, dz: f64) -> Solid {
+        match s {
+            Solid::Box {
+                dx: bx,
+                dy: by,
+                dz: bz,
+                at,
+                label,
+            } => Solid::Box {
+                dx: bx,
+                dy: by,
+                dz: bz,
+                at: Point3::new(at.x + dx, at.y + dy, at.z + dz),
+                label,
+            },
+            Solid::Cylinder {
+                radius,
+                height,
+                at,
+                label,
+            } => Solid::Cylinder {
+                radius,
+                height,
+                at: Point3::new(at.x + dx, at.y + dy, at.z + dz),
+                label,
+            },
+            Solid::Approx {
+                volume_mm3,
+                bbox,
+                solids,
+                faces,
+                edges,
+                label,
+            } => Solid::Approx {
+                volume_mm3,
+                bbox: BBox::from_min_max(
+                    Point3::new(bbox.min.x + dx, bbox.min.y + dy, bbox.min.z + dz),
+                    Point3::new(bbox.max.x + dx, bbox.max.y + dy, bbox.max.z + dz),
+                ),
+                solids,
+                faces,
+                edges,
+                label,
+            },
+        }
+    }
+
+    fn rotate_solid(s: Solid, axis: &str, deg: f64) -> Solid {
+        // Preserve volume; collapse boxes to Approx after rotate (rotated AABB).
+        let f = Self::facts_of(&s);
+        let label = Self::label_of(&s);
+        // Special-case: pure Z-rotate of Z-cylinder keeps cylinder analytic if base center rotates in XY
+        if let Solid::Cylinder {
+            radius,
+            height,
+            at,
+            label,
+        } = &s
+        {
+            if axis == "z" {
+                let (x, y, z) = rot_point(at.x, at.y, at.z, axis, deg);
+                return Solid::Cylinder {
+                    radius: *radius,
+                    height: *height,
+                    at: Point3::new(x, y, z),
+                    label: label.clone(),
+                };
+            }
+        }
+        if let Solid::Box {
+            dx,
+            dy,
+            dz,
+            at,
+            label,
+        } = &s
+        {
+            // Rotate 8 corners of AABB then re-AABB (volume preserved)
+            let hx = dx / 2.0;
+            let hy = dy / 2.0;
+            let hz = dz / 2.0;
+            let corners = [
+                [at.x - hx, at.y - hy, at.z - hz],
+                [at.x + hx, at.y - hy, at.z - hz],
+                [at.x - hx, at.y + hy, at.z - hz],
+                [at.x + hx, at.y + hy, at.z - hz],
+                [at.x - hx, at.y - hy, at.z + hz],
+                [at.x + hx, at.y - hy, at.z + hz],
+                [at.x - hx, at.y + hy, at.z + hz],
+                [at.x + hx, at.y + hy, at.z + hz],
+            ];
+            let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+            let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            for c in corners {
+                let (x, y, z) = rot_point(c[0], c[1], c[2], axis, deg);
+                min.x = min.x.min(x);
+                min.y = min.y.min(y);
+                min.z = min.z.min(z);
+                max.x = max.x.max(x);
+                max.y = max.y.max(y);
+                max.z = max.z.max(z);
+            }
+            return Solid::Approx {
+                volume_mm3: dx * dy * dz,
+                bbox: BBox::from_min_max(min, max),
+                solids: 1,
+                faces: 6,
+                edges: 12,
+                label: label.clone(),
+            };
+        }
+        // Approx / other: rotate bbox corners
+        let bb = f.bbox_mm;
+        let corners = [
+            [bb.min.x, bb.min.y, bb.min.z],
+            [bb.max.x, bb.min.y, bb.min.z],
+            [bb.min.x, bb.max.y, bb.min.z],
+            [bb.max.x, bb.max.y, bb.min.z],
+            [bb.min.x, bb.min.y, bb.max.z],
+            [bb.max.x, bb.min.y, bb.max.z],
+            [bb.min.x, bb.max.y, bb.max.z],
+            [bb.max.x, bb.max.y, bb.max.z],
+        ];
+        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for c in corners {
+            let (x, y, z) = rot_point(c[0], c[1], c[2], axis, deg);
+            min.x = min.x.min(x);
+            min.y = min.y.min(y);
+            min.z = min.z.min(z);
+            max.x = max.x.max(x);
+            max.y = max.y.max(y);
+            max.z = max.z.max(z);
+        }
+        Solid::Approx {
+            volume_mm3: f.volume_mm3,
+            bbox: BBox::from_min_max(min, max),
+            solids: f.solids,
+            faces: f.faces,
+            edges: f.edges,
+            label,
+        }
+    }
+}
+
+fn rot_point(x: f64, y: f64, z: f64, axis: &str, deg: f64) -> (f64, f64, f64) {
+    let r = deg.to_radians();
+    let (c, s) = (r.cos(), r.sin());
+    match axis {
+        "x" => (x, y * c - z * s, y * s + z * c),
+        "y" => (x * c + z * s, y, -x * s + z * c),
+        _ => (x * c - y * s, x * s + y * c, z), // z
+    }
 }
 
 #[cfg(test)]

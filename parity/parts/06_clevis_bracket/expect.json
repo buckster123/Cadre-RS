@@ -1,0 +1,38 @@
+{
+  "bbox_mm": {
+    "max": [
+      50.0,
+      18.5,
+      35.0
+    ],
+    "min": [
+      0.0,
+      -18.5,
+      0.0
+    ]
+  },
+  "bbox_tol_mm": 1.5,
+  "description": "mock golden for 06_clevis_bracket",
+  "faces_min": 1,
+  "id": "06_clevis_bracket",
+  "label": "clevis_bracket",
+  "measures": [],
+  "params": {
+    "base_l": 50.0,
+    "base_t": 5.0,
+    "base_w": 20.0,
+    "ear_gap": 12.0,
+    "ear_h": 30.0,
+    "ear_t": 5.0,
+    "light_d": 8.0,
+    "pin_d": 6.0
+  },
+  "required_ops": [
+    "box",
+    "boolean",
+    "cylinder",
+    "label"
+  ],
+  "volume_mm3": 9792.283245595885,
+  "volume_tol_frac": 0.02
+}

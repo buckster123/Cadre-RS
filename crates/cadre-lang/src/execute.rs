@@ -52,6 +52,14 @@ pub fn execute_ir(kernel: &mut dyn GeomKernel, ir: &FeatureIr) -> KernelResult<S
                 let s = lookup(&map, *of)?;
                 kernel.set_label(s, ShapeLabel::new(name.clone()))?
             }
+            IrNode::Translate { of, by } => {
+                let s = lookup(&map, *of)?;
+                kernel.translate(s, by[0], by[1], by[2])?
+            }
+            IrNode::Rotate { of, axis, deg } => {
+                let s = lookup(&map, *of)?;
+                kernel.rotate_about_axis(s, axis, *deg)?
+            }
         };
         map[idx] = Some(id);
     }

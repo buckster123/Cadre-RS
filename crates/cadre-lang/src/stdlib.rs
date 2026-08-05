@@ -190,6 +190,66 @@ fn cadre_stdlib(builder: &mut GlobalsBuilder) {
         boolean_op(BooleanKind::Cut, a, b)
     }
 
+    /// Translate shape by mm offset `(dx, dy, dz)`.
+    fn translate<'v>(
+        shape: Value<'v>,
+        dx: Value<'v>,
+        dy: Value<'v>,
+        dz: Value<'v>,
+    ) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let dx = value_f64(dx, "dx")?;
+        let dy = value_f64(dy, "dy")?;
+        let dz = value_f64(dz, "dz")?;
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            Ok(store
+                .builder
+                .push(IrNode::Translate {
+                    of,
+                    by: [dx, dy, dz],
+                })
+                .0 as i32)
+        })
+    }
+
+    /// Rotate shape about world origin axis (`\"x\"`|`\"y\"`|`\"z\"`) by `deg` degrees.
+    fn rotate<'v>(shape: Value<'v>, axis: &str, deg: Value<'v>) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let deg = value_f64(deg, "deg")?;
+        let axis = axis.to_ascii_lowercase();
+        if axis != "x" && axis != "y" && axis != "z" {
+            anyhow::bail!("rotate axis must be \"x\", \"y\", or \"z\"");
+        }
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            Ok(store.builder.push(IrNode::Rotate { of, axis, deg }).0 as i32)
+        })
+    }
+
+    /// Convenience: rotate about +Z.
+    fn rotate_z<'v>(shape: Value<'v>, deg: Value<'v>) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let deg = value_f64(deg, "deg")?;
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            Ok(store
+                .builder
+                .push(IrNode::Rotate {
+                    of,
+                    axis: "z".into(),
+                    deg,
+                })
+                .0 as i32)
+        })
+    }
+
     /// Boolean union.
     fn union<'v>(a: Value<'v>, b: Value<'v>) -> anyhow::Result<i32> {
         boolean_op(BooleanKind::Union, a, b)

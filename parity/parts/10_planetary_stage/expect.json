@@ -1,0 +1,37 @@
+{
+  "bbox_mm": {
+    "max": [
+      28.0,
+      28.0,
+      12.0
+    ],
+    "min": [
+      -28.0,
+      -28.0,
+      0.0
+    ]
+  },
+  "bbox_tol_mm": 1.5,
+  "description": "mock golden for 10_planetary_stage",
+  "faces_min": 1,
+  "id": "10_planetary_stage",
+  "label": "planetary_stage",
+  "measures": [],
+  "params": {
+    "carrier_t": 4.0,
+    "planet_h": 8.0,
+    "planet_r": 6.0,
+    "ring_ri": 22.0,
+    "ring_ro": 28.0,
+    "sun_h": 8.0,
+    "sun_r": 10.0
+  },
+  "required_ops": [
+    "cylinder",
+    "boolean",
+    "rotate",
+    "label"
+  ],
+  "volume_mm3": 16373.980910510003,
+  "volume_tol_frac": 0.02
+}

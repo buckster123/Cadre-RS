@@ -229,7 +229,7 @@ pub enum BenchCmd {
 
 #[derive(Debug, clap::Args)]
 pub struct BenchRunArgs {
-    /// Suite id: parts1-4 | parity4 | m1 | parts1-4-occt
+    /// Suite id: parts1-4 | parts5-10 | parts1-10 | parity10 | parts1-4-occt
     #[arg(long, default_value = "parts1-4")]
     pub suite: String,
 
