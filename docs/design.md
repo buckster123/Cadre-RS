@@ -28,25 +28,26 @@ or treating meshes as the modeling medium (see charter non-goals).
 
 Crate boundaries are requirements (charter D16). Internal module layout is free.
 
-| Crate | Responsibility |
-|-------|----------------|
-| `cadre` | Thin facade / re-exports so the workspace resolves from S0; not a logic dump |
-| `cadre-kernel` | `GeomKernel` trait: topology, features, queries, tessellation, STEP I/O |
-| `cadre-occt` | Default OCCT backend (FFI); loadable/separate engine component |
-| `cadre-truck` | Experimental pure-Rust backend; feature-gated; non-parity |
-| `cadre-lang` | Starlark host, CAD stdlib, params, diagnostics, IR emission |
-| `cadre-model` | Feature IR, content hashing, selectors, build cache, artifact registry |
-| `cadre-inspect` | facts / planes / measure / align / frame / diff |
-| `cadre-render` | Offscreen wgpu: multi-view PNG, orbit GIF/MP4 |
-| `cadre-export` | STEP AP242 write (+AP214 compat read), STL, 3MF, GLB, DXF |
-| `cadre-viewer` | Embedded local web viewer (static assets in binary) |
-| `cadre-parts` | `PartProvider` trait; catalog client; cache + `parts.lock` |
-| `cadre-robot` | URDF/SRDF/SDF gen + validators; inertia-from-geometry |
-| `cadre-fab` | DFM rulepacks; slicer orchestration; G-code checks; `Printer` adapters |
-| `cadre-mcp` | MCP server (stdio default; streamable HTTP per D17/OQ-7) |
-| `cadre-api` | Axum HTTP API, jobs, SSE, OpenAPI |
-| `cadre-cli` | Clap front end — the `cadre` binary |
-| `cadre-skills` | Skill-pack generator + bundled original doctrine |
+| Crate | Responsibility | v1 status |
+|-------|----------------|-----------|
+| `cadre` | Thin facade / re-exports | shipped |
+| `cadre-kernel` | `GeomKernel` trait + `MockKernel` | shipped |
+| `cadre-occt` | OCCT backend (FFI); separate LGPL engine | shipped (local/opt-in) |
+| `cadre-lang` | Starlark host, CAD stdlib, IR emission, `execute_ir` | shipped |
+| `cadre-model` | Selectors, content hashing, build cache | shipped |
+| `cadre-inspect` | refs / measure (+ topology snapshot helpers) | shipped |
+| `cadre-render` | **Software** z-buffer: multi-view PNG, orbit GIF | shipped (wgpu parked) |
+| `cadre-bench` | Parity suite runner (parts 1–4) | shipped |
+| `cadre-parts` | `PartProvider`, `parts.lock`, assembly specs | shipped |
+| `cadre-robot` | URDF/SRDF/SDF gen + validators; analytic inertials | shipped |
+| `cadre-fab` | DFM rulepacks; slicer discovery; G-code checks; `Printer` | shipped |
+| `cadre-mcp` | MCP server (stdio; hand-rolled) | shipped |
+| `cadre-api` | Axum HTTP API, jobs, SSE, OpenAPI | shipped |
+| `cadre-cli` | Clap front end — the `cadre` binary | shipped |
+
+**Parked / not crates yet:** `cadre-truck` (experimental pure-Rust kernel), standalone
+`cadre-export` / `cadre-viewer` / `cadre-skills` packages (export/view/skills live in
+cli/render/mcp as of S12). See `docs/STATUS.md`.
 
 Bootstrap shipped `crates/cadre`. **S1** added `crates/cadre-kernel` (`GeomKernel` +
 `MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0).

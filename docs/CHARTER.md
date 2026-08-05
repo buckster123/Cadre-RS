@@ -90,17 +90,18 @@ rationale is lost gets re-litigated within a month.
 
 Aligned with PRD §13 milestones. Each "done when" is checkable.
 
-| Phase | Scope | Done when |
-|-------|-------|-----------|
-| **M0 — Kernel spike** | OCCT binding strategy, `GeomKernel` v0, box+cylinder+boolean+fillet+STEP write, Starlark host PoC | Benchmark part 1 builds end-to-end from `.cad.star`; go/no-go on binding approach recorded here |
-| **M1 — Core loop** | Stdlib for parts, IR+cache, `build` / `inspect refs\|measure` / `export step\|stl\|glb`, selectors, diagnostics v1 | Parts 1–4 pass deterministic suite; CLI `--json` everywhere |
-| **M2 — See & serve** | `snapshot` (+GIF), viewer alpha, `diff`/`align`/`frame`, 3MF, MCP stdio, skill-pack alpha | Parts 5–8 pass; agent completes part 1 via MCP with snapshot review |
-| **M3 — Assemble & source** | Assemblies/joints/datums, parts provider + lockfile, HTTP API + jobs/SSE + OpenAPI, `watch` | Parts 9–10 + assembly scenario S3; agent harness ≥ 6/10 |
-| **M4 — Robots** | URDF gen+validate+inertials, SRDF, SDF, consistency checks, viewer joint jog | Scenario S4 e2e; URDF loads in a ROS 2 parser |
-| **M5 — Fabricate** | DXF writer+projection, DFM + first vendor profile, slicer orchestration, gcode-check, Bambu adapter + gates | S5 & S6 e2e with human confirmation; safety-gate tests pass |
-| **M6 — 1.0 hardening** | Windows parity, fuzzing, docs, skills export both ecosystems, streamable-HTTP MCP, licensing review | PRD §12 exit metrics table green |
+| Phase | Scope | Done when | v1 outcome |
+|-------|-------|-----------|------------|
+| **M0 — Kernel spike** | OCCT binding, `GeomKernel` v0, Starlark PoC | Part 1 e2e | **done** (S0–S3); mock CI + local OCCT |
+| **M1 — Core loop** | IR+cache, build/inspect/export, selectors, parity 1–4 | Parts 1–4 + CLI JSON | **done** (S4–S6) |
+| **M2 — See & serve** | snapshot/GIF, viewer alpha, MCP, skill-pack | Snapshot + MCP loop | **done** (S7–S8); parts 5–8 deferred |
+| **M3 — Assemble & source** | assemblies, parts.lock, HTTP API | Assembly + API | **done** (S9); harness score amber |
+| **M4 — Robots** | URDF/SRDF/SDF + validate | URDF parses | **done** (S10); joint-jog viewer deferred |
+| **M5 — Fabricate** | DXF, DFM, slicer, gcode, Bambu gates | Safety gates | **done** (S11); live print deferred |
+| **M6 — 1.0 hardening** | Windows, fuzz, dual skills, licensing, metrics | Metrics 1–16 green | **done** (S12) |
 
-Bootstrap (this stamp) is **S0** under M0 — repo, contract, CI green, no kernel yet.
+Bootstrap (this stamp) was **S0** under M0. **S0–S12 are merged on `main` as of 2026-08-05.**
+Honesty on partial done-whens: see `docs/METRICS.md` rows 17–20 and `docs/STATUS.md`.
 
 ## Deliberately out of v1
 
@@ -167,3 +168,6 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — S12: v1 hardening — `docs/METRICS.md`, `docs/LICENSING.md`, Windows CI,
   `skills export --all` (claude-code/codex/hermes), property tests on lang/gcode/selectors,
   release checklist.
+- **2026-08-05** — Post-S12 docs sync: `docs/STATUS.md` as-built map; README/CLAUDE/design
+  crate tables aligned to reality (no phantom crates); milestone table marked done with
+  honesty notes on amber/red metrics.

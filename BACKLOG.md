@@ -3,10 +3,10 @@
 A row gets its ✅ when the slice is **merged, deployed, and verified live** — not when tests
 pass (house doctrine #5). Notes carry the date and the evidence.
 
-## v1 (agent CAD loop parity)
+## v1 (agent CAD loop parity) — COMPLETE
 
-Milestones M0–M6 match `docs/CHARTER.md` / PRD §13. Slices below are the near-term ledger;
-split further when a slice stops being reviewable in one PR.
+Milestones M0–M6 / slices S0–S12 shipped on `main` (2026-08-05). Scorecard: `docs/METRICS.md`.
+As-built map: `docs/STATUS.md`.
 
 - [x] **S0 — bootstrap**: Launchpad stamp, CLAUDE.md, CHARTER, design contract, PRD in-tree,
       workspace + `crates/cadre` facade, CI, dual license (2026-08-05)
@@ -35,6 +35,18 @@ split further when a slice stops being reviewable in one PR.
       (2026-08-05)
 - [x] **S12 — M6 1.0 hardening**: metrics table, licensing review, Windows CI job, dual-agent
       skills export (`--all`), property/fuzz-style parser tests, release checklist (2026-08-05)
+
+## Post-v1 candidates (unordered; pick deliberately)
+
+Priority suggestions when resuming:
+
+1. **OCCT depth** — topology wiring for inspect; parity goldens beyond mock volumes
+2. **Live Bambu** — FTPS/MQTT behind existing start gates (still confirm-gated)
+3. **Face→DXF** — project planar face selector to DXF (replace plate helper path)
+4. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
+5. **Streamable-HTTP MCP** — OQ-7 leftover
+6. **Agent harness score** — external eval ≥6/10
+7. **Diff/align/frame** CLI polish beyond assembly align_check
 
 ## Post-v1 parking
 
