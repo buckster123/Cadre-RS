@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "params": {
+    "boss_r": 5.0,
+    "fin_h": 10.0,
+    "fin_l": 18.0,
+    "fin_t": 2.0,
+    "hub_h": 12.0,
+    "hub_r": 8.0,
+    "n_fins": 6.0
+  },
+  "nodes": [
+    {
+      "op": "cylinder",
+      "radius": 8.0,
+      "height": 12.0,
+      "at": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "op": "box",
+      "dx": 18.0,
+      "dy": 2.0,
+      "dz": 10.0,
+      "at": [
+        17.0,
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "op": "rotate",
+      "of": 1,
+      "axis": "z",
+      "deg": 60.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 1,
+      "b": 2
+    },
+    {
+      "op": "rotate",
+      "of": 1,
+      "axis": "z",
+      "deg": 120.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 3,
+      "b": 4
+    },
+    {
+      "op": "rotate",
+      "of": 1,
+      "axis": "z",
+      "deg": 180.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 5,
+      "b": 6
+    },
+    {
+      "op": "rotate",
+      "of": 1,
+      "axis": "z",
+      "deg": 240.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 7,
+      "b": 8
+    },
+    {
+      "op": "rotate",
+      "of": 1,
+      "axis": "z",
+      "deg": 300.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 9,
+      "b": 10
+    },
+    {
+      "op": "sphere",
+      "radius": 5.0,
+      "at": [
+        0.0,
+        0.0,
+        14.5
+      ]
+    },
+    {
+      "op": "box",
+      "dx": 12.0,
+      "dy": 8.0,
+      "dz": 3.0,
+      "at": [
+        20.0,
+        0.0,
+        1.5
+      ]
+    },
+    {
+      "op": "mirror",
+      "of": 13,
+      "plane": "yz"
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 13,
+      "b": 14
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 0,
+      "b": 11
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 12,
+      "b": 15
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 16,
+      "b": 17
+    },
+    {
+      "op": "label",
+      "of": 18,
+      "name": "pattern_hub"
+    }
+  ],
+  "root": 19,
+  "label": "pattern_hub"
+}

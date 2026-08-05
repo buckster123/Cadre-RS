@@ -24,6 +24,14 @@ pub fn execute_ir(kernel: &mut dyn GeomKernel, ir: &FeatureIr) -> KernelResult<S
                 *height,
                 Placement::at(Point3::new(at[0], at[1], at[2])),
             )?,
+            IrNode::Sphere { radius, at } => {
+                kernel.sphere(*radius, Placement::at(Point3::new(at[0], at[1], at[2])))?
+            }
+            IrNode::Cone { radius, height, at } => kernel.cone(
+                *radius,
+                *height,
+                Placement::at(Point3::new(at[0], at[1], at[2])),
+            )?,
             IrNode::Boolean { kind, a, b } => {
                 let sa = lookup(&map, *a)?;
                 let sb = lookup(&map, *b)?;
@@ -59,6 +67,10 @@ pub fn execute_ir(kernel: &mut dyn GeomKernel, ir: &FeatureIr) -> KernelResult<S
             IrNode::Rotate { of, axis, deg } => {
                 let s = lookup(&map, *of)?;
                 kernel.rotate_about_axis(s, axis, *deg)?
+            }
+            IrNode::Mirror { of, plane } => {
+                let s = lookup(&map, *of)?;
+                kernel.mirror_plane(s, plane)?
             }
         };
         map[idx] = Some(id);
@@ -96,5 +108,41 @@ def gen_step():
         let sid = execute_ir(&mut k, &ir).unwrap();
         let f = k.facts(sid).unwrap();
         assert!((f.volume_mm3 - 6000.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn sphere_and_linear_pattern() {
+        let src = r#"
+def gen_step():
+    s = sphere(10.0, at=CENTER)
+    p = linear_pattern(box(5.0, 5.0, 5.0, at=CENTER), 3.0, 10.0, 0.0, 0.0)
+    return solid(union(s, p), label="sp")
+"#;
+        let r = evaluate(src, &EvalOptions::new("t.cad.star"));
+        assert!(r.ok, "{:?}", r.diagnostics);
+        let ir = r.ir.unwrap();
+        assert!(ir.nodes.iter().any(|n| matches!(n, IrNode::Sphere { .. })));
+        let mut k = MockKernel::new();
+        let sid = execute_ir(&mut k, &ir).unwrap();
+        let f = k.facts(sid).unwrap();
+        assert!(f.volume_mm3 > 4000.0, "vol {}", f.volume_mm3);
+    }
+
+    #[test]
+    fn polar_and_mirror() {
+        let src = r#"
+def gen_step():
+    fin = box(20.0, 2.0, 10.0, at=(15.0, 0.0, 5.0))
+    body = polar_pattern(fin, 4.0)
+    m = mirror(box(10.0, 10.0, 10.0, at=(20.0, 0.0, 0.0)), "yz")
+    return solid(union(body, m), label="pm")
+"#;
+        let r = evaluate(src, &EvalOptions::new("t.cad.star"));
+        assert!(r.ok, "{:?}", r.diagnostics);
+        let ir = r.ir.unwrap();
+        assert!(ir.nodes.iter().any(|n| matches!(n, IrNode::Mirror { .. })));
+        let mut k = MockKernel::new();
+        let sid = execute_ir(&mut k, &ir).unwrap();
+        assert!(k.facts(sid).unwrap().volume_mm3 > 100.0);
     }
 }

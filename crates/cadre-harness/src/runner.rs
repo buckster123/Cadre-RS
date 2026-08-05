@@ -320,6 +320,13 @@ pub(crate) fn topo_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
             IrNode::Cylinder { radius, height, at } => {
                 cylinder_topology(*radius, *height, Point3::new(at[0], at[1], at[2]))
             }
+            IrNode::Sphere { radius, at } => {
+                let r = *radius;
+                box_topology(2.0 * r, 2.0 * r, 2.0 * r, Point3::new(at[0], at[1], at[2]))
+            }
+            IrNode::Cone { radius, height, at } => {
+                cylinder_topology(*radius, *height, Point3::new(at[0], at[1], at[2]))
+            }
             IrNode::Boolean { kind, a, b } => {
                 let sa = solids
                     .get(a.0 as usize)
@@ -346,7 +353,8 @@ pub(crate) fn topo_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
             | IrNode::Chamfer { of, .. }
             | IrNode::Label { of, .. }
             | IrNode::Translate { of, .. }
-            | IrNode::Rotate { of, .. } => solids
+            | IrNode::Rotate { of, .. }
+            | IrNode::Mirror { of, .. } => solids
                 .get(of.0 as usize)
                 .and_then(|s| s.as_ref())
                 .ok_or_else(|| format!("missing node {}", of.0))?

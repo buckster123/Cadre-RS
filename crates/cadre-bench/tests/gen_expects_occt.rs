@@ -35,12 +35,15 @@ fn write_expects_occt_5_10() {
             let key = match n {
                 IrNode::Box { .. } => "box",
                 IrNode::Cylinder { .. } => "cylinder",
+                IrNode::Sphere { .. } => "sphere",
+                IrNode::Cone { .. } => "cone",
                 IrNode::Boolean { .. } => "boolean",
                 IrNode::Fillet { .. } => "fillet",
                 IrNode::Chamfer { .. } => "chamfer",
                 IrNode::Label { .. } => "label",
                 IrNode::Translate { .. } => "translate",
                 IrNode::Rotate { .. } => "rotate",
+                IrNode::Mirror { .. } => "mirror",
             };
             if !ops.iter().any(|o| o == key) {
                 ops.push(key.to_string());

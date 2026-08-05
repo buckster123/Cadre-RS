@@ -185,6 +185,128 @@ fn cadre_stdlib(builder: &mut GlobalsBuilder) {
         })
     }
 
+    /// Sphere centered at `at`.
+    fn sphere<'v>(radius: Value<'v>, at: Option<Value<'v>>) -> anyhow::Result<i32> {
+        let radius = value_f64(radius, "radius")?;
+        require_positive("radius", radius)?;
+        let at = parse_at(at)?;
+        with_builder_mut(|store| {
+            let id = store.builder.push(IrNode::Sphere { radius, at });
+            Ok(id.0 as i32)
+        })
+    }
+
+    /// Cone along +Z; base radius at `at`, height toward +Z.
+    fn cone<'v>(
+        radius: Value<'v>,
+        height: Value<'v>,
+        at: Option<Value<'v>>,
+    ) -> anyhow::Result<i32> {
+        let radius = value_f64(radius, "radius")?;
+        let height = value_f64(height, "height")?;
+        require_positive("radius", radius)?;
+        require_positive("height", height)?;
+        let at = parse_at(at)?;
+        with_builder_mut(|store| {
+            let id = store.builder.push(IrNode::Cone { radius, height, at });
+            Ok(id.0 as i32)
+        })
+    }
+
+    /// Mirror through plane `xy` | `yz` | `zx` (through world origin).
+    fn mirror<'v>(shape: Value<'v>, plane: &str) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let plane = plane.to_ascii_lowercase();
+        if plane != "xy" && plane != "yz" && plane != "zx" && plane != "xz" {
+            anyhow::bail!("mirror plane must be \"xy\", \"yz\", or \"zx\"");
+        }
+        let plane = if plane == "xz" {
+            "zx".to_string()
+        } else {
+            plane
+        };
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            Ok(store.builder.push(IrNode::Mirror { of, plane }).0 as i32)
+        })
+    }
+
+    /// Linear pattern: `count` copies of `shape` stepped by `(dx,dy,dz)` (includes original at 0).
+    fn linear_pattern<'v>(
+        shape: Value<'v>,
+        count: Value<'v>,
+        dx: Value<'v>,
+        dy: Value<'v>,
+        dz: Value<'v>,
+    ) -> anyhow::Result<i32> {
+        let base = shape_id(shape)?;
+        let count = value_f64(count, "count")? as i32;
+        if count < 1 {
+            anyhow::bail!("linear_pattern count must be >= 1");
+        }
+        if count > 64 {
+            anyhow::bail!("linear_pattern count must be <= 64");
+        }
+        let dx = value_f64(dx, "dx")?;
+        let dy = value_f64(dy, "dy")?;
+        let dz = value_f64(dz, "dz")?;
+        with_builder_mut(|store| {
+            if store.builder.get(base).is_none() {
+                anyhow::bail!("unknown shape id {}", base.0);
+            }
+            let mut acc = base;
+            for i in 1..count {
+                let t = store.builder.push(IrNode::Translate {
+                    of: base,
+                    by: [dx * f64::from(i), dy * f64::from(i), dz * f64::from(i)],
+                });
+                acc = store.builder.push(IrNode::Boolean {
+                    kind: BooleanKind::Union,
+                    a: acc,
+                    b: t,
+                });
+            }
+            Ok(acc.0 as i32)
+        })
+    }
+
+    /// Polar pattern about +Z through origin: `count` copies at equal angles (includes original).
+    fn polar_pattern<'v>(shape: Value<'v>, count: Value<'v>) -> anyhow::Result<i32> {
+        let base = shape_id(shape)?;
+        let count = value_f64(count, "count")? as i32;
+        if count < 1 {
+            anyhow::bail!("polar_pattern count must be >= 1");
+        }
+        if count > 64 {
+            anyhow::bail!("polar_pattern count must be <= 64");
+        }
+        with_builder_mut(|store| {
+            if store.builder.get(base).is_none() {
+                anyhow::bail!("unknown shape id {}", base.0);
+            }
+            let mut acc = base;
+            if count == 1 {
+                return Ok(acc.0 as i32);
+            }
+            let step = 360.0 / f64::from(count);
+            for i in 1..count {
+                let r = store.builder.push(IrNode::Rotate {
+                    of: base,
+                    axis: "z".into(),
+                    deg: step * f64::from(i),
+                });
+                acc = store.builder.push(IrNode::Boolean {
+                    kind: BooleanKind::Union,
+                    a: acc,
+                    b: r,
+                });
+            }
+            Ok(acc.0 as i32)
+        })
+    }
+
     /// Boolean cut: `a` minus `b`.
     fn cut<'v>(a: Value<'v>, b: Value<'v>) -> anyhow::Result<i32> {
         boolean_op(BooleanKind::Cut, a, b)
