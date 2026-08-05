@@ -1,0 +1,136 @@
+# Cadre-RS — charter
+
+> **The decisions log below is BINDING.** Amend it with a dated entry; never silently.
+> Where this document and the code disagree, one of them is a bug — say which.
+> Where a later doc and D1–Dn disagree, **D1–Dn win**.
+
+## What this is
+
+Cadre is a Rust-native CAD runtime for AI agents: hermetic Starlark source → B-rep kernel →
+numeric inspect → visual snapshot → export / parts / robots / fab handoff. One workspace,
+three co-equal surfaces (CLI, MCP, local HTTP), plus a generated skill pack that teaches the
+workflow. Clean-room functional-conceptual equivalent of `earthtojake/text-to-cad` — parity of
+jobs and doctrine, never of source or API.
+
+## What it is not
+
+- Not a GUI CAD app, sketcher, or constraint solver — parametricity lives in source.
+- Not a build123d / OpenCascade Python runtime — no CPython, no running reference sources.
+- Not CAM, FEA, BIM, mesh sculpting, or organic modeling as the authoring medium.
+- Not a multi-tenant hosted SaaS — HTTP is local/embedded; public hardening is future work.
+- Not a slicer reimplementation — Cadre orchestrates real slicer CLIs and validates G-code.
+- Not a pure-Rust-only stack in v1 — default kernel is OCCT (LGPL + exception), fetched as a
+  separate engine component; pure-Rust `truck` is experimental and non-parity.
+- Not telemetry-bearing and not auto-printing — hardware and third-party effects are
+  dry-run-first and consent-gated at every surface.
+
+## Decisions
+
+Numbered, binding, dated. One decision per entry, with the reason — a decision whose
+rationale is lost gets re-litigated within a month.
+
+- **D1 — Clean-room of the reference, not a port of its source.** Implement from this
+  repo's PRD (`docs/cadre-prd.md`) and public reference *behavior* only. No translating
+  Python/JS from `earthtojake/text-to-cad`. Rules out source compatibility and dual-maintenance
+  of a Python surface.
+- **D2 — Starlark is the authoring language.** Hermetic, deterministic, LLM-fluent
+  Python-shaped syntax without ambient authority. Rules out JSON-only feature trees (too weak
+  for impeller/staircase benchmarks) and embedded CPython (forfeits static binary + sandbox).
+- **D3 — STEP-first; source is truth; artifacts are derived.** Primary artifact is STEP next
+  to source with the same basename. STL/3MF/GLB/DXF are secondary with provenance. Never
+  hand-edit generated geometry — edit source and rebuild.
+- **D4 — Default kernel is OCCT behind `GeomKernel`; truck is experimental.** Only realistic
+  path to reference-grade fillets/booleans/STEP. Sanctioned C/FFI exception to the house
+  "pure Rust" preference. OCCT ships as a separately fetched engine (`cadre engine install`),
+  not statically linked into the core binary. Truck never carries parity claims.
+- **D5 — Three co-equal faces + skill pack.** CLI (`cadre`), MCP (`cadre mcp`), local HTTP
+  (`cadre serve api`) share one schema source (`cadre schema`). L2 requires installable skill
+  packs for Claude Code and Codex. Standalone-first: no ApexOS ownership assumed.
+- **D6 — Dual license MIT OR Apache-2.0 for core.** Rust convention; skill-pack prose and
+  vendor profiles are original works. OCCT remains LGPL-2.1 + OCCT exception via dynamic /
+  separate engine distribution (legal review before 1.0 — NFR-6).
+- **D7 — Machine-first I/O and stable diagnostics.** Every command has `--json`. Failures are
+  structured `{code, severity, message, target, span, refs, hint}` with enumerable codes.
+  Exit codes 0/2–9 are stable for agent branching.
+- **D8 — Numeric verify before visual; snapshots still mandatory in doctrine.** facts /
+  measure / align / diff are the repair loop; snapshots complement and skill doctrine makes
+  review non-optional after visible geometry changes (sanctioned skips only).
+- **D9 — Hermetic model evaluation.** Model code: no clock, env, network, or filesystem;
+  fueled/time/memory caps; builds cache by content hash. Same source + Cadre version ⇒
+  identical IR and equal-within-tolerance geometry.
+- **D10 — Consent for consequences.** Printer start, vendor upload, and any hardware /
+  third-party effect: dry-run default, allow-list, explicit non-defaultable confirm at every
+  surface. No surface may default `confirm`.
+- **D11 — Explicit targets only.** Commands name files/refs; refuse directory-wide builds or
+  ambient mutation outside the stated target.
+- **D12 — MCP tool surface budget ≤ 4,000 tokens.** Deep guidance lives in skill-pack
+  progressive references and `cadre://doc/**` resources, not tool descriptions.
+- **D13 — Single schema source.** CLI JSON shapes, MCP tool schemas, and OpenAPI are
+  generated from one Rust type layer; drift is a CI failure.
+- **D14 — No telemetry.** None. Opt-in local bench reports may be printed; nothing phones home.
+- **D15 — Cerebro agent id `CADRE`.** Session memory for this repo is isolated under
+  `agent_id="CADRE"`.
+- **D16 — Crate map is a requirement; internal design is free.** Workspace members follow
+  PRD §6 (`cadre-kernel`, `cadre-lang`, `cadre-model`, faces, …). Bootstrap keeps a thin
+  `cadre` facade crate so the workspace resolves from commit 0; slices split logic into the
+  named crates rather than growing an unstructured monolith.
+- **D17 — House MCP default may yield here.** House stack prefers hand-rolled JSON-RPC MCP.
+  Cadre targets stdio + streamable HTTP and an official Rust MCP SDK *if* it stays small and
+  honest; final transport choice is confirmed at M2 with a dated amendment if hand-rolled wins.
+- **D18 — Working name `cadre` pending trademark/crates.io sweep.** Binary and crate
+  namespace stay `cadre` until OQ-1 closes; rename is a deliberate charter amendment.
+
+## Phases
+
+Aligned with PRD §13 milestones. Each "done when" is checkable.
+
+| Phase | Scope | Done when |
+|-------|-------|-----------|
+| **M0 — Kernel spike** | OCCT binding strategy, `GeomKernel` v0, box+cylinder+boolean+fillet+STEP write, Starlark host PoC | Benchmark part 1 builds end-to-end from `.cad.star`; go/no-go on binding approach recorded here |
+| **M1 — Core loop** | Stdlib for parts, IR+cache, `build` / `inspect refs\|measure` / `export step\|stl\|glb`, selectors, diagnostics v1 | Parts 1–4 pass deterministic suite; CLI `--json` everywhere |
+| **M2 — See & serve** | `snapshot` (+GIF), viewer alpha, `diff`/`align`/`frame`, 3MF, MCP stdio, skill-pack alpha | Parts 5–8 pass; agent completes part 1 via MCP with snapshot review |
+| **M3 — Assemble & source** | Assemblies/joints/datums, parts provider + lockfile, HTTP API + jobs/SSE + OpenAPI, `watch` | Parts 9–10 + assembly scenario S3; agent harness ≥ 6/10 |
+| **M4 — Robots** | URDF gen+validate+inertials, SRDF, SDF, consistency checks, viewer joint jog | Scenario S4 e2e; URDF loads in a ROS 2 parser |
+| **M5 — Fabricate** | DXF writer+projection, DFM + first vendor profile, slicer orchestration, gcode-check, Bambu adapter + gates | S5 & S6 e2e with human confirmation; safety-gate tests pass |
+| **M6 — 1.0 hardening** | Windows parity, fuzzing, docs, skills export both ecosystems, streamable-HTTP MCP, licensing review | PRD §12 exit metrics table green |
+
+Bootstrap (this stamp) is **S0** under M0 — repo, contract, CI green, no kernel yet.
+
+## Deliberately out of v1
+
+**Permanently out (v1 non-goals)**
+
+- 2D constraint solver / GUI sketcher — code-CAD only (NG1)
+- CAM toolpathing, FEA, production raytracing, BIM (NG2)
+- Hosted multi-tenant SaaS with authn/z (NG3)
+- Mesh sculpting as modeling medium (NG4)
+- Running build123d/ezdxf Python sources (NG5)
+
+**Out of v1, honestly deferred**
+
+- WASM component authoring against IR (post-1.0 escape hatch)
+- Pure-Rust kernel as default (truck seeds the trait; OCCT remains default until parity)
+- Additional printer adapters (Klipper/Moonraker, OctoPrint) and extra DFM vendor profiles
+- Implicit SDF CAD (FR-9xx experimental)
+- build123d migration assistant (OQ-3) — only if buildable from public docs, never reference source
+- STEP PMI/GD&T and drawing sheets
+
+## Open questions
+
+From PRD §16 — still unresolved; do not silently assume answers in code:
+
+1. **OQ-1** Final product/binary name and crate namespace (trademark + crates.io).
+2. **OQ-2** Starlark dialect details: float formatting, module system for shared libraries, stdlib naming via LLM A/B.
+3. **OQ-3** Migration assistant scope/timing (M6 vs defer).
+4. **OQ-4** Depth of assembly joint model in STEP for 1.0 (kinematic AP242 vs labels+placements).
+5. **OQ-5** Whether MCP `write_source`/`read_source` default on for local stdio or HTTP-only.
+6. **OQ-6** Vendor-profile governance for community DFM rulepack updates.
+7. **OQ-7** MCP transport: official SDK vs house hand-rolled (see D17) — decide at M2.
+
+---
+
+## Amendments
+
+Dated entries. A decision changes here first, then in the code.
+
+- **2026-08-05** — charter adopted from `docs/cadre-prd.md` (Draft v0.1, 2026-07-28) at Launchpad-RS bootstrap.

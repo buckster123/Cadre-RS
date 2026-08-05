@@ -1,0 +1,43 @@
+# Gotchas — the invariant ledger
+
+> **RULE: before modifying ANY subsystem, grep this file for it and read the matching
+> entries.** These are load-bearing invariants — most were written after something broke
+> on a live node, and many end with an explicit "don't do X" that a future change would
+> otherwise walk straight into.
+>
+> **A newly discovered gotcha goes HERE**, not in CLAUDE.md. Docs travel with code —
+> update this file in the same PR as the change that discovered or altered an invariant.
+>
+> Format: one bullet, **bold lead naming the invariant**, then the story, ending with the
+> explicit don't. Cross-project version drift lives in
+> `~/Projects/Launchpad-RS/docs/sharp-edges.md` instead.
+
+- **Clean-room only.** Cadre is a functional-conceptual peer of `earthtojake/text-to-cad`, not
+  a source port. Don't vendor, translate, or "check how they did it" in their Python/JS tree.
+  Behavior comes from our PRD + their *public* docs/README/skill text. Don't add a submodule
+  or copy of the reference repo.
+
+- **OCCT behind `GeomKernel`, engine separate.** Default kernel is LGPL-adjacent. Don't
+  statically link OCCT into MIT/Apache core binaries or bypass the trait "just for a spike"
+  in a way that smears license boundary into published crates. Use `cadre engine install`
+  distribution story; legal review before 1.0.
+
+- **Truck is not parity.** Experimental backend seeds the trait. Don't mark Parity-10 green
+  on truck or advertise truck as default without a charter amendment.
+
+- **No directory-wide builds.** Agents will try `cadre build .`. Refuse. Explicit targets only.
+
+- **Don't git-diff STEP/STL/3MF.** Binary noise. Use `inspect diff` and content hashes. Skill
+  doctrine must keep saying this.
+
+- **MCP stdout is sacred.** JSON-RPC only on stdout; all `tracing` to stderr. Don't `println!`
+  in library code that MCP links.
+
+- **Printer start is triple-gated.** Allow-list + gcode hash match + explicit confirm string/flag.
+  Don't add a "dev convenience" default that skips confirm on any surface.
+
+- **Schema is one type layer.** CLI JSON, MCP tools, OpenAPI — generate together. Don't
+  hand-edit one surface's schema without the others; CI must fail on drift once S8+ lands.
+
+- **Fake success is a bug.** Missing engine, slicer, lock entry, or GPU snapshot path →
+  structured error. Don't return empty artifacts with `ok: true`.

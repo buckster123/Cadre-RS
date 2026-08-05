@@ -1,0 +1,307 @@
+# Cadre-RS — the contract
+
+> **Contract first** (house doctrine #1). This document is pinned **before** the code it
+> describes. Code follows this doc; a PR that changes behaviour updates this doc in the same
+> commit. When the two disagree, that is a bug in one of them — find out which, don't guess.
+>
+> Full product requirements live in [`cadre-prd.md`](cadre-prd.md). This file is the
+> **implementer contract**: surfaces, types, lifecycle, env, invariants. Charter decisions
+> D1–Dn bind when this doc and the PRD disagree on scope.
+
+## Scope
+
+Covers the agent/hardware-design loop Cadre exposes:
+
+- hermetic evaluation of `*.cad.star` / `*.dxf.star` / `*.urdf.star` / `*.srdf.star` / `*.sdf.star`
+- kernel execution to primary STEP (and secondary exports)
+- numeric inspection (refs / measure / align / frame / diff)
+- snapshots and local viewer
+- parts catalog client + `parts.lock`
+- robot description gen/validate
+- fab preflight, slicer orchestration, gated printer handoff
+- CLI · MCP · local HTTP · skill-pack export
+
+Does **not** cover: GUI sketcher, CAM/FEA/BIM, multi-tenant SaaS, running Python CAD sources,
+or treating meshes as the modeling medium (see charter non-goals).
+
+## Architecture (crate boundaries)
+
+Crate boundaries are requirements (charter D16). Internal module layout is free.
+
+| Crate | Responsibility |
+|-------|----------------|
+| `cadre` | Thin facade / re-exports so the workspace resolves from S0; not a logic dump |
+| `cadre-kernel` | `GeomKernel` trait: topology, features, queries, tessellation, STEP I/O |
+| `cadre-occt` | Default OCCT backend (FFI); loadable/separate engine component |
+| `cadre-truck` | Experimental pure-Rust backend; feature-gated; non-parity |
+| `cadre-lang` | Starlark host, CAD stdlib, params, diagnostics, IR emission |
+| `cadre-model` | Feature IR, content hashing, selectors, build cache, artifact registry |
+| `cadre-inspect` | facts / planes / measure / align / frame / diff |
+| `cadre-render` | Offscreen wgpu: multi-view PNG, orbit GIF/MP4 |
+| `cadre-export` | STEP AP242 write (+AP214 compat read), STL, 3MF, GLB, DXF |
+| `cadre-viewer` | Embedded local web viewer (static assets in binary) |
+| `cadre-parts` | `PartProvider` trait; catalog client; cache + `parts.lock` |
+| `cadre-robot` | URDF/SRDF/SDF gen + validators; inertia-from-geometry |
+| `cadre-fab` | DFM rulepacks; slicer orchestration; G-code checks; `Printer` adapters |
+| `cadre-mcp` | MCP server (stdio default; streamable HTTP per D17/OQ-7) |
+| `cadre-api` | Axum HTTP API, jobs, SSE, OpenAPI |
+| `cadre-cli` | Clap front end — the `cadre` binary |
+| `cadre-skills` | Skill-pack generator + bundled original doctrine |
+
+Bootstrap ships only `crates/cadre`. Later slices add members under `crates/*` without
+rewriting history of this contract.
+
+## Project layout (user projects)
+
+```
+myproject/
+  cadre.toml            # kernel, viewer port, printer allow-list, providers
+  parts.lock            # pinned catalog parts + checksums
+  cad/bracket.cad.star  # source …
+  cad/bracket.step      # … artifact, same basename, same directory
+  cad/bracket.snap/     # snapshot packets
+  robots/arm.urdf.star  → robots/arm.urdf
+  .cadre/               # build cache, tess cache, logs (gitignored)
+```
+
+Paths resolve from invoking CWD, never from install/skill directories.
+Config precedence: **flags > env (`CADRE_*`) > project `cadre.toml` > user config**.
+
+## Authoring surface
+
+- Entry points: `gen_step()`, `gen_dxf()`, `gen_urdf()`, `gen_srdf()`, `gen_sdf()`.
+- Evaluation emits **feature IR** (persisted, hashed, diffable). Kernel executes IR.
+- Model code is hermetic: no clock/env/net/fs; fueled caps; deterministic iteration and float formatting (details OQ-2).
+- Parameter overrides at build: `--set width=120` (recorded in build metadata).
+- Selectors: `#o<obj>[.<solid>][.f<face>|.e<edge>|.v<vertex>]` with kernel-independent ordering
+  (centroid/area tuple + tie-breakers). In-language queries (`faces(">Z")`, …) for authoring;
+  tokens for CLI/tool addressing. `diff` reports token remaps across builds.
+
+Illustrative flavor (not final stdlib API — pin concrete names in M1 with tests):
+
+```python
+# block.cad.star
+P = params(width=100.0, depth=60.0, height=20.0, hole_d=8.0, cham=2.0)
+
+def gen_step():
+    blk = box(P.width, P.depth, P.height, at=CENTER)
+    holes = [cylinder(d=P.hole_d, h=P.height + 2.0, at=(x, y, 0.0))
+             for x in (-40.0, 40.0) for y in (-20.0, 20.0)]
+    blk = cut(blk, union(holes))
+    top_edges = faces(blk, ">Z").outer_wire().edges()
+    blk = chamfer(blk, edges=top_edges, size=P.cham)
+    return solid(blk, label="calibration_block")
+```
+
+## The wire / API surface
+
+Global CLI flags: `--json`, `--quiet`, `--project <dir>`, `--kernel <backend>`, `--no-color`.
+
+| Surface | Purpose | Shape notes |
+|---------|---------|-------------|
+| `cadre build <target>` | Hermetic eval + kernel → primary artifact | JSON: artifacts[], facts, diagnostics[], hashes, validity, wall_ms. Refuses directory-wide builds |
+| `cadre inspect refs\|measure\|align\|frame\|diff` | Numeric interrogation | JSON numeric results + construction text; align is pass/fail vs tol |
+| `cadre snapshot <target>` | PNG packet (+ GIF) | Files on disk; MCP/API also return image content blocks |
+| `cadre export …` | Secondary formats | Provenance: source hash + tolerances |
+| `cadre view [paths…]` | Embed viewer, reuse instance | Prints deep links (`http://127.0.0.1:<port>/…`) |
+| `cadre parts search\|show\|fetch\|lock` | Catalog + lockfile | Checksum-verified cache; fail closed on lock mismatch |
+| `cadre robot validate` | URDF/SRDF/SDF | Cross-check flags where paired |
+| `cadre fab check\|slicers\|slice\|gcode-check` | DFM + slice path | Evidence-backed findings; real slicer CLIs |
+| `cadre printer status\|upload\|dry-run\|start\|watch` | Printer handoff | `start` gated (below) |
+| `cadre serve api` | Local Axum | Loopback + bearer token default; `/v1/*` + jobs/SSE + OpenAPI |
+| `cadre mcp` | Agent tools | stdio default; progress notifications; image blocks for snapshot |
+| `cadre skills export\|install` | L2 skill packs | Original prose; tool invocations → `cadre` |
+| `cadre bench run\|agent` | Parity-10 + agent harness | Local only; no phone-home |
+| `cadre engine install\|info` | Kernel backend component | Checksummed fetch |
+| `cadre schema [cli\|mcp\|api\|errors]` | Single schema dump | CI drift gate (D13) |
+
+### MCP tools (names final; schemas via `cadre schema mcp`)
+
+`build`, `write_source`, `read_source`, `inspect_refs`, `measure`, `align_check`, `frame`,
+`diff`, `snapshot`, `export`, `viewer_open`, `parts_search`, `parts_fetch`, `robot_validate`,
+`fab_check`, `fab_slice`, `gcode_check`, `printer_status`, `printer_upload`, `printer_dry_run`,
+`printer_start`, `project_artifacts`, `engine_info`.
+
+Resources: `cadre://project/**`, `cadre://artifact/**`, `cadre://doc/**`.
+
+Tool descriptions + schemas total **≤ 4,000 tokens** (D12).
+
+### HTTP API
+
+- Bearer token (printed at start); loopback bind default.
+- Sync for fast ops; async jobs: `POST /v1/jobs`, `GET /v1/jobs/{id}`, `GET /v1/jobs/{id}/events` (SSE).
+- Artifacts: `GET /v1/artifacts/{hash}`.
+- Families mirror MCP 1:1 under `/v1/...`. OpenAPI at `/v1/openapi.json` from the same types as `cadre schema`.
+- Versioned `/v1`; additive-only within a major.
+
+### Printer start gate (all surfaces)
+
+`printer start` / `printer_start` requires **all** of:
+
+1. G-code hash matches last validated/uploaded file
+2. Printer is on the allow-list in config
+3. Explicit confirmation: CLI `--confirm-start`, MCP `confirm: "START"`, API `"confirm": true` + capability token
+
+No defaulting. Refusal → exit code **8** / structured safety diagnostic.
+
+### Exit codes (stable)
+
+| Code | Meaning |
+|------|---------|
+| 0 | ok |
+| 2 | usage |
+| 3 | evaluation/build error |
+| 4 | validation failed |
+| 5 | kernel operation failed |
+| 6 | I/O |
+| 7 | provider/network |
+| 8 | safety gate refused |
+| 9 | internal |
+
+## Types
+
+Load-bearing serialized shapes (evolve only with schema + fixtures):
+
+**Diagnostic**
+
+```json
+{
+  "code": "CADRE-E-FILLET-RADIUS",
+  "severity": "error",
+  "message": "…",
+  "target": "cad/flange.cad.star",
+  "span": {"file": "cad/flange.cad.star", "line": 14, "col": 5},
+  "refs": ["#o1.1.e7"],
+  "hint": "reduce radius below 2.4 mm or exclude edge #o1.1.e7",
+  "docs_url": null
+}
+```
+
+Codes are stable and enumerable (`cadre schema errors`). Kernel failures are translated to
+feature-level terms (which op, which selector, plausible causes) — never raw FFI dumps as the
+only message.
+
+**Build result (`--json`)**
+
+```json
+{
+  "ok": true,
+  "artifacts": [{"path": "cad/block.step", "sha256": "…", "kind": "step"}],
+  "facts": {
+    "bbox_mm": [100.0, 60.0, 20.0],
+    "volume_mm3": 137904.2,
+    "area_mm2": null,
+    "centroid_mm": [0.0, 0.0, 10.0],
+    "solids": 1,
+    "faces": 22,
+    "edges": null
+  },
+  "validity": {"closed": true, "positive_volume": true, "shells": 1},
+  "diagnostics": [],
+  "meta": {
+    "source_sha256": "…",
+    "params": {},
+    "cadre_version": "0.1.0",
+    "kernel": "occt",
+    "kernel_version": "…",
+    "wall_ms": 420
+  }
+}
+```
+
+**Job (HTTP)** — `pending | running | completed | failed` (never silent forever). Paid/long work
+that outlives a client poll stays **pending/running** with a resumable id (doctrine #9), not
+premature `failed`.
+
+Float comparisons in tests and parity assertions use documented tolerances (Parity-10: volume
+±0.5% unless a tighter check is named). STEP reproducibility: stable modulo timestamp header;
+`--reproducible` pins the header.
+
+## Lifecycle / state machine
+
+### Build
+
+```
+resolve target → load source + params + lock → cache lookup
+  → (miss) eval Starlark → IR → kernel → validate → write artifact + meta
+  → facts summary → JSON/human render
+```
+
+Failure at any stage: `ok: false`, diagnostics filled, non-zero exit (3/5/6…). No partial
+artifact presented as success.
+
+### HTTP job
+
+```
+POST /v1/jobs → pending → running → completed | failed
+SSE /events streams progress
+GET artifact by content hash after completed
+```
+
+Cancel where supported flips to `failed` with reason `cancelled`, never deletes spend evidence
+for fab/printer jobs without an audit line.
+
+### Printer
+
+```
+slice → gcode-check → dry-run upload → (human) confirm start → watch
+```
+
+Any skipped gate is a hard error (code 8), not a warning.
+
+## Environment
+
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `CADRE_PROJECT` | cwd walk | Project root override (else `--project` / find `cadre.toml`) |
+| `CADRE_KERNEL` | `occt` | Backend id (`occt` \| `truck`) |
+| `CADRE_ENGINE_DIR` | platform cache | OCCT/engine install location |
+| `CADRE_VIEWER_PORT` | `7411` | Default viewer bind port |
+| `CADRE_API_PORT` | `7410` | Default API bind port |
+| `CADRE_API_TOKEN` | auto at start | Bearer token; never log full value |
+| `CADRE_LOG` | `info` | `tracing` filter (stderr only) |
+| `CADRE_CACHE` | `<project>/.cadre` | Build/tess cache root |
+| `CADRE_PARTS_CACHE` | user cache | Catalog STEP cache |
+| `CADRE_NO_COLOR` | unset | Disable ANSI |
+
+Flags win over env; env wins over `cadre.toml`. Tokens and printer credentials: **0600 files /
+env only**, never committed, never full-printed (lengths/heads only).
+
+## Invariants
+
+1. **Source + lock + Cadre/kernel versions determine artifacts.** No hidden ambient inputs in model code.
+2. **Primary artifact basename matches source** (`block.cad.star` → `block.step` beside it).
+3. **No directory-wide build or scan mutation.** Explicit targets only.
+4. **Stdout on MCP is JSON-RPC only.** All logs on stderr.
+5. **`--json` is canonical**; human text is a rendering of the same structure.
+6. **Safety gates cannot be defaulted away** on any surface.
+7. **Schema drift is a CI failure** (CLI / MCP / OpenAPI one type layer).
+8. **Clean-room:** no reference-project source in tree, as dependency, or as translation input.
+9. **OCCT stays behind `GeomKernel`** and separate distribution — no smearing LGPL into core static link without charter amendment + legal review.
+10. **Fake success is a bug.** Missing engine, missing slicer, lock mismatch, allow-list miss → structured failure.
+
+## Honest degrades
+
+| Condition | Behavior |
+|-----------|----------|
+| OCCT engine not installed | `cadre build` fails with `CADRE-E-ENGINE-MISSING` + hint to `cadre engine install`; never pretends truck parity |
+| `truck` selected for parity path | Explicit non-parity warning in meta; parity-10 may skip or xfail loudly |
+| Parts catalog unreachable | `parts search/fetch` → code 7; builds using lock miss fail closed |
+| Slicer CLI not found | `fab slice` → structured miss listing discovery paths; no fake gcode |
+| Printer not allow-listed / confirm missing | code 8 safety refuse |
+| Snapshot backend/GPU unavailable | clear diagnostic; doctrine skip only if skill policy allows and reason recorded |
+| Feature not in this milestone | `"not yet implemented"` / capability flag from `engine_info` — never empty success |
+
+## Verification hooks (contract-level)
+
+- Parity-10 deterministic suite (PRD §12) is the geometry acceptance gate.
+- Agent harness scores loops-to-success; not a substitute for deterministic asserts.
+- Library face: 30-line "bracket → STEP" example compiles in CI once `cadre-lang` + kernel land.
+
+## Open questions
+
+See charter OQ-1…OQ-7. Design-level watches:
+
+- Exact stdlib symbol names and selector query grammar — freeze with golden-IR tests in M1.
+- Default viewer/API ports (7411/7410 above) — change only with schema + docs together.
+- Whether `cadre` facade remains public on crates.io or becomes a virtual workspace binary package only (OQ-1).
