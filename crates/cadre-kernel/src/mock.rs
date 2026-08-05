@@ -30,6 +30,18 @@ enum Solid {
         at: Point3,
         label: Option<String>,
     },
+    Sphere {
+        radius: f64,
+        at: Point3,
+        label: Option<String>,
+    },
+    /// Cone along +Z; base radius at `at`, height toward +Z.
+    Cone {
+        radius: f64,
+        height: f64,
+        at: Point3,
+        label: Option<String>,
+    },
     /// Boolean result with cached analytic approximation (not true B-rep).
     Approx {
         volume_mm3: f64,
@@ -112,6 +124,49 @@ impl MockKernel {
                     mass_g: None,
                 }
             }
+            Solid::Sphere { radius, at, .. } => {
+                let r = *radius;
+                let bbox = BBox::from_min_max(
+                    Point3::new(at.x - r, at.y - r, at.z - r),
+                    Point3::new(at.x + r, at.y + r, at.z + r),
+                );
+                let vol = 4.0 / 3.0 * PI * r * r * r;
+                let area = 4.0 * PI * r * r;
+                ShapeFacts {
+                    bbox_mm: bbox,
+                    volume_mm3: vol,
+                    area_mm2: Some(area),
+                    centroid_mm: Some(*at),
+                    solids: 1,
+                    faces: 1,
+                    edges: 0,
+                    vertices: Some(0),
+                    mass_g: None,
+                }
+            }
+            Solid::Cone {
+                radius, height, at, ..
+            } => {
+                let r = *radius;
+                let h = *height;
+                let bbox = BBox::from_min_max(
+                    Point3::new(at.x - r, at.y - r, at.z),
+                    Point3::new(at.x + r, at.y + r, at.z + h),
+                );
+                let vol = PI * r * r * h / 3.0;
+                let area = PI * r * (r + (r * r + h * h).sqrt());
+                ShapeFacts {
+                    bbox_mm: bbox,
+                    volume_mm3: vol,
+                    area_mm2: Some(area),
+                    centroid_mm: Some(Point3::new(at.x, at.y, at.z + h * 0.25)),
+                    solids: 1,
+                    faces: 2,
+                    edges: 1,
+                    vertices: Some(0),
+                    mass_g: None,
+                }
+            }
             Solid::Approx {
                 volume_mm3,
                 bbox,
@@ -137,6 +192,8 @@ impl MockKernel {
         match solid {
             Solid::Box { label, .. }
             | Solid::Cylinder { label, .. }
+            | Solid::Sphere { label, .. }
+            | Solid::Cone { label, .. }
             | Solid::Approx { label, .. } => label.clone(),
         }
     }
@@ -145,6 +202,8 @@ impl MockKernel {
         match solid {
             Solid::Box { label: l, .. }
             | Solid::Cylinder { label: l, .. }
+            | Solid::Sphere { label: l, .. }
+            | Solid::Cone { label: l, .. }
             | Solid::Approx { label: l, .. } => *l = label,
         }
     }
@@ -348,6 +407,37 @@ impl GeomKernel for MockKernel {
         let s = self.get(shape)?.clone();
         Ok(self.alloc(Self::rotate_solid(s, &ax, deg)))
     }
+
+    fn sphere(&mut self, radius: f64, placement: Placement) -> KernelResult<ShapeId> {
+        Self::require_positive(radius, "radius")?;
+        Ok(self.alloc(Solid::Sphere {
+            radius,
+            at: placement.origin,
+            label: None,
+        }))
+    }
+
+    fn cone(&mut self, radius: f64, height: f64, placement: Placement) -> KernelResult<ShapeId> {
+        Self::require_positive(radius, "radius")?;
+        Self::require_positive(height, "height")?;
+        Ok(self.alloc(Solid::Cone {
+            radius,
+            height,
+            at: placement.origin,
+            label: None,
+        }))
+    }
+
+    fn mirror_plane(&mut self, shape: ShapeId, plane: &str) -> KernelResult<ShapeId> {
+        let pl = plane.to_ascii_lowercase();
+        if pl != "xy" && pl != "yz" && pl != "zx" && pl != "xz" {
+            return Err(KernelError::invalid_arg(
+                "plane must be \"xy\", \"yz\", or \"zx\"",
+            ));
+        }
+        let s = self.get(shape)?.clone();
+        Ok(self.alloc(mirror_solid(s, &pl)))
+    }
 }
 
 impl MockKernel {
@@ -372,6 +462,22 @@ impl MockKernel {
                 at,
                 label,
             } => Solid::Cylinder {
+                radius,
+                height,
+                at: Point3::new(at.x + dx, at.y + dy, at.z + dz),
+                label,
+            },
+            Solid::Sphere { radius, at, label } => Solid::Sphere {
+                radius,
+                at: Point3::new(at.x + dx, at.y + dy, at.z + dz),
+                label,
+            },
+            Solid::Cone {
+                radius,
+                height,
+                at,
+                label,
+            } => Solid::Cone {
                 radius,
                 height,
                 at: Point3::new(at.x + dx, at.y + dy, at.z + dz),
@@ -492,6 +598,96 @@ impl MockKernel {
             faces: f.faces,
             edges: f.edges,
             label,
+        }
+    }
+}
+
+fn mirror_solid(s: Solid, plane: &str) -> Solid {
+    // Reflect placement / bbox through coordinate plane through origin.
+    let flip = |p: Point3| match plane {
+        "yz" => Point3::new(-p.x, p.y, p.z),
+        "zx" | "xz" => Point3::new(p.x, -p.y, p.z),
+        _ => Point3::new(p.x, p.y, -p.z), // xy
+    };
+    match s {
+        Solid::Box {
+            dx,
+            dy,
+            dz,
+            at,
+            label,
+        } => Solid::Box {
+            dx,
+            dy,
+            dz,
+            at: flip(at),
+            label,
+        },
+        Solid::Cylinder {
+            radius,
+            height,
+            at,
+            label,
+        } => {
+            // Base point flips; height still +Z (mirror of Z-axis cylinder about xy flips base).
+            let at2 = flip(at);
+            let (at3, h) = if plane == "xy" {
+                // base was at.z, extends +h; after z→-z base becomes at.z+h in old coords → new base at -at.z-h, height still +h toward -old
+                (Point3::new(at.x, at.y, -(at.z + height)), height)
+            } else {
+                (at2, height)
+            };
+            Solid::Cylinder {
+                radius,
+                height: h,
+                at: at3,
+                label,
+            }
+        }
+        Solid::Sphere { radius, at, label } => Solid::Sphere {
+            radius,
+            at: flip(at),
+            label,
+        },
+        Solid::Cone {
+            radius,
+            height,
+            at,
+            label,
+        } => {
+            let at2 = flip(at);
+            let (at3, h) = if plane == "xy" {
+                (Point3::new(at.x, at.y, -(at.z + height)), height)
+            } else {
+                (at2, height)
+            };
+            Solid::Cone {
+                radius,
+                height: h,
+                at: at3,
+                label,
+            }
+        }
+        Solid::Approx {
+            volume_mm3,
+            bbox,
+            solids,
+            faces,
+            edges,
+            label,
+        } => {
+            let c1 = flip(bbox.min);
+            let c2 = flip(bbox.max);
+            let min = Point3::new(c1.x.min(c2.x), c1.y.min(c2.y), c1.z.min(c2.z));
+            let max = Point3::new(c1.x.max(c2.x), c1.y.max(c2.y), c1.z.max(c2.z));
+            Solid::Approx {
+                volume_mm3,
+                bbox: BBox::from_min_max(min, max),
+                solids,
+                faces,
+                edges,
+                label,
+            }
         }
     }
 }

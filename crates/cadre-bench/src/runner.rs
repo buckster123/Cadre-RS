@@ -479,12 +479,15 @@ fn collect_ops(ir: &FeatureIr) -> Vec<String> {
             match n {
                 IrNode::Box { .. } => "box",
                 IrNode::Cylinder { .. } => "cylinder",
+                IrNode::Sphere { .. } => "sphere",
+                IrNode::Cone { .. } => "cone",
                 IrNode::Boolean { .. } => "boolean",
                 IrNode::Fillet { .. } => "fillet",
                 IrNode::Chamfer { .. } => "chamfer",
                 IrNode::Label { .. } => "label",
                 IrNode::Translate { .. } => "translate",
                 IrNode::Rotate { .. } => "rotate",
+                IrNode::Mirror { .. } => "mirror",
             }
             .to_string()
         })
@@ -503,6 +506,13 @@ fn crate_topo_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
                 box_topology(*dx, *dy, *dz, Point3::new(at[0], at[1], at[2]))
             }
             IrNode::Cylinder { radius, height, at } => {
+                cylinder_topology(*radius, *height, Point3::new(at[0], at[1], at[2]))
+            }
+            IrNode::Sphere { radius, at } => {
+                let r = *radius;
+                box_topology(2.0 * r, 2.0 * r, 2.0 * r, Point3::new(at[0], at[1], at[2]))
+            }
+            IrNode::Cone { radius, height, at } => {
                 cylinder_topology(*radius, *height, Point3::new(at[0], at[1], at[2]))
             }
             IrNode::Boolean { kind, a, b } => {
@@ -531,7 +541,8 @@ fn crate_topo_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
             | IrNode::Chamfer { of, .. }
             | IrNode::Label { of, .. }
             | IrNode::Translate { of, .. }
-            | IrNode::Rotate { of, .. } => solids
+            | IrNode::Rotate { of, .. }
+            | IrNode::Mirror { of, .. } => solids
                 .get(of.0 as usize)
                 .and_then(|s| s.as_ref())
                 .ok_or_else(|| format!("missing node {}", of.0))?

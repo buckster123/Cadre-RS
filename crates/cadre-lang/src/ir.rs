@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// Stable IR schema version (bump when node shapes change incompatibly).
-pub const IR_VERSION: u32 = 1;
+pub const IR_VERSION: u32 = 2;
 
 /// Opaque node id within one IR document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -30,6 +30,10 @@ pub enum IrNode {
     Box { dx: f64, dy: f64, dz: f64, at: At3 },
     /// Cylinder along +Z; base center at `at`, height `height`.
     Cylinder { radius: f64, height: f64, at: At3 },
+    /// Sphere centered at `at`.
+    Sphere { radius: f64, at: At3 },
+    /// Cone along +Z; base radius at `at`, tip at `at.z + height` (radius 0).
+    Cone { radius: f64, height: f64, at: At3 },
     /// Boolean combination of two prior nodes.
     Boolean {
         kind: BooleanKind,
@@ -56,6 +60,8 @@ pub enum IrNode {
     Translate { of: NodeId, by: At3 },
     /// Rotate child about world origin axis x|y|z by degrees.
     Rotate { of: NodeId, axis: String, deg: f64 },
+    /// Mirror child through a coordinate plane: `xy` | `yz` | `zx`.
+    Mirror { of: NodeId, plane: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

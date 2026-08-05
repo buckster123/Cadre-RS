@@ -122,4 +122,31 @@ pub trait GeomKernel: Send {
             "rotate_about_axis",
         ))
     }
+
+    /// Sphere centered at placement origin. Default: unsupported.
+    fn sphere(&mut self, radius: f64, placement: Placement) -> KernelResult<ShapeId> {
+        let _ = (radius, placement);
+        Err(crate::error::KernelError::unsupported(
+            self.backend_id(),
+            "sphere",
+        ))
+    }
+
+    /// Cone along +Z, base at placement origin. Default: unsupported.
+    fn cone(&mut self, radius: f64, height: f64, placement: Placement) -> KernelResult<ShapeId> {
+        let _ = (radius, height, placement);
+        Err(crate::error::KernelError::unsupported(
+            self.backend_id(),
+            "cone",
+        ))
+    }
+
+    /// Mirror through plane `xy` | `yz` | `zx` (through world origin). Default: unsupported.
+    fn mirror_plane(&mut self, shape: ShapeId, plane: &str) -> KernelResult<ShapeId> {
+        let _ = (shape, plane);
+        Err(crate::error::KernelError::unsupported(
+            self.backend_id(),
+            "mirror_plane",
+        ))
+    }
 }

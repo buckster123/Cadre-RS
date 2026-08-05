@@ -18,6 +18,8 @@ pub fn mesh_from_ir(ir: &FeatureIr) -> Result<(Mesh, Vec<String>), String> {
         let m = match node {
             IrNode::Box { dx, dy, dz, at } => mesh_box(*dx, *dy, *dz, *at),
             IrNode::Cylinder { radius, height, at } => mesh_cylinder(*radius, *height, *at, 24),
+            IrNode::Sphere { radius, at } => mesh_sphere(*radius, *at, 16),
+            IrNode::Cone { radius, height, at } => mesh_cone(*radius, *height, *at, 24),
             IrNode::Boolean { kind, a, b } => {
                 let ma = take_mesh(&meshes, *a)?;
                 let mb = take_mesh(&meshes, *b)?;
@@ -42,6 +44,11 @@ pub fn mesh_from_ir(ir: &FeatureIr) -> Result<(Mesh, Vec<String>), String> {
             IrNode::Translate { of, by } => {
                 let mut m = take_mesh(&meshes, *of)?;
                 translate_mesh(&mut m, *by);
+                m
+            }
+            IrNode::Mirror { of, plane } => {
+                let mut m = take_mesh(&meshes, *of)?;
+                mirror_mesh(&mut m, plane);
                 m
             }
             IrNode::Rotate { of, axis, deg } => {
@@ -190,6 +197,78 @@ fn rotate_mesh(m: &mut Mesh, axis: &str, deg: f64) {
         m.positions[3 * i] = nx;
         m.positions[3 * i + 1] = ny;
         m.positions[3 * i + 2] = nz;
+    }
+}
+
+fn mesh_sphere(radius: f64, at: [f64; 3], segments: usize) -> Mesh {
+    // UV sphere
+    let mut positions = Vec::new();
+    let mut indices = Vec::new();
+    let stacks = segments / 2;
+    let slices = segments;
+    for i in 0..=stacks {
+        let v = i as f64 / stacks as f64;
+        let phi = std::f64::consts::PI * v;
+        for j in 0..=slices {
+            let u = j as f64 / slices as f64;
+            let theta = 2.0 * std::f64::consts::PI * u;
+            let x = at[0] + radius * phi.sin() * theta.cos();
+            let y = at[1] + radius * phi.sin() * theta.sin();
+            let z = at[2] + radius * phi.cos();
+            positions.extend_from_slice(&[x as f32, y as f32, z as f32]);
+        }
+    }
+    let row = slices + 1;
+    for i in 0..stacks {
+        for j in 0..slices {
+            let a = (i * row + j) as u32;
+            let b = a + row as u32;
+            indices.extend_from_slice(&[a, b, a + 1, b, b + 1, a + 1]);
+        }
+    }
+    Mesh {
+        positions,
+        normals: None,
+        indices,
+    }
+}
+
+fn mesh_cone(radius: f64, height: f64, at: [f64; 3], segments: usize) -> Mesh {
+    // Side fan + base
+    let mut positions = Vec::new();
+    let mut indices = Vec::new();
+    let tip = [at[0] as f32, at[1] as f32, (at[2] + height) as f32];
+    let base_c = [at[0] as f32, at[1] as f32, at[2] as f32];
+    positions.extend_from_slice(&tip);
+    positions.extend_from_slice(&base_c);
+    for i in 0..segments {
+        let a = 2.0 * std::f64::consts::PI * (i as f64) / segments as f64;
+        let x = at[0] + radius * a.cos();
+        let y = at[1] + radius * a.sin();
+        positions.extend_from_slice(&[x as f32, y as f32, at[2] as f32]);
+    }
+    for i in 0..segments {
+        let cur = (2 + i) as u32;
+        let next = (2 + (i + 1) % segments) as u32;
+        indices.extend_from_slice(&[0, cur, next]); // side
+        indices.extend_from_slice(&[1, next, cur]); // base
+    }
+    Mesh {
+        positions,
+        normals: None,
+        indices,
+    }
+}
+
+fn mirror_mesh(m: &mut Mesh, plane: &str) {
+    let pl = plane.to_ascii_lowercase();
+    let n = m.positions.len() / 3;
+    for i in 0..n {
+        match pl.as_str() {
+            "yz" => m.positions[3 * i] = -m.positions[3 * i],
+            "zx" | "xz" => m.positions[3 * i + 1] = -m.positions[3 * i + 1],
+            _ => m.positions[3 * i + 2] = -m.positions[3 * i + 2],
+        }
     }
 }
 

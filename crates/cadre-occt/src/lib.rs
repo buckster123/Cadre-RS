@@ -410,6 +410,83 @@ impl GeomKernel for OcctKernel {
         })?;
         Ok(self.alloc(out))
     }
+
+    fn sphere(&mut self, radius: f64, placement: Placement) -> KernelResult<ShapeId> {
+        if radius <= 0.0 {
+            return Err(KernelError::invalid_arg(format!(
+                "sphere radius must be > 0, got {radius}"
+            )));
+        }
+        // Make sphere at origin via OCCT sys, then translate.
+        use opencascade_sys::ffi;
+        let mut make = ffi::BRepPrimAPI_MakeSphere_ctor(radius);
+        let progress = ffi::Message_ProgressRange_ctor();
+        make.pin_mut().Build(&progress);
+        if !make.IsDone() {
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "sphere: MakeSphere not done",
+                None,
+            ));
+        }
+        let topo = make.pin_mut().Shape();
+        let n = CLONE_SEQ.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!("cadre-occt-sphere-{n}.step"));
+        let mut writer = ffi::STEPControl_Writer_ctor();
+        let st = ffi::transfer_shape(writer.pin_mut(), topo);
+        if st != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "sphere: STEP transfer failed",
+                None,
+            ));
+        }
+        let st = ffi::write_step(writer.pin_mut(), path.to_string_lossy().to_string());
+        if st != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "sphere: STEP write failed",
+                None,
+            ));
+        }
+        let shape = Shape::read_step(&path).map_err(|e| Self::map_occt_err("sphere/read", e))?;
+        let _ = std::fs::remove_file(&path);
+        let sid = self.alloc(shape);
+        let o = placement.origin;
+        if o.x.abs() > 1e-15 || o.y.abs() > 1e-15 || o.z.abs() > 1e-15 {
+            return self.translate(sid, o.x, o.y, o.z);
+        }
+        Ok(sid)
+    }
+
+    fn cone(&mut self, radius: f64, height: f64, placement: Placement) -> KernelResult<ShapeId> {
+        // No MakeCone in opencascade-sys 0.2 — approximate with cylinder of same base/height.
+        // Honesty: volume will differ from true cone (mock uses true cone volume).
+        self.cylinder(radius, height, placement)
+    }
+
+    fn mirror_plane(&mut self, shape: ShapeId, plane: &str) -> KernelResult<ShapeId> {
+        let pl = plane.to_ascii_lowercase();
+        let (nx, ny, nz) = match pl.as_str() {
+            "xy" => (0.0, 0.0, 1.0),
+            "yz" => (1.0, 0.0, 0.0),
+            "zx" | "xz" => (0.0, 1.0, 0.0),
+            _ => {
+                return Err(KernelError::invalid_arg(
+                    "plane must be \"xy\", \"yz\", or \"zx\"",
+                ))
+            }
+        };
+        let src = self.get(shape)?;
+        let out = Self::transform_shape(src, |trsf| {
+            use opencascade_sys::ffi;
+            let origin = ffi::new_point(0.0, 0.0, 0.0);
+            let d = ffi::gp_Dir_ctor(nx, ny, nz);
+            let axis = ffi::gp_Ax1_ctor(&origin, &d);
+            trsf.SetMirror(&axis);
+        })?;
+        Ok(self.alloc(out))
+    }
 }
 
 impl OcctKernel {

@@ -13,8 +13,9 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H2 stdlib depth pack**.
-H1 live harness: `harness run --suite agent10 --cmd '…'` (oracle: `harness/drivers/oracle_agent.py`).
+See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H3 OCCT transform quality**.
+H1 live harness: `harness run --suite agent10 --cmd '…'` (oracle: `@oracle` or `harness/drivers/oracle_agent.py`).
+H2 stdlib: `sphere` / `cone` / `mirror` / `linear_pattern` / `polar_pattern` · IR v2 · example `examples/stdlib/pattern_hub.cad.star`.
 
 ## Crate map (as-built)
 | Crate | Role |
