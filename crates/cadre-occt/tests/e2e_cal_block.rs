@@ -92,7 +92,6 @@ fn union_topology_live() {
     let snap = k.topology_snapshot(u).unwrap();
     assert!(snap.solids[0].faces.len() >= 6);
     let f = k.facts(u).unwrap();
-    // two 1000 cubes overlapping 500 → ~1500
     assert!(
         (f.volume_mm3 - 1500.0).abs() / 1500.0 < 0.15,
         "union vol={}",
@@ -100,33 +99,90 @@ fn union_topology_live() {
     );
 }
 
-/// Host OCCT 7.x + opencascade-rs 0.2 currently aborts inside BRepAlgoAPI_Cut
-/// (C++ StdFail_NotDone) on this machine. Re-enable when cut is stable.
 #[test]
-#[ignore = "OCCT BRepAlgoAPI_Cut aborts StdFail_NotDone on host"]
 fn calibration_block_star_to_step() {
     let r = evaluate(CAL_BLOCK, &EvalOptions::new("cal.cad.star"));
     assert!(r.ok, "{:?}", r.diagnostics);
     let ir = r.ir.expect("ir");
+
+    assert!(ir.nodes.iter().any(|n| matches!(
+        n,
+        cadre_lang::IrNode::Boolean {
+            kind: cadre_lang::BooleanKind::Cut,
+            ..
+        }
+    )));
+    assert!(ir
+        .nodes
+        .iter()
+        .any(|n| matches!(n, cadre_lang::IrNode::Fillet { .. })));
+
     let mut k = OcctKernel::new();
     let sid = execute_ir(&mut k, &ir).expect("execute");
     let f = k.facts(sid).unwrap();
+
     let expect = 120_000.0 - std::f64::consts::PI * 16.0 * 22.0;
     let err = (f.volume_mm3 - expect).abs() / expect;
-    assert!(err < 0.08, "volume={} err={}", f.volume_mm3, err);
-    let _ = PathBuf::from(".");
+    assert!(
+        err < 0.08,
+        "volume={} expect≈{} rel_err={}",
+        f.volume_mm3,
+        expect,
+        err
+    );
+
+    let e = f.bbox_mm.extents_mm();
+    assert!((e[0] - 100.0).abs() < 1.0, "dx={}", e[0]);
+    assert!((e[1] - 60.0).abs() < 1.0, "dy={}", e[1]);
+    assert!((e[2] - 20.0).abs() < 1.0, "dz={}", e[2]);
+
+    let snap = k.topology_snapshot(sid).unwrap();
+    let solid = &snap.solids[0];
+    assert!(
+        solid.faces.len() > 6,
+        "filleted plate+hole should exceed 6 faces, got {}",
+        solid.faces.len()
+    );
+    let refs = inspect_refs(&snap, true);
+    assert!(refs.faces > 6);
+    assert!(refs.edges > 12);
+
+    let dir = tempfile::tempdir().unwrap();
+    let path: PathBuf = dir.path().join("calibration_block.step");
+    k.write_step(sid, &path, &StepWriteOpts::default()).unwrap();
+    let bytes = std::fs::read(&path).unwrap();
+    assert!(bytes.len() > 500, "STEP too small: {}", bytes.len());
+    let head = String::from_utf8_lossy(&bytes[..bytes.len().min(64)]);
+    assert!(
+        head.contains("ISO-10303") || head.contains("STEP") || bytes.starts_with(b"ISO"),
+        "unexpected STEP header: {head:?}"
+    );
+
+    let sid2 = k.read_step(&path, &Default::default()).unwrap();
+    let f2 = k.facts(sid2).unwrap();
+    assert!((f2.volume_mm3 - f.volume_mm3).abs() / f.volume_mm3 < 0.05);
 }
 
 #[test]
-#[ignore = "OCCT BRepAlgoAPI_Cut aborts StdFail_NotDone on host"]
 fn parity_01_calibration_occt_volume() {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../parity/parts/01_calibration_block");
     let star = std::fs::read_to_string(root.join("part.cad.star")).expect("star");
     let r = evaluate(&star, &EvalOptions::new("part.cad.star"));
     assert!(r.ok, "{:?}", r.diagnostics);
+    let ir = r.ir.unwrap();
     let mut k = OcctKernel::new();
-    let sid = execute_ir(&mut k, &r.ir.unwrap()).unwrap();
+    let sid = execute_ir(&mut k, &ir).unwrap();
     let f = k.facts(sid).unwrap();
-    assert!(f.volume_mm3 > 0.0);
+    let expect = 100.0 * 60.0 * 20.0 - 4.0 * std::f64::consts::PI * 16.0 * 22.0;
+    let err = (f.volume_mm3 - expect).abs() / expect;
+    assert!(
+        err < 0.10,
+        "occt volume={} expect≈{} err={}",
+        f.volume_mm3,
+        expect,
+        err
+    );
+    let snap = k.topology_snapshot(sid).unwrap();
+    assert!(snap.solids[0].faces.len() >= 6);
 }

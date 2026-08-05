@@ -1,29 +1,30 @@
 # OCCT depth notes (post-v1)
 
-## Shipped (this slice)
-- `OcctKernel::topology_snapshot(shape)` — live B-rep faces (COM + normals + planar area
-  approx) and edges (polyline length + midpoint)
+## Shipped
+- `OcctKernel::topology_snapshot(shape)` — mesh-clustered faces (normals + area + COM) and
+  mesh edges; safe on boolean-cut solids
 - `cadre inspect … --kernel occt` uses live topology when binary built `--features occt`
-- Tests: box topology + thickness measure; union topology + volume
+- Boolean ops via **AdHocShape** (avoids `Shape::subtract` → `SectionEdges` crash)
+- Tests: box topology + thickness; union; cut; calibration STEP e2e; parity-01 volume
 
-## Known host issue
-`BRepAlgoAPI_Cut` (boolean cut) aborts with C++ `StdFail_NotDone` on the current Ubuntu OCCT
-+ `opencascade` 0.2 stack. **Union works.** Cut/fillet e2e tests are `#[ignore]` until the
-binding/runtime is fixed.
+## Boolean cut fix
+`Shape::subtract` / `union` in opencascade-rs 0.2 call `SectionEdges()` after the op, which
+throws C++ `StdFail_NotDone` on some OCCT builds. **Fix:** route all booleans through
+`AdHocShape::{subtract,union,intersect}`, which only take `.Shape()`.
 
-Repro:
-```sh
-CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-occt --test cut_smoke -- --ignored
-```
+## Topology safety
+`Face::center_of_mass` / `normal_at_center` can also throw uncatchable C++ exceptions on cut
+faces (cxx does not turn them into Rust panics). **Fix:** build topology from `shape.mesh()`
+triangle normal clustering — no B-rep face property calls.
 
-## Local verify (works today)
+## Local verify
 ```sh
 CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-occt
 CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo run -p cadre-cli --features occt -- \
-  --kernel occt inspect refs <box-only.cad.star> --facts --json
+  --kernel occt inspect refs parity/parts/01_calibration_block/part.cad.star --facts --json
 ```
 
 ## Next
-1. Fix/cut-wrap boolean cut (catch NotDone → KernelError, or upgrade opencascade-rs)
-2. Re-enable calibration + parity-01 OCCT goldens
-3. Wire tessellation tolerance for tighter volume goldens
+1. Tighter tessellation tolerance for volume goldens
+2. OCCT expect.json lane in cadre-bench (`parts1-4-occt`)
+3. Face→DXF from live face refs

@@ -208,9 +208,19 @@ impl GeomKernel for OcctKernel {
     fn boolean(&mut self, op: BooleanOp, a: ShapeId, b: ShapeId) -> KernelResult<ShapeId> {
         let sa = self.get(a)?;
         let sb = self.get(b)?;
+        // Prefer AdHocShape boolean ops: Shape::subtract/union call SectionEdges()
+        // which throws StdFail_NotDone on some OCCT builds. AdHoc only takes Shape().
         let result = match op {
-            BooleanOp::Union => sa.union(sb).shape,
-            BooleanOp::Cut => sa.subtract(sb).shape,
+            BooleanOp::Union => {
+                let mut left = AdHocShape(Self::clone_shape(sa)?);
+                left.union(sb);
+                left.into_shape()
+            }
+            BooleanOp::Cut => {
+                let mut left = AdHocShape(Self::clone_shape(sa)?);
+                left.subtract(sb);
+                left.into_shape()
+            }
             BooleanOp::Intersect => {
                 let mut left = AdHocShape(Self::clone_shape(sa)?);
                 left.intersect(sb);
