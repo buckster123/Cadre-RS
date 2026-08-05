@@ -64,5 +64,6 @@ See `docs/METRICS.md`. Amber/red remaining: live OCCT e2e, live Bambu start, fac
 ## Honesty defaults
 - Mock ≠ OCCT; STEP needs `--features occt` + `--kernel occt`
 - Snapshot cut preview keeps operand A
-- Printer start: allowlist + sha256 + `confirm=START`; S11/S12 still no live start
+- Printer start: **you** open gates — allowlist + sha256 + `confirm=START` + optional `--live`
+  (live uses curl FTPS + mosquitto_pub MQTT; default still no network)
 - DFM = profile-version truth, not vendor API

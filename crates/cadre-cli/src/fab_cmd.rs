@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use cadre_fab::{
     check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256, load_profile_json,
@@ -32,17 +32,9 @@ pub fn run_fab(cli: &Cli, args: &FabArgs) -> ExitCode {
 
 pub fn run_printer(cli: &Cli, args: &PrinterArgs) -> ExitCode {
     match &args.cmd {
-        PrinterCmd::Status(a) => printer_status(cli, &a.id, &a.host, &a.model),
-        PrinterCmd::DryRun(a) => printer_dry_run(cli, &a.id, &a.host, &a.model, &a.gcode),
-        PrinterCmd::Start(a) => printer_start(
-            cli,
-            &a.id,
-            &a.host,
-            &a.gcode,
-            &a.sha256,
-            a.confirm.as_deref(),
-            a.allowlist.as_deref(),
-        ),
+        PrinterCmd::Status(a) => printer_status(cli, a),
+        PrinterCmd::DryRun(a) => printer_dry_run(cli, a),
+        PrinterCmd::Start(a) => printer_start(cli, a),
     }
 }
 
@@ -464,8 +456,11 @@ fn fab_gcode_check(cli: &Cli, a: &FabGcodeCheckArgs) -> ExitCode {
     }
 }
 
-fn printer_status(cli: &Cli, id: &str, host: &str, model: &str) -> ExitCode {
-    let p = BambuAdapter::new(id, host, model);
+fn printer_status(cli: &Cli, a: &crate::cli::PrinterStatusArgs) -> ExitCode {
+    let mut p = BambuAdapter::from_env(&a.id, &a.host, &a.model, a.serial.clone(), None);
+    if let Some(s) = &a.serial {
+        p = p.with_serial(s.clone());
+    }
     match p.status() {
         Ok(v) => {
             emit(cli.json, &v, true);
@@ -482,9 +477,15 @@ fn printer_status(cli: &Cli, id: &str, host: &str, model: &str) -> ExitCode {
     }
 }
 
-fn printer_dry_run(cli: &Cli, id: &str, host: &str, model: &str, gcode: &Path) -> ExitCode {
-    let p = BambuAdapter::new(id, host, model);
-    match p.dry_run(gcode, &PrinterVolume::default()) {
+fn printer_dry_run(cli: &Cli, a: &crate::cli::PrinterDryRunArgs) -> ExitCode {
+    let p = BambuAdapter::from_env(
+        &a.id,
+        &a.host,
+        &a.model,
+        a.serial.clone(),
+        a.access_code.clone(),
+    );
+    match p.dry_run(&a.gcode, &PrinterVolume::default()) {
         Ok(r) => {
             let ok = r.ok;
             emit(cli.json, &json!({"ok": ok, "dry_run": r}), ok);
@@ -505,18 +506,37 @@ fn printer_dry_run(cli: &Cli, id: &str, host: &str, model: &str, gcode: &Path) -
     }
 }
 
-fn printer_start(
-    cli: &Cli,
-    id: &str,
-    host: &str,
-    gcode: &Path,
-    sha256: &str,
-    confirm: Option<&str>,
-    allowlist: Option<&str>,
-) -> ExitCode {
-    let p = BambuAdapter::new(id, host, "X1C").with_allowlisted(false);
+fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
+    use cadre_fab::ExternalLiveTransport;
+    use std::sync::Arc;
+
+    let mut p = BambuAdapter::from_env(
+        &a.id,
+        &a.host,
+        &a.model,
+        a.serial.clone(),
+        a.access_code.clone(),
+    );
+    if a.live {
+        match ExternalLiveTransport::detect() {
+            Ok(t) => p = p.with_transport(Arc::new(t)),
+            Err(e) => {
+                emit(
+                    cli.json,
+                    &json!({
+                        "ok": false,
+                        "error": e.to_string(),
+                        "hint": "live start needs curl + mosquitto_pub on PATH (or CADRE_CURL / CADRE_MOSQUITTO_PUB)"
+                    }),
+                    false,
+                );
+                return ExitCode::Usage;
+            }
+        }
+    }
+
     let mut allow = BTreeSet::new();
-    if let Some(list) = allowlist {
+    if let Some(list) = &a.allowlist {
         for part in list.split(',') {
             let t = part.trim();
             if !t.is_empty() {
@@ -525,10 +545,12 @@ fn printer_start(
         }
     }
     let req = StartRequest {
-        printer_id: id.into(),
-        gcode_path: gcode.display().to_string(),
-        gcode_sha256: sha256.into(),
-        confirm: confirm.unwrap_or("").into(),
+        printer_id: a.id.clone(),
+        gcode_path: a.gcode.display().to_string(),
+        gcode_sha256: a.sha256.clone(),
+        confirm: a.confirm.clone().unwrap_or_default(),
+        live: a.live,
+        remote_name: a.remote_name.clone(),
     };
     match p.start(&req, &allow) {
         Ok(gate) => {
@@ -538,7 +560,12 @@ fn printer_start(
                     "ok": gate.ok,
                     "gate": gate,
                     "required_confirm": CONFIRM_START,
-                    "note": "S11 never starts a real print; gates must still pass."
+                    "live_requested": a.live,
+                    "note": if a.live {
+                        "live path: FTPS upload + MQTT gcode_file after gates"
+                    } else {
+                        "default is safe: gates only; pass --live to contact printer"
+                    }
                 }),
                 gate.ok,
             );
