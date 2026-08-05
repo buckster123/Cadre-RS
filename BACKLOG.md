@@ -62,12 +62,12 @@ Priority suggestions when resuming:
 | H4 | Fillet/chamfer in OCCT parity + diagnostics | ✅ PR #28 |
 | H5 | Viewer: G-code scrub + URDF jog alpha | ✅ PR #29 |
 | H6 | Slicer execute (gated) + 2nd DFM profile | ✅ PR #30 |
-| H7 | MCP resources + write_source policy | ✅ this slice |
-| H8 | build123d → skeleton migrator (clean-room) | next |
-| H9 | Klipper/Moonraker gated adapter | pending |
+| H7 | MCP resources + write_source policy | ✅ PR #31 |
+| H8 | build123d → skeleton migrator (clean-room) | ✅ this slice |
+| H9 | Klipper/Moonraker gated adapter | next |
 | H10 | truck experimental non-parity lane | pending |
 
-Default when resuming with no pref: **H8**.
+Default when resuming with no pref: **H9**.
 
 ## Post-v1 parking (Horizon-2+)
 

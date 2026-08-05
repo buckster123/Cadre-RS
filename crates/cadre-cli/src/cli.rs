@@ -70,6 +70,8 @@ pub enum Commands {
     Fab(FabArgs),
     /// Printer adapters (Bambu dry-run / gated start).
     Printer(PrinterArgs),
+    /// Clean-room build123d-style Python → Cadre `.cad.star` skeleton (best-effort).
+    Migrate(MigrateArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -622,4 +624,13 @@ pub struct PrinterStartArgs {
     /// Remote filename on printer (default: local basename).
     #[arg(long)]
     pub remote_name: Option<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct MigrateArgs {
+    /// build123d-style Python source (single file).
+    pub source: PathBuf,
+    /// Output `.cad.star` (default: `<stem>.cad.star` beside source).
+    #[arg(short = 'o', long)]
+    pub out: Option<PathBuf>,
 }

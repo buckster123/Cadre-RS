@@ -21,12 +21,14 @@ mod diagnostic;
 mod eval;
 mod execute;
 mod ir;
+mod migrate;
 mod stdlib;
 
 pub use diagnostic::{Diagnostic, Severity, Span};
 pub use eval::{evaluate, EvalMeta, EvalOptions, EvalResult};
 pub use execute::execute_ir;
 pub use ir::{BooleanKind, FeatureIr, IrNode, NodeId, IR_VERSION};
+pub use migrate::{migrate_build123d_skeleton, MigrateReport};
 
 /// Crate version.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
