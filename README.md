@@ -57,7 +57,8 @@ S7: `cadre snapshot` / `cadre view` (PNG packet + orbit GIF).
 S8: `cadre mcp` + `cadre skills export` (skill pack in `skills/cadre`).
 S9: `cadre serve api` + `parts.lock` + assembly validate (`examples/assembly`).
 S10: `cadre robot gen|validate` (URDF/SRDF/SDF, urdf-rs parse).
-Next: fab path — see [`BACKLOG.md`](BACKLOG.md).
+S11: `cadre fab` / `cadre printer` (DXF, DFM, gcode-check, gated dry-run).
+Next: 1.0 hardening — see [`BACKLOG.md`](BACKLOG.md).
 
 ### Quick test snapshot
 ```sh
@@ -75,6 +76,13 @@ curl -s -H "Authorization: Bearer dev" -H 'content-type: application/json' \
 ### Quick test robot
 ```sh
 cargo run -p cadre-cli -- robot gen examples/robots/simple_arm.robot.json -o /tmp/arm --json
+```
+
+### Quick test fab
+```sh
+cargo run -p cadre-cli -- fab check --part-json examples/fab/plate.flat.json --json
+cargo run -p cadre-cli -- fab gcode-check examples/fab/sample.gcode --json
+cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode --json
 ```
 
 

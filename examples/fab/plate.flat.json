@@ -1,0 +1,9 @@
+{
+  "width_mm": 100.0,
+  "height_mm": 50.0,
+  "thickness_mm": 3.0,
+  "material": "Aluminum 5052",
+  "holes_dia_mm": [6.0, 6.0, 6.0, 6.0],
+  "min_hole_edge_mm": 5.0,
+  "min_hole_spacing_mm": 20.0
+}

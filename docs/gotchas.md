@@ -86,3 +86,6 @@
 - **parts.lock is fail-closed.** Missing lock entry or checksum mismatch must error — never
   silently fetch/substitute.
 - **API default is loopback.** Don't bind `0.0.0.0` without a token.
+- **Printer start is gated.** Needs allow-list + gcode sha256 match + `confirm=START`.
+  S11 never performs live MQTT/FTPS start even when gates pass.
+- **DFM profiles are versioned data.** Reports are profile-truth, not live vendor quotes.

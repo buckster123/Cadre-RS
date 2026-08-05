@@ -471,6 +471,7 @@ dependencies = [
  "assert_cmd",
  "cadre-api",
  "cadre-bench",
+ "cadre-fab",
  "cadre-inspect",
  "cadre-kernel",
  "cadre-lang",
@@ -489,6 +490,18 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "cadre-fab"
+version = "0.1.0"
+dependencies = [
+ "cadre-kernel",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 2.0.19",
 ]
 
 [[package]]
