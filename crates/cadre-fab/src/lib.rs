@@ -20,8 +20,9 @@ pub use gcode::{check_gcode, GcodeFlavor, GcodeReport, PrinterVolume};
 pub use gcode_path::{extract_gcode_path, GcodeLayer, GcodePath, GcodePoint};
 pub use printer::{
     evaluate_start_gates, hex_sha256, BambuAdapter, BambuTransport, DryRunReport,
-    ExternalLiveTransport, NullTransport, Printer, PrinterError, PrinterInfo, RecordingTransport,
-    StartGate, StartRequest, CONFIRM_START,
+    ExternalLiveTransport, ExternalMoonrakerTransport, KlipperAdapter, MoonrakerTransport,
+    NullMoonrakerTransport, NullTransport, Printer, PrinterError, PrinterInfo,
+    RecordingMoonrakerTransport, RecordingTransport, StartGate, StartRequest, CONFIRM_START,
 };
 pub use slicer::{
     discover_slicers, run_slice, slice_command_preview, SliceGate, SliceReport, SliceRequest,

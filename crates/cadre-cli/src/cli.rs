@@ -68,7 +68,7 @@ pub enum Commands {
     Robot(RobotArgs),
     /// Fabrication: DXF, DFM, slicer, gcode-check.
     Fab(FabArgs),
-    /// Printer adapters (Bambu dry-run / gated start).
+    /// Printer adapters (Bambu / Klipper dry-run / gated start).
     Printer(PrinterArgs),
     /// Clean-room build123d-style Python → Cadre `.cad.star` skeleton (best-effort).
     Migrate(MigrateArgs),
@@ -567,8 +567,19 @@ pub enum PrinterCmd {
     Start(PrinterStartArgs),
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq, Default)]
+pub enum PrinterBackend {
+    #[default]
+    Bambu,
+    Klipper,
+    Moonraker,
+}
+
 #[derive(Debug, clap::Args)]
 pub struct PrinterStatusArgs {
+    /// Backend: bambu (default) or klipper/moonraker.
+    #[arg(long, value_enum, default_value_t = PrinterBackend::Bambu)]
+    pub backend: PrinterBackend,
     #[arg(long, default_value = "bambu:x1c-01")]
     pub id: String,
     #[arg(long, default_value = "192.168.1.50")]
@@ -577,11 +588,19 @@ pub struct PrinterStatusArgs {
     pub model: String,
     #[arg(long, env = "CADRE_BAMBU_SERIAL")]
     pub serial: Option<String>,
+    /// Moonraker base URL (default: http://HOST:7125). Env: CADRE_MOONRAKER_URL.
+    #[arg(long, env = "CADRE_MOONRAKER_URL")]
+    pub moonraker_url: Option<String>,
+    /// Moonraker API key. Env: CADRE_MOONRAKER_API_KEY.
+    #[arg(long, env = "CADRE_MOONRAKER_API_KEY")]
+    pub api_key: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
 pub struct PrinterDryRunArgs {
     pub gcode: PathBuf,
+    #[arg(long, value_enum, default_value_t = PrinterBackend::Bambu)]
+    pub backend: PrinterBackend,
     #[arg(long, default_value = "bambu:x1c-01")]
     pub id: String,
     #[arg(long, default_value = "192.168.1.50")]
@@ -592,6 +611,10 @@ pub struct PrinterDryRunArgs {
     pub serial: Option<String>,
     #[arg(long, env = "CADRE_BAMBU_ACCESS_CODE")]
     pub access_code: Option<String>,
+    #[arg(long, env = "CADRE_MOONRAKER_URL")]
+    pub moonraker_url: Option<String>,
+    #[arg(long, env = "CADRE_MOONRAKER_API_KEY")]
+    pub api_key: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -603,6 +626,8 @@ pub struct PrinterStartArgs {
     /// Must be exactly START (human consent gate).
     #[arg(long)]
     pub confirm: Option<String>,
+    #[arg(long, value_enum, default_value_t = PrinterBackend::Bambu)]
+    pub backend: PrinterBackend,
     #[arg(long, default_value = "bambu:x1c-01")]
     pub id: String,
     #[arg(long, default_value = "192.168.1.50")]
@@ -612,15 +637,21 @@ pub struct PrinterStartArgs {
     /// Comma-separated allow-list of printer ids.
     #[arg(long)]
     pub allowlist: Option<String>,
-    /// Opt-in to real FTPS upload + MQTT start after gates pass.
+    /// Opt-in to real network after gates pass (Bambu FTPS+MQTT or Moonraker HTTP).
     #[arg(long, default_value_t = false)]
     pub live: bool,
-    /// Printer serial (MQTT topic). Env: CADRE_BAMBU_SERIAL.
+    /// Printer serial (MQTT topic, Bambu). Env: CADRE_BAMBU_SERIAL.
     #[arg(long, env = "CADRE_BAMBU_SERIAL")]
     pub serial: Option<String>,
-    /// LAN access code. Env: CADRE_BAMBU_ACCESS_CODE.
+    /// LAN access code (Bambu). Env: CADRE_BAMBU_ACCESS_CODE.
     #[arg(long, env = "CADRE_BAMBU_ACCESS_CODE")]
     pub access_code: Option<String>,
+    /// Moonraker base URL. Env: CADRE_MOONRAKER_URL.
+    #[arg(long, env = "CADRE_MOONRAKER_URL")]
+    pub moonraker_url: Option<String>,
+    /// Moonraker API key. Env: CADRE_MOONRAKER_API_KEY.
+    #[arg(long, env = "CADRE_MOONRAKER_API_KEY")]
+    pub api_key: Option<String>,
     /// Remote filename on printer (default: local basename).
     #[arg(long)]
     pub remote_name: Option<String>,

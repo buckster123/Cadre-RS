@@ -39,18 +39,29 @@ export CADRE_BAMBU_SERIAL=01P00A000000000
 cargo run -p cadre-cli -- printer start examples/fab/sample.gcode \
   --sha256 <from dry-run> --confirm START --allowlist bambu:x1c-01 \
   --host 192.168.1.50 --live --json
+
+# --- Klipper / Moonraker (H9) ---
+cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode \
+  --backend klipper --id klipper:ender --host 192.168.1.60 --json
+cargo run -p cadre-cli -- printer start examples/fab/sample.gcode \
+  --backend klipper --id klipper:ender --host 192.168.1.60 \
+  --sha256 <from dry-run> --confirm START --allowlist klipper:ender --json
+# LIVE Moonraker:
+cargo run -p cadre-cli -- printer start examples/fab/sample.gcode \
+  --backend klipper --id klipper:ender --host 192.168.1.60 \
+  --sha256 <from dry-run> --confirm START --allowlist klipper:ender --live --json
 ```
 
 ## Safety gates (all required before any network)
 
 | Gate | How you open it |
 |------|-----------------|
-| **allowlist** | `--allowlist bambu:x1c-01` (your printer id) |
+| **allowlist** | `--allowlist bambu:x1c-01` or `klipper:ender` |
 | **sha256** | must match file; copy from `printer dry-run` |
 | **confirm** | exactly `--confirm START` (case-sensitive) |
 | **gcode-check** | static validation must pass |
 | **`--live`** | second consent: without it, gates may pass but **no sockets** |
-| **credentials** | `--access-code` / `CADRE_BAMBU_ACCESS_CODE` + `--serial` / `CADRE_BAMBU_SERIAL` |
+| **credentials** | Bambu: access-code + serial · Klipper: optional API key |
 
-Live transport shells to `curl` (FTPS, `-k` for self-signed) and `mosquitto_pub` (MQTT 8883).
-Community LAN protocol — label accordingly; printer firmware drift is possible.
+Live Bambu: `curl` FTPS + `mosquitto_pub` MQTT.  
+Live Klipper: `curl` → Moonraker upload + print/start (`docs/KLIPPER.md`).
