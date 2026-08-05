@@ -1,0 +1,30 @@
+# Patched `opencascade` 0.2.0 (Cadre-RS H3)
+
+Local path patch of [opencascade-rs](https://github.com/bschwind/opencascade-rs) 0.2.0.
+
+## Why
+
+Upstream `Shape.inner` is `pub(crate)`, so consumers cannot call `BRepBuilderAPI_Transform`
+without STEP write/read thrash. Cadre-RS needs in-memory translate/rotate/mirror/sphere.
+
+## Cadre additions (`src/primitives/shape.rs`)
+
+| Method | Purpose |
+|--------|---------|
+| `deep_copy()` | identity transform, `copy=true` |
+| `apply_transform(&gp_Trsf)` | direct BRep transform |
+| `transformed_with(setup)` | build `gp_Trsf` + apply |
+| `sphere(radius)` | `BRepPrimAPI_MakeSphere` → Shape |
+
+Also `Error::TransformFailed` / `PrimitiveFailed`.
+
+## Wire-up
+
+Workspace root:
+
+```toml
+[patch.crates-io]
+opencascade = { path = "third_party/opencascade" }
+```
+
+LGPL-2.1 same as upstream. Do not treat this as a general fork — keep the delta minimal.

@@ -1,14 +1,13 @@
-//! OCCT translate / rotate smoke.
+//! OCCT translate / rotate / mirror / sphere smoke (H3: no STEP thrash on transforms).
 //!
-//! OCCT global state is not thread-safe across concurrent STEP I/O — keep this
-//! file as a **single** test so cargo doesn't parallelize siblings.
+//! Keep as a **single** test — OCCT is happier serial.
 
 use cadre_kernel::{GeomKernel, Placement, Point3};
 use cadre_lang::{evaluate, execute_ir, EvalOptions};
 use cadre_occt::OcctKernel;
 
 #[test]
-fn translate_rotate_and_finned_serial() {
+fn transform_quality_serial() {
     // translate
     {
         let mut k = OcctKernel::new();
@@ -40,6 +39,42 @@ fn translate_rotate_and_finned_serial() {
         );
     }
 
+    // mirror YZ (x → -x)
+    {
+        let mut k = OcctKernel::new();
+        let s = k
+            .box_solid(10.0, 10.0, 10.0, Placement::at(Point3::new(20.0, 0.0, 0.0)))
+            .unwrap();
+        let m = k.mirror_plane(s, "yz").expect("mirror");
+        let f = k.facts(m).unwrap();
+        assert!(
+            (f.volume_mm3 - 1000.0).abs() / 1000.0 < 0.15,
+            "mirror vol {}",
+            f.volume_mm3
+        );
+        assert!(
+            f.bbox_mm.center().x < -10.0,
+            "mirror center x {}",
+            f.bbox_mm.center().x
+        );
+    }
+
+    // sphere
+    {
+        let mut k = OcctKernel::new();
+        let s = k
+            .sphere(10.0, Placement::at(Point3::new(0.0, 0.0, 5.0)))
+            .expect("sphere");
+        let f = k.facts(s).unwrap();
+        let expect = 4.0 / 3.0 * std::f64::consts::PI * 1000.0;
+        assert!(
+            (f.volume_mm3 - expect).abs() / expect < 0.15,
+            "sphere vol {} expect {}",
+            f.volume_mm3,
+            expect
+        );
+    }
+
     // star: translate + rotate_z
     {
         let src = r#"
@@ -62,6 +97,23 @@ def gen_step():
         );
     }
 
+    // H3: transforms must not litter /tmp with cadre-occt-xf/clone STEP files.
+    {
+        let before = count_tmp_cadre_step();
+        let mut k = OcctKernel::new();
+        let s = k
+            .box_solid(5.0, 5.0, 5.0, Placement::at(Point3::ORIGIN))
+            .unwrap();
+        let s = k.translate(s, 1.0, 2.0, 3.0).unwrap();
+        let s = k.rotate_about_axis(s, "z", 90.0).unwrap();
+        let _ = k.mirror_plane(s, "xy").unwrap();
+        let after = count_tmp_cadre_step();
+        assert_eq!(
+            before, after,
+            "transform path wrote temp STEP files (H3 regression)"
+        );
+    }
+
     // parity part 07 (uses rotate/translate heavily)
     {
         let src = std::fs::read_to_string(concat!(
@@ -81,4 +133,18 @@ def gen_step():
         k.write_step(sid, &step, &Default::default()).expect("step");
         assert!(step.is_file());
     }
+}
+
+fn count_tmp_cadre_step() -> usize {
+    let tmp = std::env::temp_dir();
+    let Ok(rd) = std::fs::read_dir(&tmp) else {
+        return 0;
+    };
+    rd.flatten()
+        .filter(|e| {
+            let n = e.file_name();
+            let s = n.to_string_lossy();
+            s.starts_with("cadre-occt-") && s.ends_with(".step")
+        })
+        .count()
 }

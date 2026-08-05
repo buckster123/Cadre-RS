@@ -7,7 +7,6 @@ mod topology;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 use cadre_kernel::{
     BBox, BooleanOp, EdgeRef, GeomKernel, KernelError, KernelResult, Mesh, Placement, Point3,
@@ -16,10 +15,6 @@ use cadre_kernel::{
 use glam::dvec3;
 use opencascade::adhoc::AdHocShape;
 use opencascade::primitives::{IntoShape, Shape};
-
-// re-export topology helper path via OcctKernel::topology_snapshot
-
-static CLONE_SEQ: AtomicU64 = AtomicU64::new(0);
 
 /// OCCT-backed geometry kernel.
 ///
@@ -79,16 +74,11 @@ impl OcctKernel {
         )
     }
 
-    /// Clone a shape via STEP round-trip (public API has no Shape::clone).
+    /// Deep-copy via BRep transform (no STEP I/O).
     fn clone_shape(shape: &Shape) -> KernelResult<Shape> {
-        let n = CLONE_SEQ.fetch_add(1, Ordering::Relaxed);
-        let path = std::env::temp_dir().join(format!("cadre-occt-clone-{n}.step"));
         shape
-            .write_step(&path)
-            .map_err(|e| Self::map_occt_err("clone/write_step", e))?;
-        let out = Shape::read_step(&path).map_err(|e| Self::map_occt_err("clone/read_step", e))?;
-        let _ = std::fs::remove_file(&path);
-        Ok(out)
+            .deep_copy()
+            .map_err(|e| Self::map_occt_err("deep_copy", e))
     }
 
     fn bbox_from_mesh(shape: &Shape) -> BBox {
@@ -379,10 +369,15 @@ impl GeomKernel for OcctKernel {
         if ![dx, dy, dz].into_iter().all(|v| v.is_finite()) {
             return Err(KernelError::invalid_arg("translate offsets must be finite"));
         }
-        let mut work = Self::clone_shape(self.get(shape)?)?;
-        // After STEP clone the location is identity — set_global_translation applies dx,dy,dz.
-        work.set_global_translation(dvec3(dx, dy, dz));
-        Ok(self.alloc(work))
+        let src = self.get(shape)?;
+        let out = src
+            .transformed_with(|trsf| {
+                use opencascade_sys::ffi;
+                let v = ffi::new_vec(dx, dy, dz);
+                trsf.set_translation_vec(&v);
+            })
+            .map_err(|e| Self::map_occt_err("translate", e))?;
+        Ok(self.alloc(out))
     }
 
     fn rotate_about_axis(&mut self, shape: ShapeId, axis: &str, deg: f64) -> KernelResult<ShapeId> {
@@ -391,9 +386,9 @@ impl GeomKernel for OcctKernel {
         }
         let ax = axis.to_ascii_lowercase();
         let dir = match ax.as_str() {
-            "x" => dvec3(1.0, 0.0, 0.0),
-            "y" => dvec3(0.0, 1.0, 0.0),
-            "z" => dvec3(0.0, 0.0, 1.0),
+            "x" => (1.0, 0.0, 0.0),
+            "y" => (0.0, 1.0, 0.0),
+            "z" => (0.0, 0.0, 1.0),
             _ => {
                 return Err(KernelError::invalid_arg(
                     "axis must be \"x\", \"y\", or \"z\"",
@@ -401,13 +396,15 @@ impl GeomKernel for OcctKernel {
             }
         };
         let src = self.get(shape)?;
-        let out = Self::transform_shape(src, |trsf| {
-            use opencascade_sys::ffi;
-            let origin = ffi::new_point(0.0, 0.0, 0.0);
-            let d = ffi::gp_Dir_ctor(dir.x, dir.y, dir.z);
-            let axis1 = ffi::gp_Ax1_ctor(&origin, &d);
-            trsf.SetRotation(&axis1, deg.to_radians());
-        })?;
+        let out = src
+            .transformed_with(|trsf| {
+                use opencascade_sys::ffi;
+                let origin = ffi::new_point(0.0, 0.0, 0.0);
+                let d = ffi::gp_Dir_ctor(dir.0, dir.1, dir.2);
+                let axis1 = ffi::gp_Ax1_ctor(&origin, &d);
+                trsf.SetRotation(&axis1, deg.to_radians());
+            })
+            .map_err(|e| Self::map_occt_err("rotate", e))?;
         Ok(self.alloc(out))
     }
 
@@ -417,40 +414,7 @@ impl GeomKernel for OcctKernel {
                 "sphere radius must be > 0, got {radius}"
             )));
         }
-        // Make sphere at origin via OCCT sys, then translate.
-        use opencascade_sys::ffi;
-        let mut make = ffi::BRepPrimAPI_MakeSphere_ctor(radius);
-        let progress = ffi::Message_ProgressRange_ctor();
-        make.pin_mut().Build(&progress);
-        if !make.IsDone() {
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "sphere: MakeSphere not done",
-                None,
-            ));
-        }
-        let topo = make.pin_mut().Shape();
-        let n = CLONE_SEQ.fetch_add(1, Ordering::Relaxed);
-        let path = std::env::temp_dir().join(format!("cadre-occt-sphere-{n}.step"));
-        let mut writer = ffi::STEPControl_Writer_ctor();
-        let st = ffi::transfer_shape(writer.pin_mut(), topo);
-        if st != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "sphere: STEP transfer failed",
-                None,
-            ));
-        }
-        let st = ffi::write_step(writer.pin_mut(), path.to_string_lossy().to_string());
-        if st != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "sphere: STEP write failed",
-                None,
-            ));
-        }
-        let shape = Shape::read_step(&path).map_err(|e| Self::map_occt_err("sphere/read", e))?;
-        let _ = std::fs::remove_file(&path);
+        let shape = Shape::sphere(radius).map_err(|e| Self::map_occt_err("sphere", e))?;
         let sid = self.alloc(shape);
         let o = placement.origin;
         if o.x.abs() > 1e-15 || o.y.abs() > 1e-15 || o.z.abs() > 1e-15 {
@@ -466,11 +430,13 @@ impl GeomKernel for OcctKernel {
     }
 
     fn mirror_plane(&mut self, shape: ShapeId, plane: &str) -> KernelResult<ShapeId> {
+        // Plane mirror = central inversion (scale -1) then 180° about the plane normal's
+        // complementary axis. sys only exposes SetMirror(gp_Ax1) (axis symmetry), not Ax2.
         let pl = plane.to_ascii_lowercase();
-        let (nx, ny, nz) = match pl.as_str() {
-            "xy" => (0.0, 0.0, 1.0),
-            "yz" => (1.0, 0.0, 0.0),
-            "zx" | "xz" => (0.0, 1.0, 0.0),
+        let rot_axis = match pl.as_str() {
+            "xy" => (0.0, 0.0, 1.0),        // after scale-1: need 180 about Z → (x,y,-z)
+            "yz" => (1.0, 0.0, 0.0),        // → (-x,y,z)
+            "zx" | "xz" => (0.0, 1.0, 0.0), // → (x,-y,z)
             _ => {
                 return Err(KernelError::invalid_arg(
                     "plane must be \"xy\", \"yz\", or \"zx\"",
@@ -478,87 +444,24 @@ impl GeomKernel for OcctKernel {
             }
         };
         let src = self.get(shape)?;
-        let out = Self::transform_shape(src, |trsf| {
-            use opencascade_sys::ffi;
-            let origin = ffi::new_point(0.0, 0.0, 0.0);
-            let d = ffi::gp_Dir_ctor(nx, ny, nz);
-            let axis = ffi::gp_Ax1_ctor(&origin, &d);
-            trsf.SetMirror(&axis);
-        })?;
+        // Two sequential BRep transforms (no STEP).
+        let inverted = src
+            .transformed_with(|trsf| {
+                use opencascade_sys::ffi;
+                let origin = ffi::new_point(0.0, 0.0, 0.0);
+                trsf.SetScale(&origin, -1.0);
+            })
+            .map_err(|e| Self::map_occt_err("mirror/scale", e))?;
+        let out = inverted
+            .transformed_with(|trsf| {
+                use opencascade_sys::ffi;
+                let origin = ffi::new_point(0.0, 0.0, 0.0);
+                let d = ffi::gp_Dir_ctor(rot_axis.0, rot_axis.1, rot_axis.2);
+                let axis1 = ffi::gp_Ax1_ctor(&origin, &d);
+                trsf.SetRotation(&axis1, std::f64::consts::PI);
+            })
+            .map_err(|e| Self::map_occt_err("mirror/rotate", e))?;
         Ok(self.alloc(out))
-    }
-}
-
-impl OcctKernel {
-    /// Apply a `gp_Trsf` via STEP round-trip (opencascade `Shape.inner` is crate-private).
-    fn transform_shape(
-        shape: &Shape,
-        setup: impl FnOnce(std::pin::Pin<&mut opencascade_sys::ffi::gp_Trsf>),
-    ) -> KernelResult<Shape> {
-        use opencascade_sys::ffi;
-
-        let n = CLONE_SEQ.fetch_add(1, Ordering::Relaxed);
-        let path_in = std::env::temp_dir().join(format!("cadre-occt-xf-in-{n}.step"));
-        let path_out = std::env::temp_dir().join(format!("cadre-occt-xf-out-{n}.step"));
-
-        shape
-            .write_step(&path_in)
-            .map_err(|e| Self::map_occt_err("transform/write_step", e))?;
-
-        let mut reader = ffi::STEPControl_Reader_ctor();
-        let status = ffi::read_step(reader.pin_mut(), path_in.to_string_lossy().to_string());
-        if status != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
-            let _ = std::fs::remove_file(&path_in);
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "transform: STEP read failed",
-                None,
-            ));
-        }
-        reader
-            .pin_mut()
-            .TransferRoots(&ffi::Message_ProgressRange_ctor());
-        let topo = ffi::one_shape(&reader);
-
-        let mut trsf = ffi::new_transform();
-        setup(trsf.pin_mut());
-
-        let mut brep = ffi::BRepBuilderAPI_Transform_ctor(&topo, &trsf, true);
-        if !brep.IsDone() {
-            let _ = std::fs::remove_file(&path_in);
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "transform: BRepBuilderAPI_Transform not done",
-                None,
-            ));
-        }
-        let out_topo = brep.pin_mut().Shape();
-
-        let mut writer = ffi::STEPControl_Writer_ctor();
-        let wstat = ffi::transfer_shape(writer.pin_mut(), out_topo);
-        if wstat != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
-            let _ = std::fs::remove_file(&path_in);
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "transform: STEP transfer_shape failed",
-                None,
-            ));
-        }
-        let wstat = ffi::write_step(writer.pin_mut(), path_out.to_string_lossy().to_string());
-        if wstat != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
-            let _ = std::fs::remove_file(&path_in);
-            return Err(KernelError::diagnostic(
-                "CADRE-E-KERNEL",
-                "transform: STEP write failed",
-                None,
-            ));
-        }
-
-        let out =
-            Shape::read_step(&path_out).map_err(|e| Self::map_occt_err("transform/read", e))?;
-        let _ = std::fs::remove_file(&path_in);
-        let _ = std::fs::remove_file(&path_out);
-        Ok(out)
     }
 }
 
