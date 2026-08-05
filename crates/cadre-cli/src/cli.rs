@@ -339,6 +339,8 @@ pub struct FabArgs {
 pub enum FabCmd {
     /// Write a simple plate+holes DXF (mm).
     Dxf(FabDxfArgs),
+    /// Project a planar face from a .cad.star model to DXF.
+    DxfFace(FabDxfFaceArgs),
     /// DFM preflight against a vendor profile.
     Check(FabCheckArgs),
     /// Discover local slicer CLIs.
@@ -360,6 +362,25 @@ pub struct FabDxfArgs {
     pub hole: Vec<String>,
     #[arg(long, short = 'o')]
     pub out: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabDxfFaceArgs {
+    /// Part source (.cad.star or IR json).
+    pub target: PathBuf,
+    /// Face selector e.g. `#o1.1.f0` (optional if --normal given).
+    #[arg(long)]
+    pub face: Option<String>,
+    /// Pick largest face with this normal `x,y,z` (default 0,0,1 if no --face).
+    #[arg(long)]
+    pub normal: Option<String>,
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+    /// Plane thickness tol mm for coplanar edges.
+    #[arg(long, default_value_t = 0.5)]
+    pub plane_tol: f64,
+    #[arg(long)]
+    pub set: Vec<String>,
 }
 
 #[derive(Debug, clap::Args)]

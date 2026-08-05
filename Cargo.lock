@@ -498,6 +498,7 @@ dependencies = [
 name = "cadre-fab"
 version = "0.1.0"
 dependencies = [
+ "cadre-inspect",
  "cadre-kernel",
  "serde",
  "serde_json",

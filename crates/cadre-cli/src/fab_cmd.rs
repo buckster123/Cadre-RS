@@ -5,21 +5,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use cadre_fab::{
-    check_dfm, check_gcode, discover_slicers, hex_sha256, load_profile_json, plate_with_holes_dxf,
-    sendcutsend_laser_v1, slice_command_preview, BambuAdapter, FlatPart, Printer, PrinterVolume,
-    StartRequest, CONFIRM_START,
+    check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256, load_profile_json,
+    plate_with_holes_dxf, sendcutsend_laser_v1, slice_command_preview, BambuAdapter, FacePick,
+    FlatPart, Printer, PrinterVolume, StartRequest, CONFIRM_START,
 };
+use cadre_inspect::inspect_refs;
 use serde_json::json;
 
 use crate::cli::{
-    Cli, FabArgs, FabCheckArgs, FabCmd, FabDxfArgs, FabGcodeCheckArgs, FabSliceArgs, PrinterArgs,
-    PrinterCmd,
+    Cli, FabArgs, FabCheckArgs, FabCmd, FabDxfArgs, FabDxfFaceArgs, FabGcodeCheckArgs,
+    FabSliceArgs, PrinterArgs, PrinterCmd,
 };
 use crate::output::{emit, ExitCode};
+use crate::topo_from_ir::topology_from_ir;
 
 pub fn run_fab(cli: &Cli, args: &FabArgs) -> ExitCode {
     match &args.cmd {
         FabCmd::Dxf(a) => fab_dxf(cli, a),
+        FabCmd::DxfFace(a) => fab_dxf_face(cli, a),
         FabCmd::Check(a) => fab_check(cli, a),
         FabCmd::Slicers => fab_slicers(cli),
         FabCmd::Slice(a) => fab_slice(cli, a),
@@ -73,6 +76,213 @@ fn parse_hole(s: &str) -> Option<(f64, f64, f64)> {
         parts[1].parse().ok()?,
         parts[2].parse().ok()?,
     ))
+}
+
+fn fab_dxf_face(cli: &Cli, a: &FabDxfFaceArgs) -> ExitCode {
+    use cadre_lang::{evaluate, EvalOptions};
+    use std::fs;
+
+    let source = match fs::read_to_string(&a.target) {
+        Ok(s) => s,
+        Err(e) => {
+            emit(
+                cli.json,
+                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-IO","message": e.to_string()}]}),
+                false,
+            );
+            return ExitCode::Io;
+        }
+    };
+    let name = a
+        .target
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("part.cad.star")
+        .to_string();
+    let mut opts = EvalOptions::new(name);
+    // sets optional — reuse build_cmd parse if present
+    if !a.set.is_empty() {
+        match crate::build_cmd::parse_sets(&a.set) {
+            Ok(m) => opts.overrides = m,
+            Err(e) => {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-USAGE","message": e}]}),
+                    false,
+                );
+                return ExitCode::Usage;
+            }
+        }
+    }
+    let eval = evaluate(&source, &opts);
+    if !eval.ok {
+        emit(
+            cli.json,
+            &json!({"ok": false, "diagnostics": eval.diagnostics}),
+            false,
+        );
+        return ExitCode::Eval;
+    }
+    let ir = eval.ir.expect("ir");
+
+    // Prefer OCCT topology when requested; else IR analytic.
+    let snap = match cli.kernel {
+        crate::cli::KernelId::Occt => {
+            #[cfg(feature = "occt")]
+            {
+                use crate::kernel_pick::open_kernel;
+                use cadre_lang::execute_ir;
+                match open_kernel(cli.kernel) {
+                    Ok(mut kb) => match execute_ir(kb.as_mut(), &ir) {
+                        Ok(sid) => match &kb {
+                            crate::kernel_pick::KernelBox::Occt(k) => {
+                                match k.topology_snapshot(sid) {
+                                    Ok(s) => s,
+                                    Err(e) => {
+                                        emit(
+                                            cli.json,
+                                            &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-TOPO","message": e.to_string()}]}),
+                                            false,
+                                        );
+                                        return ExitCode::Kernel;
+                                    }
+                                }
+                            }
+                            _ => unreachable!(),
+                        },
+                        Err(e) => {
+                            emit(
+                                cli.json,
+                                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-KERNEL","message": e.to_string()}]}),
+                                false,
+                            );
+                            return ExitCode::Kernel;
+                        }
+                    },
+                    Err((c, v)) => {
+                        emit(cli.json, &v, false);
+                        return c;
+                    }
+                }
+            }
+            #[cfg(not(feature = "occt"))]
+            {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-KERNEL-UNAVAILABLE","message":"occt not in binary"}]}),
+                    false,
+                );
+                return ExitCode::Usage;
+            }
+        }
+        crate::cli::KernelId::Mock => match topology_from_ir(&ir) {
+            Ok(s) => s,
+            Err(e) => {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-TOPO","message": e}]}),
+                    false,
+                );
+                return ExitCode::Internal;
+            }
+        },
+    };
+
+    let report = inspect_refs(&snap, false);
+    // Map selectors → (solid_idx, face_idx) by matching centroid/normal to snap faces
+    let mut face_sels = Vec::new();
+    for r in &report.refs {
+        if r.kind != "face" {
+            continue;
+        }
+        // find matching face in snap
+        let mut found = None;
+        for (si, solid) in snap.solids.iter().enumerate() {
+            for (fi, face) in solid.faces.iter().enumerate() {
+                let cdist = (face.centroid.x - r.centroid_mm.x).abs()
+                    + (face.centroid.y - r.centroid_mm.y).abs()
+                    + (face.centroid.z - r.centroid_mm.z).abs();
+                if cdist > 1e-4 {
+                    continue;
+                }
+                found = Some((si, fi));
+                break;
+            }
+            if found.is_some() {
+                break;
+            }
+        }
+        if let Some((si, fi)) = found {
+            face_sels.push((r.selector.clone(), si, fi));
+        }
+    }
+
+    let pick = if let Some(f) = &a.face {
+        FacePick::Selector(f.clone())
+    } else if let Some(n) = &a.normal {
+        match parse_vec3(n) {
+            Some(v) => FacePick::Normal(v),
+            None => {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-USAGE","message":"bad --normal x,y,z"}]}),
+                    false,
+                );
+                return ExitCode::Usage;
+            }
+        }
+    } else {
+        FacePick::Normal([0.0, 0.0, 1.0])
+    };
+
+    let result = match face_to_dxf(&snap, &face_sels, &pick, a.plane_tol, 0.15) {
+        Ok(r) => r,
+        Err(e) => {
+            emit(
+                cli.json,
+                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-DXF-FACE","message": e}]}),
+                false,
+            );
+            return ExitCode::Validation;
+        }
+    };
+    let out = a.out.clone().unwrap_or_else(|| PathBuf::from("face.dxf"));
+    if let Err(e) = fs::write(&out, &result.dxf) {
+        emit(
+            cli.json,
+            &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-IO","message": e.to_string()}]}),
+            false,
+        );
+        return ExitCode::Io;
+    }
+    emit(
+        cli.json,
+        &json!({
+            "ok": true,
+            "path": out,
+            "bytes": result.dxf.len(),
+            "face": result.face_selector,
+            "normal": result.normal,
+            "centroid_mm": result.centroid,
+            "area_mm2": result.area_mm2,
+            "edge_count": result.edge_count,
+            "circle_count": result.circle_count,
+            "kernel": match cli.kernel {
+                crate::cli::KernelId::Mock => "mock",
+                crate::cli::KernelId::Occt => "occt",
+            },
+        }),
+        true,
+    );
+    ExitCode::Ok
+}
+
+fn parse_vec3(s: &str) -> Option<[f64; 3]> {
+    let p: Vec<_> = s.split(',').collect();
+    if p.len() != 3 {
+        return None;
+    }
+    Some([p[0].parse().ok()?, p[1].parse().ok()?, p[2].parse().ok()?])
 }
 
 fn fab_check(cli: &Cli, a: &FabCheckArgs) -> ExitCode {

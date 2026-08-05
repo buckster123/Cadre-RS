@@ -138,6 +138,20 @@ cargo run -p cadre-cli -- robot validate /tmp/arm/simple_arm.urdf --json
 tree integrity + positive mass/inertia; re-parsed with **urdf-rs**. SRDF group from
 non-fixed joints; minimal SDF model emit.
 
+### Face → DXF (S11+)
+
+```sh
+# Largest +Z face outline from a part (mock topology)
+cargo run -p cadre-cli -- fab dxf-face parity/parts/01_calibration_block/part.cad.star \
+  --normal 0,0,1 -o /tmp/face.dxf --json
+
+# Or pick a selector from `inspect refs`
+cargo run -p cadre-cli -- fab dxf-face part.cad.star --face '#o1.1.f6' -o face.dxf --json
+```
+
+Projects coplanar edges with endpoints onto the face plane (R12 DXF, mm).
+Plate helper `fab dxf --width …` remains for quick sketches without a model.
+
 ### Fabrication (v0 / S11)
 
 ```sh
