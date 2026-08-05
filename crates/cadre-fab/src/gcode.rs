@@ -173,7 +173,7 @@ pub fn check_gcode(text: &str, volume: &PrinterVolume) -> GcodeReport {
     }
 }
 
-fn parse_word(line: &str, key: char) -> Option<f64> {
+pub(crate) fn parse_word(line: &str, key: char) -> Option<f64> {
     let upkey = key.to_ascii_uppercase();
     for tok in line.split_whitespace() {
         let t = tok.as_bytes();

@@ -3,6 +3,7 @@
 #![deny(unsafe_code)]
 
 mod inertial;
+mod jog;
 mod model;
 mod sdf;
 mod srdf;
@@ -10,6 +11,7 @@ mod urdf;
 mod validate;
 
 pub use inertial::{box_inertial, cylinder_inertial, Inertial};
+pub use jog::{jog_payload, JogJoint, JogLink, JogPayload};
 pub use model::{Collision, Geometry, Joint, JointType, Link, Material, Origin, RobotSpec, Visual};
 pub use sdf::write_sdf;
 pub use srdf::{srdf_from_robot, write_srdf, SrdfEndEffector, SrdfGroup, SrdfSpec};
