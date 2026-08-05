@@ -1,0 +1,414 @@
+//! Analytical mock kernel — exercises the trait without OCCT.
+//!
+//! **Not parity-eligible.** Fillet/chamfer/STEP/tessellate are honest `Unsupported`
+//! (or no-op label-only) so agents never mistake mock geometry for real B-rep.
+
+use std::collections::HashMap;
+use std::f64::consts::PI;
+use std::path::Path;
+
+use crate::error::{KernelError, KernelResult};
+use crate::facts::{ShapeFacts, ValidityReport};
+use crate::handles::{EdgeRef, ShapeId, ShapeLabel};
+use crate::kernel::GeomKernel;
+use crate::mesh::Mesh;
+use crate::step::{StepReadOpts, StepWriteOpts};
+use crate::types::{BBox, BooleanOp, Placement, Point3, TessTol};
+
+#[derive(Debug, Clone)]
+enum Solid {
+    Box {
+        dx: f64,
+        dy: f64,
+        dz: f64,
+        at: Point3,
+        label: Option<String>,
+    },
+    Cylinder {
+        radius: f64,
+        height: f64,
+        at: Point3,
+        label: Option<String>,
+    },
+    /// Boolean result with cached analytic approximation (not true B-rep).
+    Approx {
+        volume_mm3: f64,
+        bbox: BBox,
+        solids: u32,
+        faces: u32,
+        edges: u32,
+        label: Option<String>,
+    },
+}
+
+/// In-process mock backend for unit tests and offline agent dry-runs.
+#[derive(Debug, Default)]
+pub struct MockKernel {
+    next_id: u64,
+    shapes: HashMap<u64, Solid>,
+}
+
+impl MockKernel {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn alloc(&mut self, solid: Solid) -> ShapeId {
+        self.next_id += 1;
+        let id = self.next_id;
+        self.shapes.insert(id, solid);
+        ShapeId(id)
+    }
+
+    fn get(&self, id: ShapeId) -> KernelResult<&Solid> {
+        self.shapes
+            .get(&id.0)
+            .ok_or_else(|| KernelError::unknown_shape(id))
+    }
+
+    fn facts_of(solid: &Solid) -> ShapeFacts {
+        match solid {
+            Solid::Box { dx, dy, dz, at, .. } => {
+                let hx = dx / 2.0;
+                let hy = dy / 2.0;
+                let hz = dz / 2.0;
+                let bbox = BBox::from_min_max(
+                    Point3::new(at.x - hx, at.y - hy, at.z - hz),
+                    Point3::new(at.x + hx, at.y + hy, at.z + hz),
+                );
+                ShapeFacts {
+                    bbox_mm: bbox,
+                    volume_mm3: dx * dy * dz,
+                    area_mm2: Some(2.0 * (dx * dy + dy * dz + dz * dx)),
+                    centroid_mm: Some(*at),
+                    solids: 1,
+                    faces: 6,
+                    edges: 12,
+                    vertices: Some(8),
+                    mass_g: None,
+                }
+            }
+            Solid::Cylinder {
+                radius, height, at, ..
+            } => {
+                let r = *radius;
+                let h = *height;
+                // cylinder base at z=at.z, extends +Z by h; lateral center xy = at
+                let bbox = BBox::from_min_max(
+                    Point3::new(at.x - r, at.y - r, at.z),
+                    Point3::new(at.x + r, at.y + r, at.z + h),
+                );
+                let vol = PI * r * r * h;
+                let area = 2.0 * PI * r * h + 2.0 * PI * r * r;
+                ShapeFacts {
+                    bbox_mm: bbox,
+                    volume_mm3: vol,
+                    area_mm2: Some(area),
+                    centroid_mm: Some(Point3::new(at.x, at.y, at.z + h * 0.5)),
+                    solids: 1,
+                    faces: 3,
+                    edges: 2,
+                    vertices: Some(0),
+                    mass_g: None,
+                }
+            }
+            Solid::Approx {
+                volume_mm3,
+                bbox,
+                solids,
+                faces,
+                edges,
+                ..
+            } => ShapeFacts {
+                bbox_mm: *bbox,
+                volume_mm3: *volume_mm3,
+                area_mm2: None,
+                centroid_mm: Some(bbox.center()),
+                solids: *solids,
+                faces: *faces,
+                edges: *edges,
+                vertices: None,
+                mass_g: None,
+            },
+        }
+    }
+
+    fn label_of(solid: &Solid) -> Option<String> {
+        match solid {
+            Solid::Box { label, .. }
+            | Solid::Cylinder { label, .. }
+            | Solid::Approx { label, .. } => label.clone(),
+        }
+    }
+
+    fn set_label_on(solid: &mut Solid, label: Option<String>) {
+        match solid {
+            Solid::Box { label: l, .. }
+            | Solid::Cylinder { label: l, .. }
+            | Solid::Approx { label: l, .. } => *l = label,
+        }
+    }
+
+    fn union_bbox(a: BBox, b: BBox) -> BBox {
+        BBox::from_min_max(
+            Point3::new(
+                a.min.x.min(b.min.x),
+                a.min.y.min(b.min.y),
+                a.min.z.min(b.min.z),
+            ),
+            Point3::new(
+                a.max.x.max(b.max.x),
+                a.max.y.max(b.max.y),
+                a.max.z.max(b.max.z),
+            ),
+        )
+    }
+
+    fn require_positive(dim: f64, name: &str) -> KernelResult<()> {
+        if !dim.is_finite() || dim <= 0.0 {
+            return Err(KernelError::invalid_arg(format!(
+                "{name} must be finite and > 0, got {dim}"
+            )));
+        }
+        Ok(())
+    }
+}
+
+impl GeomKernel for MockKernel {
+    fn backend_id(&self) -> &'static str {
+        "mock"
+    }
+
+    fn backend_version(&self) -> &str {
+        "0.1.0-mock"
+    }
+
+    fn parity_eligible(&self) -> bool {
+        false
+    }
+
+    fn box_solid(
+        &mut self,
+        dx: f64,
+        dy: f64,
+        dz: f64,
+        placement: Placement,
+    ) -> KernelResult<ShapeId> {
+        Self::require_positive(dx, "dx")?;
+        Self::require_positive(dy, "dy")?;
+        Self::require_positive(dz, "dz")?;
+        Ok(self.alloc(Solid::Box {
+            dx,
+            dy,
+            dz,
+            at: placement.origin,
+            label: None,
+        }))
+    }
+
+    fn cylinder(
+        &mut self,
+        radius: f64,
+        height: f64,
+        placement: Placement,
+    ) -> KernelResult<ShapeId> {
+        Self::require_positive(radius, "radius")?;
+        Self::require_positive(height, "height")?;
+        Ok(self.alloc(Solid::Cylinder {
+            radius,
+            height,
+            at: placement.origin,
+            label: None,
+        }))
+    }
+
+    fn boolean(&mut self, op: BooleanOp, a: ShapeId, b: ShapeId) -> KernelResult<ShapeId> {
+        let fa = Self::facts_of(self.get(a)?);
+        let fb = Self::facts_of(self.get(b)?);
+        let (volume, bbox, solids) = match op {
+            BooleanOp::Union => (
+                fa.volume_mm3 + fb.volume_mm3, // overcount if overlap — mock honesty note in validity
+                Self::union_bbox(fa.bbox_mm, fb.bbox_mm),
+                fa.solids + fb.solids,
+            ),
+            BooleanOp::Cut => ((fa.volume_mm3 - fb.volume_mm3).max(0.0), fa.bbox_mm, 1),
+            BooleanOp::Intersect => {
+                // crude: min volume, intersection AABB if overlapping axis ranges
+                let min = Point3::new(
+                    fa.bbox_mm.min.x.max(fb.bbox_mm.min.x),
+                    fa.bbox_mm.min.y.max(fb.bbox_mm.min.y),
+                    fa.bbox_mm.min.z.max(fb.bbox_mm.min.z),
+                );
+                let max = Point3::new(
+                    fa.bbox_mm.max.x.min(fb.bbox_mm.max.x),
+                    fa.bbox_mm.max.y.min(fb.bbox_mm.max.y),
+                    fa.bbox_mm.max.z.min(fb.bbox_mm.max.z),
+                );
+                let empty = min.x >= max.x || min.y >= max.y || min.z >= max.z;
+                if empty {
+                    (0.0, BBox::from_min_max(Point3::ORIGIN, Point3::ORIGIN), 0)
+                } else {
+                    let bb = BBox::from_min_max(min, max);
+                    (fa.volume_mm3.min(fb.volume_mm3), bb, 1)
+                }
+            }
+        };
+        Ok(self.alloc(Solid::Approx {
+            volume_mm3: volume,
+            bbox,
+            solids,
+            faces: fa.faces.saturating_add(fb.faces),
+            edges: fa.edges.saturating_add(fb.edges),
+            label: None,
+        }))
+    }
+
+    fn fillet(&mut self, shape: ShapeId, _edges: &[EdgeRef], radius: f64) -> KernelResult<ShapeId> {
+        let _ = self.get(shape)?;
+        Self::require_positive(radius, "radius")?;
+        Err(KernelError::unsupported("mock", "fillet"))
+    }
+
+    fn chamfer(
+        &mut self,
+        shape: ShapeId,
+        _edges: &[EdgeRef],
+        distance: f64,
+    ) -> KernelResult<ShapeId> {
+        let _ = self.get(shape)?;
+        Self::require_positive(distance, "distance")?;
+        Err(KernelError::unsupported("mock", "chamfer"))
+    }
+
+    fn set_label(&mut self, shape: ShapeId, label: ShapeLabel) -> KernelResult<ShapeId> {
+        let s = self
+            .shapes
+            .get_mut(&shape.0)
+            .ok_or_else(|| KernelError::unknown_shape(shape))?;
+        Self::set_label_on(s, Some(label.0));
+        Ok(shape)
+    }
+
+    fn facts(&self, shape: ShapeId) -> KernelResult<ShapeFacts> {
+        Ok(Self::facts_of(self.get(shape)?))
+    }
+
+    fn validity(&self, shape: ShapeId) -> KernelResult<ValidityReport> {
+        let s = self.get(shape)?;
+        let f = Self::facts_of(s);
+        let mut notes = Vec::new();
+        if matches!(s, Solid::Approx { .. }) {
+            notes.push("mock boolean volumes are analytic approximations, not B-rep".into());
+        }
+        if let Some(l) = Self::label_of(s) {
+            notes.push(format!("label={l}"));
+        }
+        Ok(ValidityReport {
+            closed: f.volume_mm3 > 0.0,
+            positive_volume: f.volume_mm3 > 0.0,
+            shells: if f.solids > 0 { 1 } else { 0 },
+            notes,
+        })
+    }
+
+    fn edges(&self, shape: ShapeId) -> KernelResult<Vec<EdgeRef>> {
+        let f = Self::facts_of(self.get(shape)?);
+        Ok((0..f.edges).map(EdgeRef).collect())
+    }
+
+    fn write_step(&self, shape: ShapeId, _path: &Path, _opts: &StepWriteOpts) -> KernelResult<()> {
+        let _ = self.get(shape)?;
+        Err(KernelError::unsupported("mock", "write_step"))
+    }
+
+    fn read_step(&mut self, _path: &Path, _opts: &StepReadOpts) -> KernelResult<ShapeId> {
+        Err(KernelError::unsupported("mock", "read_step"))
+    }
+
+    fn tessellate(&self, shape: ShapeId, _tol: TessTol) -> KernelResult<Mesh> {
+        let _ = self.get(shape)?;
+        Err(KernelError::unsupported("mock", "tessellate"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::Density;
+
+    #[test]
+    fn box_volume_and_bbox() {
+        let mut k = MockKernel::new();
+        let s = k.box_solid(100.0, 60.0, 20.0, Placement::IDENTITY).unwrap();
+        let f = k.facts(s).unwrap();
+        assert!((f.volume_mm3 - 120_000.0).abs() < 1e-9);
+        assert_eq!(f.solids, 1);
+        assert_eq!(f.faces, 6);
+        assert_eq!(f.edges, 12);
+        let e = f.bbox_mm.extents_mm();
+        assert!((e[0] - 100.0).abs() < 1e-12);
+        assert!((e[1] - 60.0).abs() < 1e-12);
+        assert!((e[2] - 20.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn cylinder_volume() {
+        let mut k = MockKernel::new();
+        let s = k.cylinder(10.0, 50.0, Placement::IDENTITY).unwrap();
+        let f = k.facts(s).unwrap();
+        let expect = PI * 100.0 * 50.0;
+        assert!((f.volume_mm3 - expect).abs() < 1e-9);
+    }
+
+    #[test]
+    fn cut_reduces_volume() {
+        let mut k = MockKernel::new();
+        let a = k.box_at(100.0, 60.0, 20.0, Point3::ORIGIN).unwrap();
+        let b = k
+            .cylinder_at(4.0, 22.0, Point3::new(0.0, 0.0, -1.0))
+            .unwrap();
+        let cut = k.boolean(BooleanOp::Cut, a, b).unwrap();
+        let fa = k.facts(a).unwrap().volume_mm3;
+        let fb = k.facts(b).unwrap().volume_mm3;
+        let fc = k.facts(cut).unwrap().volume_mm3;
+        assert!((fc - (fa - fb).max(0.0)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn fillet_honestly_unsupported() {
+        let mut k = MockKernel::new();
+        let s = k.box_at(10.0, 10.0, 10.0, Point3::ORIGIN).unwrap();
+        let err = k.fillet(s, &[], 1.0).unwrap_err();
+        assert_eq!(err.code(), "CADRE-E-UNSUPPORTED");
+    }
+
+    #[test]
+    fn mass_from_density() {
+        let mut k = MockKernel::new();
+        let s = k.box_at(10.0, 10.0, 10.0, Point3::ORIGIN).unwrap(); // 1000 mm³ = 1 cm³
+        let f = k.facts_with_density(s, Density::g_per_cm3(2.7)).unwrap();
+        assert!((f.mass_g.unwrap() - 2.7).abs() < 1e-9);
+    }
+
+    #[test]
+    fn rejects_non_positive_dims() {
+        let mut k = MockKernel::new();
+        assert!(k.box_at(0.0, 1.0, 1.0, Point3::ORIGIN).is_err());
+        assert!(k.cylinder_at(-1.0, 5.0, Point3::ORIGIN).is_err());
+    }
+
+    #[test]
+    fn label_and_edges() {
+        let mut k = MockKernel::new();
+        let s = k.box_at(1.0, 2.0, 3.0, Point3::ORIGIN).unwrap();
+        k.set_label(s, ShapeLabel::new("block")).unwrap();
+        let v = k.validity(s).unwrap();
+        assert!(v.notes.iter().any(|n| n.contains("block")));
+        assert_eq!(k.edges(s).unwrap().len(), 12);
+    }
+
+    #[test]
+    fn not_parity_eligible() {
+        assert!(!MockKernel::new().parity_eligible());
+    }
+}

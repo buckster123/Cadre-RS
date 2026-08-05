@@ -41,3 +41,11 @@
 
 - **Fake success is a bug.** Missing engine, slicer, lock entry, or GPU snapshot path →
   structured error. Don't return empty artifacts with `ok: true`.
+
+- **`MockKernel` is not OCCT.** Volumes after boolean are analytic approximations; fillet /
+  chamfer / STEP / tessellate return `CADRE-E-UNSUPPORTED`. Don't mark Parity-10 or field
+  evidence against mock. Don't silently “implement” fillet in mock as a no-op success.
+
+- **OCCT stays out of default `cargo test`.** `cadre-kernel` must stay pure Rust. Don't add
+  `opencascade`/`occt-sys` to the default workspace build graph — gate behind `cadre-occt`
+  features / optional member so fresh clones stay green (see `docs/occt-binding.md`).

@@ -10,8 +10,8 @@ split further when a slice stops being reviewable in one PR.
 
 - [x] **S0 — bootstrap**: Launchpad stamp, CLAUDE.md, CHARTER, design contract, PRD in-tree,
       workspace + `crates/cadre` facade, CI, dual license (2026-08-05)
-- [ ] **S1 — M0 kernel spike (trait + binding eval)**: `cadre-kernel` `GeomKernel` v0 surface;
-      OCCT bind/vendor strategy spike notes in charter amendment; go/no-go recorded
+- [x] **S1 — M0 kernel spike (trait + binding eval)**: `cadre-kernel` `GeomKernel` v0 +
+      `MockKernel` tests; `docs/occt-binding.md`; charter D19 GO (2026-08-05). Live OCCT → S3
 - [ ] **S2 — M0 Starlark host PoC**: `cadre-lang` eval of box+cylinder params → IR stub;
       hermetic caps; `--json` diagnostic shape
 - [ ] **S3 — M0 e2e part 1**: boolean + fillet + STEP write; calibration block from `.cad.star`;

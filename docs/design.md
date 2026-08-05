@@ -48,8 +48,9 @@ Crate boundaries are requirements (charter D16). Internal module layout is free.
 | `cadre-cli` | Clap front end — the `cadre` binary |
 | `cadre-skills` | Skill-pack generator + bundled original doctrine |
 
-Bootstrap ships only `crates/cadre`. Later slices add members under `crates/*` without
-rewriting history of this contract.
+Bootstrap shipped `crates/cadre`. **S1 added `crates/cadre-kernel`** (`GeomKernel` +
+`MockKernel`). Later slices add remaining members under `crates/*` without rewriting this
+contract. OCCT bind approach: [`occt-binding.md`](occt-binding.md) (D19).
 
 ## Project layout (user projects)
 
