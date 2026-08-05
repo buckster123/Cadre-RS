@@ -77,4 +77,4 @@ MIT OR Apache-2.0 — see [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENS
 The optional OCCT engine component is LGPL-2.1 with the OCCT exception and is distributed
 separately (see charter D4/D6).
 
-<sub>Banner: pending Imaginarium-RS job (not generated at bootstrap — spend is gated).</sub>
+<sub>Banner generated with <a href="https://github.com/buckster123/Imaginarium-RS">Imaginarium-RS</a> (job <code>01KZ94QZ21JH73Y7J64A2ENW90</code>).</sub>
