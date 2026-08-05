@@ -110,6 +110,22 @@ Tools (short schemas): `build`, `write_source`, `read_source`, `inspect_refs`, `
 Doctrine pack: `skills/cadre/SKILL.md` + `references/workflow.md`.
 Hand-rolled JSON-RPC (OQ-7 SDK deferred). Logs on **stderr** only.
 
+### HTTP API + parts/assembly (v0 / S9)
+
+```sh
+cargo run -p cadre-cli -- serve api --port 7410 --token secret
+# GET  /v1/health
+# GET  /v1/openapi.json
+# POST /v1/build|inspect/refs|snapshot  (Bearer token)
+# POST /v1/parts/search
+# POST /v1/assembly/validate
+# POST /v1/jobs  + GET /v1/jobs/{id}  + GET /v1/jobs/{id}/events (SSE)
+```
+
+`parts.lock` pins provider/id/sha256/path; builds referencing lock keys **fail closed** on
+missing/mismatched checksums. Assembly JSON: named components, placements, joints.
+Example: `examples/assembly/plate_bolt.assy.json`.
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).

@@ -10,6 +10,8 @@ members = [
     "crates/cadre-bench",
     "crates/cadre-render",
     "crates/cadre-mcp",
+    "crates/cadre-parts",
+    "crates/cadre-api",
     "crates/cadre-occt",
 ]
 default-members = [
@@ -22,6 +24,8 @@ default-members = [
     "crates/cadre-bench",
     "crates/cadre-render",
     "crates/cadre-mcp",
+    "crates/cadre-parts",
+    "crates/cadre-api",
 ]
 
 [workspace.package]
@@ -35,7 +39,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 starlark = "0.14.2"
 thiserror = "2"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "net"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -47,4 +51,6 @@ cadre-cli = { path = "crates/cadre-cli" }
 cadre-bench = { path = "crates/cadre-bench" }
 cadre-render = { path = "crates/cadre-render" }
 cadre-mcp = { path = "crates/cadre-mcp" }
+cadre-parts = { path = "crates/cadre-parts" }
+cadre-api = { path = "crates/cadre-api" }
 cadre-occt = { path = "crates/cadre-occt" }

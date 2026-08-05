@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "parts": {
+    "m6_bolt": {
+      "provider": "local",
+      "id": "m6_bolt",
+      "version": "1",
+      "sha256": "08a0608147df696309375e3eb1fc57a3d105c0a10e9404799b18c6f8eda161a9",
+      "path": "parts/m6_bolt.step",
+      "license": "CC0"
+    }
+  }
+}

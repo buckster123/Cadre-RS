@@ -26,7 +26,8 @@ split further when a slice stops being reviewable in one PR.
       `cadre snapshot` / `cadre view` deep links (2026-08-05)
 - [x] **S8 — M2 MCP stdio + skill-pack alpha**: `cadre-mcp` 6 tools; `cadre mcp`;
       `cadre skills export`; bundled `skills/cadre` doctrine (2026-08-05)
-- [ ] **S9 — M3 assemblies + parts.lock + HTTP API**: S3 scenario; jobs/SSE/OpenAPI; harness ≥ 6/10
+- [x] **S9 — M3 assemblies + parts.lock + HTTP API**: `cadre-parts` lock/provider/assembly;
+      `cadre-api` Axum `/v1` + jobs/SSE/OpenAPI; plate+bolt example; `cadre serve api` (2026-08-05)
 - [ ] **S10 — M4 robots**: URDF+inertials validate; SRDF/SDF; ROS 2 parser load
 - [ ] **S11 — M5 fab path**: DXF, DFM profile, slicer orch, gcode-check, Bambu dry-run + gated start
 - [ ] **S12 — M6 1.0 hardening**: Windows, fuzz, skills export both agents, licensing review, metrics table

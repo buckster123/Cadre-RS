@@ -60,6 +60,8 @@ pub enum Commands {
     Mcp(McpArgs),
     /// Skill-pack export for agents.
     Skills(SkillsArgs),
+    /// Local HTTP API server.
+    Serve(ServeArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -249,4 +251,30 @@ pub struct SkillsExportArgs {
     /// Target agent ecosystem label (affects INSTALL.md only).
     #[arg(long, default_value = "claude-code")]
     pub agent: String,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct ServeArgs {
+    #[command(subcommand)]
+    pub cmd: ServeCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ServeCmd {
+    /// Run local Axum HTTP API (`/v1/*`).
+    Api(ServeApiArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct ServeApiArgs {
+    #[arg(long, default_value = "127.0.0.1")]
+    pub host: String,
+    #[arg(long, default_value_t = 7410, env = "CADRE_API_PORT")]
+    pub port: u16,
+    /// Optional bearer token (also `CADRE_API_TOKEN`).
+    #[arg(long, env = "CADRE_API_TOKEN")]
+    pub token: Option<String>,
+    /// Project root for relative paths (default: cwd / --project).
+    #[arg(long)]
+    pub project: Option<PathBuf>,
 }
