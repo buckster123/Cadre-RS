@@ -9,3 +9,4 @@
 # keep example catalog stubs
 !examples/**/*.step
 !examples/**/*.ir.json
+examples/**/*.view/
