@@ -374,6 +374,115 @@ impl GeomKernel for OcctKernel {
             indices,
         })
     }
+
+    fn translate(&mut self, shape: ShapeId, dx: f64, dy: f64, dz: f64) -> KernelResult<ShapeId> {
+        if ![dx, dy, dz].into_iter().all(|v| v.is_finite()) {
+            return Err(KernelError::invalid_arg("translate offsets must be finite"));
+        }
+        let mut work = Self::clone_shape(self.get(shape)?)?;
+        // After STEP clone the location is identity — set_global_translation applies dx,dy,dz.
+        work.set_global_translation(dvec3(dx, dy, dz));
+        Ok(self.alloc(work))
+    }
+
+    fn rotate_about_axis(&mut self, shape: ShapeId, axis: &str, deg: f64) -> KernelResult<ShapeId> {
+        if !deg.is_finite() {
+            return Err(KernelError::invalid_arg("deg must be finite"));
+        }
+        let ax = axis.to_ascii_lowercase();
+        let dir = match ax.as_str() {
+            "x" => dvec3(1.0, 0.0, 0.0),
+            "y" => dvec3(0.0, 1.0, 0.0),
+            "z" => dvec3(0.0, 0.0, 1.0),
+            _ => {
+                return Err(KernelError::invalid_arg(
+                    "axis must be \"x\", \"y\", or \"z\"",
+                ))
+            }
+        };
+        let src = self.get(shape)?;
+        let out = Self::transform_shape(src, |trsf| {
+            use opencascade_sys::ffi;
+            let origin = ffi::new_point(0.0, 0.0, 0.0);
+            let d = ffi::gp_Dir_ctor(dir.x, dir.y, dir.z);
+            let axis1 = ffi::gp_Ax1_ctor(&origin, &d);
+            trsf.SetRotation(&axis1, deg.to_radians());
+        })?;
+        Ok(self.alloc(out))
+    }
+}
+
+impl OcctKernel {
+    /// Apply a `gp_Trsf` via STEP round-trip (opencascade `Shape.inner` is crate-private).
+    fn transform_shape(
+        shape: &Shape,
+        setup: impl FnOnce(std::pin::Pin<&mut opencascade_sys::ffi::gp_Trsf>),
+    ) -> KernelResult<Shape> {
+        use opencascade_sys::ffi;
+
+        let n = CLONE_SEQ.fetch_add(1, Ordering::Relaxed);
+        let path_in = std::env::temp_dir().join(format!("cadre-occt-xf-in-{n}.step"));
+        let path_out = std::env::temp_dir().join(format!("cadre-occt-xf-out-{n}.step"));
+
+        shape
+            .write_step(&path_in)
+            .map_err(|e| Self::map_occt_err("transform/write_step", e))?;
+
+        let mut reader = ffi::STEPControl_Reader_ctor();
+        let status = ffi::read_step(reader.pin_mut(), path_in.to_string_lossy().to_string());
+        if status != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
+            let _ = std::fs::remove_file(&path_in);
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "transform: STEP read failed",
+                None,
+            ));
+        }
+        reader
+            .pin_mut()
+            .TransferRoots(&ffi::Message_ProgressRange_ctor());
+        let topo = ffi::one_shape(&reader);
+
+        let mut trsf = ffi::new_transform();
+        setup(trsf.pin_mut());
+
+        let mut brep = ffi::BRepBuilderAPI_Transform_ctor(&topo, &trsf, true);
+        if !brep.IsDone() {
+            let _ = std::fs::remove_file(&path_in);
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "transform: BRepBuilderAPI_Transform not done",
+                None,
+            ));
+        }
+        let out_topo = brep.pin_mut().Shape();
+
+        let mut writer = ffi::STEPControl_Writer_ctor();
+        let wstat = ffi::transfer_shape(writer.pin_mut(), out_topo);
+        if wstat != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
+            let _ = std::fs::remove_file(&path_in);
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "transform: STEP transfer_shape failed",
+                None,
+            ));
+        }
+        let wstat = ffi::write_step(writer.pin_mut(), path_out.to_string_lossy().to_string());
+        if wstat != ffi::IFSelect_ReturnStatus::IFSelect_RetDone {
+            let _ = std::fs::remove_file(&path_in);
+            return Err(KernelError::diagnostic(
+                "CADRE-E-KERNEL",
+                "transform: STEP write failed",
+                None,
+            ));
+        }
+
+        let out =
+            Shape::read_step(&path_out).map_err(|e| Self::map_occt_err("transform/read", e))?;
+        let _ = std::fs::remove_file(&path_in);
+        let _ = std::fs::remove_file(&path_out);
+        Ok(out)
+    }
 }
 
 /// Convenience: write STEP next to a logical name under `dir`.

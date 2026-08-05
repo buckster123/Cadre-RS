@@ -47,8 +47,8 @@ Priority suggestions when resuming:
 5. **Streamable-HTTP MCP** — POST /mcp + SSE ✅ (PR #18)
 6. **Agent harness score** — scripted agent10 ≥6/10 ✅ (PR #19)
 8. **Diff/align/frame** CLI polish beyond assembly align_check ✅ (PR #20)
-9. **Parity 5–10** — full parts1-10 mock suite + translate/rotate ✅ (this slice)
-10. OCCT translate/rotate + expect.occt for 5–10
+9. **Parity 5–10** — full parts1-10 mock suite + translate/rotate ✅ (PR #21)
+10. **OCCT translate/rotate + expect.occt 5–10** ✅ (this slice)
 
 ## Post-v1 parking
 

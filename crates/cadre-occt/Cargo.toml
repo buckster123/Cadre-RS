@@ -11,6 +11,7 @@ cadre-kernel = { workspace = true }
 cadre-inspect = { workspace = true }
 glam = "0.23"
 opencascade = "0.2"
+opencascade-sys = "0.2"
 thiserror = { workspace = true }
 
 [dev-dependencies]
