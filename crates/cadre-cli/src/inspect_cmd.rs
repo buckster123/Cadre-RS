@@ -3,9 +3,9 @@
 use std::fs;
 
 use cadre_inspect::{inspect_refs, measure, MeasureKind, MeasureRequest, TopologySnapshot};
-use cadre_lang::{evaluate, EvalOptions, FeatureIr};
 #[cfg(feature = "occt")]
 use cadre_lang::execute_ir;
+use cadre_lang::{evaluate, EvalOptions, FeatureIr};
 use serde_json::json;
 
 use crate::build_cmd::parse_sets;
