@@ -62,6 +62,8 @@ pub enum Commands {
     Skills(SkillsArgs),
     /// Local HTTP API server.
     Serve(ServeArgs),
+    /// Robot description gen/validate (URDF/SRDF/SDF).
+    Robot(RobotArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -277,4 +279,44 @@ pub struct ServeApiArgs {
     /// Project root for relative paths (default: cwd / --project).
     #[arg(long)]
     pub project: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct RobotArgs {
+    #[command(subcommand)]
+    pub cmd: RobotCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum RobotCmd {
+    /// Validate a robot JSON spec (and emit) or existing .urdf/.srdf/.sdf.
+    Validate(RobotValidateArgs),
+    /// Generate URDF (+ optional SRDF/SDF) from robot JSON spec.
+    Gen(RobotGenArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct RobotValidateArgs {
+    pub target: PathBuf,
+    /// Optional paired file (e.g. SRDF against URDF).
+    #[arg(long)]
+    pub against: Option<String>,
+    /// When target is robot JSON, also write artifacts here.
+    #[arg(long)]
+    pub emit_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct RobotGenArgs {
+    /// Path to robot JSON spec.
+    pub spec: PathBuf,
+    /// Output directory (default: next to spec).
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+    /// Also write SRDF.
+    #[arg(long, default_value_t = true)]
+    pub srdf: bool,
+    /// Also write SDF.
+    #[arg(long, default_value_t = true)]
+    pub sdf: bool,
 }
