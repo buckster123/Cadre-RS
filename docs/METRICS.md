@@ -22,7 +22,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 16 | Fuzz / property | parsers don't panic on junk | **green** | property tests (S12) |
 | 17 | Live OCCT STEP e2e | optional local | **green** | cal-block STEP + cut via AdHocShape |
 | 18 | Live Bambu MQTT start | gated + network | **red / deferred** | dry-run only by design |
-| 19 | Face→DXF projection | from B-rep face ref | **amber** | plate DXF helper only |
+| 19 | Face→DXF projection | from B-rep face ref | **green** | `fab dxf-face` (planar outline) |
 | 20 | Agent harness ≥6/10 | external eval | **amber** | manual / future |
 | 21 | OCCT live topology inspect | faces/normals from B-rep | **green** | mesh-clustered topology |
 | 22 | OCCT parity lane parts1-4 | expect.occt.json suite | **green** | `parts1-4-occt` (feature occt) |

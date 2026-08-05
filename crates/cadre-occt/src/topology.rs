@@ -101,6 +101,8 @@ fn solid_from_mesh(s: &Shape, volume_mm3: f64) -> SolidRec {
             EdgeRec {
                 length_mm: (b - a).length(),
                 midpoint: Point3::new(mid.x, mid.y, mid.z),
+                start: Some(Point3::new(a.x, a.y, a.z)),
+                end: Some(Point3::new(b.x, b.y, b.z)),
             }
         })
         .collect();

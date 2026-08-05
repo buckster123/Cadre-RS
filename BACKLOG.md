@@ -41,9 +41,9 @@ As-built map: `docs/STATUS.md`.
 Priority suggestions when resuming:
 
 1. **OCCT depth** — live topology + AdHoc booleans + mesh topology ✅ (PR #14)
-2. **OCCT bench lane** — `parts1-4-occt` + expect.occt.json ✅ (this slice)
-3. **Live Bambu** — FTPS/MQTT behind existing start gates (still confirm-gated)
-4. **Face→DXF** — project planar face selector to DXF (replace plate helper path)
+2. **OCCT bench lane** — `parts1-4-occt` + expect.occt.json ✅ (PR #15)
+3. **Face→DXF** — project planar face selector to DXF ✅ (this slice)
+4. **Live Bambu** — FTPS/MQTT behind existing start gates (still confirm-gated)
 5. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
 6. **Streamable-HTTP MCP** — OQ-7 leftover
 7. **Agent harness score** — external eval ≥6/10

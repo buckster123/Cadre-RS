@@ -14,6 +14,11 @@ pub struct VertexRec {
 pub struct EdgeRec {
     pub length_mm: f64,
     pub midpoint: Point3,
+    /// Optional endpoints (mm). When present, face→DXF can project true segments.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start: Option<Point3>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub end: Option<Point3>,
 }
 
 /// Face record.
@@ -91,25 +96,38 @@ pub fn box_topology(dx: f64, dy: f64, dz: f64, at: Point3) -> SolidRec {
             normal: Some(Vec3::new(0.0, -1.0, 0.0)),
         },
     ];
-    // 12 edges
+    // 12 edges with endpoints (axis-aligned box)
+    let corners = |x, y, z| Point3::new(at.x + x, at.y + y, at.z + z);
     let mut edges = Vec::new();
-    for &(len, mid) in &[
-        (dx, Point3::new(at.x, at.y + hy, at.z + hz)),
-        (dx, Point3::new(at.x, at.y - hy, at.z + hz)),
-        (dx, Point3::new(at.x, at.y + hy, at.z - hz)),
-        (dx, Point3::new(at.x, at.y - hy, at.z - hz)),
-        (dy, Point3::new(at.x + hx, at.y, at.z + hz)),
-        (dy, Point3::new(at.x - hx, at.y, at.z + hz)),
-        (dy, Point3::new(at.x + hx, at.y, at.z - hz)),
-        (dy, Point3::new(at.x - hx, at.y, at.z - hz)),
-        (dz, Point3::new(at.x + hx, at.y + hy, at.z)),
-        (dz, Point3::new(at.x - hx, at.y + hy, at.z)),
-        (dz, Point3::new(at.x + hx, at.y - hy, at.z)),
-        (dz, Point3::new(at.x - hx, at.y - hy, at.z)),
-    ] {
+    // top (+z) ring
+    let top = [
+        (corners(-hx, -hy, hz), corners(hx, -hy, hz)),
+        (corners(hx, -hy, hz), corners(hx, hy, hz)),
+        (corners(hx, hy, hz), corners(-hx, hy, hz)),
+        (corners(-hx, hy, hz), corners(-hx, -hy, hz)),
+    ];
+    // bot (-z) ring
+    let bot = [
+        (corners(-hx, -hy, -hz), corners(hx, -hy, -hz)),
+        (corners(hx, -hy, -hz), corners(hx, hy, -hz)),
+        (corners(hx, hy, -hz), corners(-hx, hy, -hz)),
+        (corners(-hx, hy, -hz), corners(-hx, -hy, -hz)),
+    ];
+    // verticals
+    let vert = [
+        (corners(-hx, -hy, -hz), corners(-hx, -hy, hz)),
+        (corners(hx, -hy, -hz), corners(hx, -hy, hz)),
+        (corners(hx, hy, -hz), corners(hx, hy, hz)),
+        (corners(-hx, hy, -hz), corners(-hx, hy, hz)),
+    ];
+    for (a, b) in top.into_iter().chain(bot).chain(vert) {
+        let mid = Point3::new((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, (a.z + b.z) * 0.5);
+        let len = ((b.x - a.x).powi(2) + (b.y - a.y).powi(2) + (b.z - a.z).powi(2)).sqrt();
         edges.push(EdgeRec {
             length_mm: len,
             midpoint: mid,
+            start: Some(a),
+            end: Some(b),
         });
     }
     SolidRec {
@@ -149,10 +167,14 @@ pub fn cylinder_topology(radius: f64, height: f64, at: Point3) -> SolidRec {
         EdgeRec {
             length_mm: 2.0 * PI * r,
             midpoint: Point3::new(cx + r, cy, at.z + h),
+            start: None,
+            end: None,
         },
         EdgeRec {
             length_mm: 2.0 * PI * r,
             midpoint: Point3::new(cx + r, cy, at.z),
+            start: None,
+            end: None,
         },
     ];
     SolidRec {

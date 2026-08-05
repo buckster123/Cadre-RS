@@ -35,6 +35,7 @@
 ```
 build | inspect refs|measure | export step|stl|glb
 snapshot | view | bench run
+fab dxf | fab dxf-face | fab check | printer …
 mcp | skills export [--all]
 serve api
 robot gen|validate
