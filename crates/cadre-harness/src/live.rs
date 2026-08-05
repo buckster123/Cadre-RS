@@ -11,7 +11,7 @@
 
 use std::fs;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
@@ -73,7 +73,16 @@ pub fn run_task_live(task: &Task, task_file: &Path, live: &LiveOpts) -> Result<T
         let part_path = work.join(&live.part_rel);
         let _ = fs::remove_file(&part_path);
 
-        match run_agent_cmd(live, task, task_file, &work, &part_path, loop_n, max) {
+        let agent_result = if live.cmd.trim() == "@oracle" {
+            run_oracle_write(task_file, &part_path).map(|()| AgentMeta {
+                status: 0,
+                stderr_tail: "oracle:in-process".into(),
+            })
+        } else {
+            run_agent_cmd(live, task, task_file, &work, &part_path, loop_n, max)
+        };
+
+        match agent_result {
             Ok(meta) => {
                 if !part_path.is_file() {
                     last_err = format!(
@@ -129,6 +138,36 @@ pub fn run_task_live(task: &Task, task_file: &Path, live: &LiveOpts) -> Result<T
 struct AgentMeta {
     status: i32,
     stderr_tail: String,
+}
+
+/// In-process oracle (CI): copy last-loop write from task JSON → part path.
+fn run_oracle_write(task_file: &Path, part_path: &Path) -> Result<(), String> {
+    let text = fs::read_to_string(task_file).map_err(|e| e.to_string())?;
+    let task: Task = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+    let loops = task.loops;
+    let last = loops
+        .last()
+        .ok_or_else(|| "oracle: task has no loops".to_string())?;
+    let mut content = None;
+    let mut rel = "part.cad.star".to_string();
+    for step in last {
+        if let crate::scenario::Step::Write { path, content: c } = step {
+            rel = path.clone();
+            content = Some(c.clone());
+        }
+    }
+    let content = content.ok_or_else(|| "oracle: no write in last loop".to_string())?;
+    let out = if part_path.as_os_str().is_empty() {
+        PathBuf::from(&rel)
+    } else {
+        part_path.to_path_buf()
+    };
+    if let Some(parent) = out.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    fs::write(&out, content).map_err(|e| format!("oracle write: {e}"))?;
+    let _ = rel;
+    Ok(())
 }
 
 fn run_agent_cmd(
