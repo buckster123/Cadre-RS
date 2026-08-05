@@ -3,11 +3,14 @@
 #![deny(unsafe_code)]
 
 mod http;
+mod policy;
 mod protocol;
+mod resources;
 mod server;
 mod tools;
 
 pub use http::{serve_http, HttpMcpConfig};
+pub use policy::{init_policy, policy, project_root_from_env, write_source_from_env, McpPolicy};
 pub use server::{dispatch, handle_http_body, run_stdio};
 pub use tools::{call_tool, tool_defs, ToolError};
 

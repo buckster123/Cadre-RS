@@ -13,13 +13,14 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H7 MCP resources + write_source**.
+See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H8 build123d skeleton migrator**.
 H1 live harness: `harness run --suite agent10 --cmd '…'` (oracle: `@oracle` or `harness/drivers/oracle_agent.py`).
 H2 stdlib: `sphere` / `cone` / `mirror` / `linear_pattern` / `polar_pattern` · IR v2 · example `examples/stdlib/pattern_hub.cad.star`.
 H3 OCCT transforms: direct BRep (`third_party/opencascade` patch) — no STEP thrash on translate/rotate/mirror/clone/sphere.
 H4 fillet/chamfer: OCCT `CADRE-E-FILLET-FAILED` + suite `fillet-occt` · mock stays Unsupported · `docs/FILLET_CHAMFER.md`.
 H5 viewer: gcode scrub + robot jog · `docs/VIEWER.md` · `view *.gcode` / `*.robot.json`.
 H6 slicer: `--execute --confirm SLICE` · DFM `pcb.outline` · `docs/SLICER_DFM.md`.
+H7 MCP: `resources/*` + write_source policy (stdio OFF / HTTP ON) · `docs/MCP_RESOURCES.md` · OQ-5 closed.
 
 ## Crate map (as-built)
 | Crate | Role |

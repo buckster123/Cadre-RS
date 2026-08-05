@@ -16,7 +16,7 @@ pub enum ToolError {
 }
 
 impl ToolError {
-    fn msg(s: impl Into<String>) -> Self {
+    pub(crate) fn msg(s: impl Into<String>) -> Self {
         Self::Msg(s.into())
     }
 }
@@ -38,7 +38,7 @@ pub fn tool_defs() -> Value {
         },
         {
             "name": "write_source",
-            "description": "Write a .cad.star file (creates parents). Prefer explicit paths.",
+            "description": "Write a .cad.star file (creates parents). Stdio: OFF by default (CADRE_MCP_WRITE_SOURCE=1). HTTP: ON by default.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -119,6 +119,13 @@ fn str_arg<'a>(args: &'a Value, key: &str) -> Result<&'a str, ToolError> {
 }
 
 fn tool_write_source(args: &Value) -> Result<Value, ToolError> {
+    let pol = crate::policy::policy();
+    if !pol.write_source {
+        return Err(ToolError::msg(format!(
+            "write_source disabled on {} transport (set CADRE_MCP_WRITE_SOURCE=1 to enable; see cadre://doc/write-source-policy)",
+            pol.transport
+        )));
+    }
     let path = PathBuf::from(str_arg(args, "path")?);
     let content = str_arg(args, "content")?;
     if path.is_dir() {
@@ -132,7 +139,8 @@ fn tool_write_source(args: &Value) -> Result<Value, ToolError> {
         "content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({
             "ok": true,
             "path": path,
-            "bytes": content.len()
+            "bytes": content.len(),
+            "transport": pol.transport,
         })).unwrap()}]
     }))
 }

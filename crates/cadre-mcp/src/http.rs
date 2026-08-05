@@ -31,6 +31,12 @@ struct AppState {
 
 /// Block until the server exits (never, unless bind fails).
 pub async fn serve_http(cfg: HttpMcpConfig) -> Result<(), String> {
+    crate::policy::init_policy(crate::policy::McpPolicy {
+        // H7: HTTP write_source ON unless CADRE_MCP_WRITE_SOURCE=0
+        write_source: crate::policy::write_source_from_env(true),
+        project_root: crate::policy::project_root_from_env(),
+        transport: "http",
+    });
     let addr: SocketAddr = cfg
         .bind
         .parse()
@@ -47,6 +53,12 @@ pub async fn serve_http(cfg: HttpMcpConfig) -> Result<(), String> {
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .map_err(|e| format!("bind {addr}: {e}"))?;
+    eprintln!(
+        "cadre-mcp {} http on {} write_source={}",
+        crate::VERSION,
+        cfg.bind,
+        crate::policy::policy().write_source
+    );
     axum::serve(listener, app)
         .await
         .map_err(|e| format!("serve: {e}"))
