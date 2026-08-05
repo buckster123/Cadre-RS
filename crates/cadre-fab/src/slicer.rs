@@ -497,11 +497,7 @@ mod tests {
         let out = dir.path().join("a.gcode");
         let stub = dir.path().join("fake-slicer.bat");
         // %1=mesh %2=-o %3=out when invoked as bat with mesh -o out
-        std::fs::write(
-            &stub,
-            "@echo off\r\necho ; stub gcode > \"%~3\"\r\n",
-        )
-        .unwrap();
+        std::fs::write(&stub, "@echo off\r\necho ; stub gcode > \"%~3\"\r\n").unwrap();
         let slicer = SlicerInfo {
             kind: SlicerKind::Unknown,
             name: "fake-slicer".into(),
