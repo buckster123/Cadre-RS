@@ -9,6 +9,7 @@ description = "Hermetic Starlark host and feature IR for Cadre-RS"
 [dependencies]
 anyhow = { workspace = true }
 cadre-kernel = { workspace = true }
+regex = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 starlark = { workspace = true }

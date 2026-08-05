@@ -9,6 +9,7 @@ mod harness_cmd;
 mod inspect_cmd;
 mod kernel_pick;
 mod mcp_cmd;
+mod migrate_cmd;
 mod output;
 mod robot_cmd;
 mod serve_cmd;
@@ -38,6 +39,7 @@ fn main() {
         Commands::Robot(args) => robot_cmd::run(&cli, args),
         Commands::Fab(args) => fab_cmd::run_fab(&cli, args),
         Commands::Printer(args) => fab_cmd::run_printer(&cli, args),
+        Commands::Migrate(args) => migrate_cmd::run(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,
