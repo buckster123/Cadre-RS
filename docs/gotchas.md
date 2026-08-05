@@ -69,3 +69,9 @@
 
 - **Cache get must re-hash artifacts.** A hit that skips `artifact_sha256` check will serve
   corrupted STEP as success — never.
+
+- **`.cad.star` stem is not `with_extension("")`.** That yields `foo.cad` from `foo.cad.star`.
+  Always strip the `.cad.star` / `.star` suffix explicitly (see `strip_model_suffix` in CLI).
+
+- **Mock build is IR-first.** STEP/STL need `--kernel occt` (+ binary built `--features occt`).
+  Don't treat mock STEP warnings as success in agent loops that need fab files.

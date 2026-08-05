@@ -148,3 +148,5 @@ Dated entries. A decision changes here first, then in the code.
   STEP e2e green locally (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). CI excludes OCCT package.
 - **2026-08-05** — S4: `cadre-model` selectors + build cache; `cadre-inspect` refs/measure;
   stable sort keys (centroid/area); cache keyed by source+params+versions (FR-105).
+- **2026-08-05** — S5: `cadre-cli` (`cadre` bin) build/inspect/export + `--json`; mock default;
+  optional `occt` feature; dir-wide builds refused; IR companion always written.
