@@ -52,6 +52,10 @@ pub enum Commands {
     Export(ExportArgs),
     /// Deterministic parity suite (`parts1-4`, …).
     Bench(BenchArgs),
+    /// Multi-view PNG packet (+ orbit GIF).
+    Snapshot(SnapshotArgs),
+    /// Local embedded viewer (deep links).
+    View(ViewArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -166,4 +170,51 @@ pub struct BenchRunArgs {
     /// Path to parity root (default: auto-detect `parity/` from cwd or crate layout).
     #[arg(long)]
     pub parity_root: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SnapshotArgs {
+    /// Target `.cad.star` (preview mesh from IR) or existing `.snap` dir (re-render not yet).
+    pub target: PathBuf,
+
+    /// Comma-separated views: iso,front,top,right,back,left,bottom
+    #[arg(long, default_value = "iso,front,top,right")]
+    pub views: String,
+
+    /// Output directory (default: `<stem>.snap` next to target).
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+
+    /// Image size (square).
+    #[arg(long, default_value_t = 512)]
+    pub size: u32,
+
+    /// Skip orbit GIF.
+    #[arg(long)]
+    pub no_gif: bool,
+
+    /// Orbit frame count.
+    #[arg(long, default_value_t = 24)]
+    pub gif_frames: u32,
+
+    #[arg(long = "set", value_name = "KEY=VAL")]
+    pub set: Vec<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct ViewArgs {
+    /// Paths to open (`.snap` dirs, images, or `.cad.star` which is snapshotted first).
+    pub paths: Vec<PathBuf>,
+
+    /// Bind port (default 7411).
+    #[arg(long, default_value_t = 7411, env = "CADRE_VIEWER_PORT")]
+    pub port: u16,
+
+    /// Bind host.
+    #[arg(long, default_value = "127.0.0.1")]
+    pub host: String,
+
+    /// Open once and exit after printing links (still serves until Ctrl-C unless --once).
+    #[arg(long)]
+    pub once: bool,
 }

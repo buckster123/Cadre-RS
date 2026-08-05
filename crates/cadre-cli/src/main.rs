@@ -7,7 +7,9 @@ mod export_cmd;
 mod inspect_cmd;
 mod kernel_pick;
 mod output;
+mod snapshot_cmd;
 mod topo_from_ir;
+mod view_cmd;
 
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -22,6 +24,8 @@ fn main() {
         Commands::Inspect(args) => inspect_cmd::run(&cli, args),
         Commands::Export(args) => export_cmd::run(&cli, args),
         Commands::Bench(args) => bench_cmd::run(&cli, args),
+        Commands::Snapshot(args) => snapshot_cmd::run(&cli, args),
+        Commands::View(args) => view_cmd::run(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,
