@@ -142,3 +142,5 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — charter adopted from `docs/cadre-prd.md` (Draft v0.1, 2026-07-28) at Launchpad-RS bootstrap.
 - **2026-08-05** — D19: S1 kernel spike GO on OCCT via `GeomKernel` + opencascade-rs family
   (dynamic/separate engine); see `docs/occt-binding.md`. `cadre-kernel` + `MockKernel` landed.
+- **2026-08-05** — S2: `cadre-lang` Starlark host + feature IR v0 (box/cylinder/boolean/label);
+  hermetic `load()` refuse; diagnostic JSON shape pinned in `docs/design.md`.

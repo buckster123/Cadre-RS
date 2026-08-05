@@ -49,3 +49,10 @@
 - **OCCT stays out of default `cargo test`.** `cadre-kernel` must stay pure Rust. Don't add
   `opencascade`/`occt-sys` to the default workspace build graph — gate behind `cadre-occt`
   features / optional member so fresh clones stay green (see `docs/occt-binding.md`).
+
+- **`load()` is hermetic-forbidden.** `cadre-lang` refuses AST loads before eval
+  (`CADRE-E-HERMETIC-LOAD`). Don't add a silent file loader "for convenience" without a
+  charter amendment and sandbox story.
+
+- **Starlark `box` is `r#box` in Rust.** The stdlib exports the name `box` to Starlark; don't
+  rename it to `make_box` in the language surface (PRD / agent fluency).

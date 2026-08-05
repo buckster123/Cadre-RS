@@ -48,9 +48,32 @@ Crate boundaries are requirements (charter D16). Internal module layout is free.
 | `cadre-cli` | Clap front end — the `cadre` binary |
 | `cadre-skills` | Skill-pack generator + bundled original doctrine |
 
-Bootstrap shipped `crates/cadre`. **S1 added `crates/cadre-kernel`** (`GeomKernel` +
-`MockKernel`). Later slices add remaining members under `crates/*` without rewriting this
-contract. OCCT bind approach: [`occt-binding.md`](occt-binding.md) (D19).
+Bootstrap shipped `crates/cadre`. **S1** added `crates/cadre-kernel` (`GeomKernel` +
+`MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0). Later
+slices add remaining members under `crates/*` without rewriting this contract. OCCT bind
+approach: [`occt-binding.md`](occt-binding.md) (D19).
+
+### Feature IR (v0, from `cadre-lang`)
+
+Evaluation returns `EvalResult` JSON:
+
+```json
+{
+  "ok": true,
+  "ir": {
+    "version": 0,
+    "params": {"width": 100.0},
+    "nodes": [{"op": "box", "dx": 100.0, "dy": 60.0, "dz": 20.0, "at": [0,0,0]}, ...],
+    "root": 3,
+    "label": "calibration_block"
+  },
+  "diagnostics": [],
+  "meta": {"source_name": "block.cad.star", "wall_ms": 12, "ir_version": 0, "node_count": 4}
+}
+```
+
+On failure `ok: false`, `ir` omitted, `diagnostics[]` filled with `{code, severity, message, target, span?, hint?}`.
+Hermetic: `load()` refused; no fs/net/clock in stdlib; host overrides via `EvalOptions.overrides`.
 
 ## Project layout (user projects)
 
