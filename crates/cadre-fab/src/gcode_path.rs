@@ -124,15 +124,15 @@ fn build_layers(points: &[GcodePoint]) -> Vec<GcodeLayer> {
     let mut layers = Vec::new();
     let mut start = 0usize;
     let mut z0 = points[0].z;
-    for i in 1..points.len() {
-        if (points[i].z - z0).abs() > 0.05 {
+    for (i, p) in points.iter().enumerate().skip(1) {
+        if (p.z - z0).abs() > 0.05 {
             layers.push(GcodeLayer {
                 z: z0,
                 start,
                 end: i,
             });
             start = i;
-            z0 = points[i].z;
+            z0 = p.z;
         }
     }
     layers.push(GcodeLayer {
