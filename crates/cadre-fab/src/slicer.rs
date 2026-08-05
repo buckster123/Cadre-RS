@@ -444,6 +444,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn execute_with_confirm_runs_stub() {
         let dir = tempfile::tempdir().unwrap();
         let mesh = dir.path().join("a.stl");
@@ -457,7 +458,6 @@ mod tests {
         writeln!(f, "if [ -z \"$out\" ]; then out=\"$3\"; fi").unwrap();
         writeln!(f, "echo '; stub gcode' > \"$out\"").unwrap();
         drop(f);
-        #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             let mut perms = std::fs::metadata(&stub).unwrap().permissions();
@@ -486,5 +486,42 @@ mod tests {
         assert!(rep.ok, "{rep:?}");
         assert!(out.is_file());
         assert!(std::fs::read_to_string(out).unwrap().contains("stub"));
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn execute_with_confirm_runs_stub() {
+        let dir = tempfile::tempdir().unwrap();
+        let mesh = dir.path().join("a.stl");
+        std::fs::write(&mesh, b"solid\n").unwrap();
+        let out = dir.path().join("a.gcode");
+        let stub = dir.path().join("fake-slicer.bat");
+        // %1=mesh %2=-o %3=out when invoked as bat with mesh -o out
+        std::fs::write(
+            &stub,
+            "@echo off\r\necho ; stub gcode > \"%~3\"\r\n",
+        )
+        .unwrap();
+        let slicer = SlicerInfo {
+            kind: SlicerKind::Unknown,
+            name: "fake-slicer".into(),
+            path: stub,
+            version: Some("test".into()),
+        };
+        let rep = run_slice(
+            &slicer,
+            &SliceRequest {
+                mesh,
+                out: out.clone(),
+                confirm: Some(CONFIRM_SLICE.into()),
+                execute: true,
+                allowlist: vec!["fake-slicer.bat".into()],
+                profile: None,
+                slicer_path: None,
+            },
+        );
+        assert!(rep.executed, "{rep:?}");
+        assert!(rep.ok, "{rep:?}");
+        assert!(out.is_file());
     }
 }
