@@ -22,7 +22,11 @@ pub fn topology_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
                 let sb = lookup(&solids, *b)?;
                 approx_boolean(*kind, sa, sb)
             }
-            IrNode::Fillet { of, .. } | IrNode::Chamfer { of, .. } | IrNode::Label { of, .. } => {
+            IrNode::Fillet { of, .. }
+            | IrNode::Chamfer { of, .. }
+            | IrNode::Label { of, .. }
+            | IrNode::Translate { of, .. }
+            | IrNode::Rotate { of, .. } => {
                 // Pass-through geometry approx (fillet/chamfer change volume slightly — not modeled here)
                 lookup(&solids, *of)?.clone()
             }

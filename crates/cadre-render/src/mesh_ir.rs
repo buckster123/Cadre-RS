@@ -39,6 +39,19 @@ pub fn mesh_from_ir(ir: &FeatureIr) -> Result<(Mesh, Vec<String>), String> {
                     }
                 }
             }
+            IrNode::Translate { of, by } => {
+                let mut m = take_mesh(&meshes, *of)?;
+                translate_mesh(&mut m, *by);
+                m
+            }
+            IrNode::Rotate { of, axis, deg } => {
+                let mut m = take_mesh(&meshes, *of)?;
+                rotate_mesh(&mut m, axis, *deg);
+                notes.push(format!(
+                    "preview mesh rotated about {axis} by {deg} deg (node {idx})"
+                ));
+                m
+            }
             IrNode::Fillet { of, .. } | IrNode::Chamfer { of, .. } | IrNode::Label { of, .. } => {
                 if matches!(node, IrNode::Fillet { .. } | IrNode::Chamfer { .. }) {
                     notes.push(format!(
@@ -148,6 +161,35 @@ fn mesh_cylinder(radius: f64, height: f64, at: [f64; 3], segments: u32) -> Mesh 
         positions,
         indices,
         normals: None,
+    }
+}
+
+fn translate_mesh(m: &mut Mesh, by: [f64; 3]) {
+    let n = m.positions.len() / 3;
+    for i in 0..n {
+        m.positions[3 * i] += by[0] as f32;
+        m.positions[3 * i + 1] += by[1] as f32;
+        m.positions[3 * i + 2] += by[2] as f32;
+    }
+}
+
+fn rotate_mesh(m: &mut Mesh, axis: &str, deg: f64) {
+    let r = deg.to_radians();
+    let (c, s) = (r.cos() as f32, r.sin() as f32);
+    let ax = axis.to_ascii_lowercase();
+    let n = m.positions.len() / 3;
+    for i in 0..n {
+        let x = m.positions[3 * i];
+        let y = m.positions[3 * i + 1];
+        let z = m.positions[3 * i + 2];
+        let (nx, ny, nz) = match ax.as_str() {
+            "x" => (x, y * c - z * s, y * s + z * c),
+            "y" => (x * c + z * s, y, -x * s + z * c),
+            _ => (x * c - y * s, x * s + y * c, z),
+        };
+        m.positions[3 * i] = nx;
+        m.positions[3 * i + 1] = ny;
+        m.positions[3 * i + 2] = nz;
     }
 }
 

@@ -10,7 +10,7 @@ use cadre_lang::{evaluate, execute_ir, EvalOptions, FeatureIr, IrNode};
 use serde::{Deserialize, Serialize};
 
 use crate::expect::{Expect, FindFace};
-use crate::{SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT};
+use crate::{SUITE_PARTS_1_10, SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT, SUITE_PARTS_5_10};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -86,7 +86,8 @@ pub struct SuiteReport {
 /// Discover and run suite under `parity_root` (repo `parity/` dir).
 pub fn run_suite(parity_root: &Path, suite: &str) -> Result<SuiteReport, String> {
     let opts = match suite {
-        SUITE_PARTS_1_4 | "parity4" | "m1" => RunOpts::mock(),
+        SUITE_PARTS_1_4 | "parity4" | "m1" | SUITE_PARTS_5_10 | SUITE_PARTS_1_10 | "parity10"
+        | "m2" => RunOpts::mock(),
         SUITE_PARTS_1_4_OCCT | "parity4-occt" | "m1-occt" => RunOpts::occt(),
         other => return Err(format!("unknown suite: {other}")),
     };
@@ -99,7 +100,7 @@ pub fn run_suite_with(
     opts: &RunOpts,
 ) -> Result<SuiteReport, String> {
     let started = Instant::now();
-    let part_dirs = match suite {
+    let part_dirs: Vec<&str> = match suite {
         SUITE_PARTS_1_4 | "parity4" | "m1" | SUITE_PARTS_1_4_OCCT | "parity4-occt" | "m1-occt" => {
             vec![
                 "01_calibration_block",
@@ -108,6 +109,26 @@ pub fn run_suite_with(
                 "04_stepped_shaft",
             ]
         }
+        SUITE_PARTS_5_10 => vec![
+            "05_open_enclosure",
+            "06_clevis_bracket",
+            "07_finned_cylinder",
+            "08_impeller",
+            "09_spiral_stair",
+            "10_planetary_stage",
+        ],
+        SUITE_PARTS_1_10 | "parity10" | "m2" => vec![
+            "01_calibration_block",
+            "02_bolt_circle_flange",
+            "03_l_bracket",
+            "04_stepped_shaft",
+            "05_open_enclosure",
+            "06_clevis_bracket",
+            "07_finned_cylinder",
+            "08_impeller",
+            "09_spiral_stair",
+            "10_planetary_stage",
+        ],
         other => return Err(format!("unknown suite: {other}")),
     };
 
@@ -447,6 +468,8 @@ fn collect_ops(ir: &FeatureIr) -> Vec<String> {
                 IrNode::Fillet { .. } => "fillet",
                 IrNode::Chamfer { .. } => "chamfer",
                 IrNode::Label { .. } => "label",
+                IrNode::Translate { .. } => "translate",
+                IrNode::Rotate { .. } => "rotate",
             }
             .to_string()
         })
@@ -489,13 +512,15 @@ fn crate_topo_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
                     vertices: sa.vertices.clone(),
                 }
             }
-            IrNode::Fillet { of, .. } | IrNode::Chamfer { of, .. } | IrNode::Label { of, .. } => {
-                solids
-                    .get(of.0 as usize)
-                    .and_then(|s| s.as_ref())
-                    .ok_or_else(|| format!("missing node {}", of.0))?
-                    .clone()
-            }
+            IrNode::Fillet { of, .. }
+            | IrNode::Chamfer { of, .. }
+            | IrNode::Label { of, .. }
+            | IrNode::Translate { of, .. }
+            | IrNode::Rotate { of, .. } => solids
+                .get(of.0 as usize)
+                .and_then(|s| s.as_ref())
+                .ok_or_else(|| format!("missing node {}", of.0))?
+                .clone(),
         };
         solids[idx] = Some(rec);
     }
@@ -582,6 +607,31 @@ mod tests {
             report.passed + report.failed
         );
         assert_eq!(report.parts.len(), 4);
+    }
+
+    #[test]
+    fn parts_1_10_pass() {
+        let root = default_parity_root();
+        let report = run_suite(&root, SUITE_PARTS_1_10).expect("suite");
+        if !report.ok {
+            for p in &report.parts {
+                if !p.ok {
+                    eprintln!("FAIL {}:", p.id);
+                    for c in &p.checks {
+                        if !c.ok {
+                            eprintln!("  {} — {}", c.name, c.detail);
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            report.ok,
+            "suite failed: {}/{} passed",
+            report.passed,
+            report.passed + report.failed
+        );
+        assert_eq!(report.parts.len(), 10);
     }
 
     #[test]

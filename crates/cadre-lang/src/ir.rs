@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// Stable IR schema version (bump when node shapes change incompatibly).
-pub const IR_VERSION: u32 = 0;
+pub const IR_VERSION: u32 = 1;
 
 /// Opaque node id within one IR document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -52,6 +52,10 @@ pub enum IrNode {
     },
     /// Product-structure label on a shape (may share geometry with `of`).
     Label { of: NodeId, name: String },
+    /// Translate child by mm offset.
+    Translate { of: NodeId, by: At3 },
+    /// Rotate child about world origin axis x|y|z by degrees.
+    Rotate { of: NodeId, axis: String, deg: f64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

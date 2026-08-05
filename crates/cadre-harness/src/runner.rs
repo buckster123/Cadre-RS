@@ -324,13 +324,15 @@ fn topo_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
                     vertices: sa.vertices.clone(),
                 }
             }
-            IrNode::Fillet { of, .. } | IrNode::Chamfer { of, .. } | IrNode::Label { of, .. } => {
-                solids
-                    .get(of.0 as usize)
-                    .and_then(|s| s.as_ref())
-                    .ok_or_else(|| format!("missing node {}", of.0))?
-                    .clone()
-            }
+            IrNode::Fillet { of, .. }
+            | IrNode::Chamfer { of, .. }
+            | IrNode::Label { of, .. }
+            | IrNode::Translate { of, .. }
+            | IrNode::Rotate { of, .. } => solids
+                .get(of.0 as usize)
+                .and_then(|s| s.as_ref())
+                .ok_or_else(|| format!("missing node {}", of.0))?
+                .clone(),
         };
         solids[idx] = Some(rec);
     }
