@@ -1,7 +1,6 @@
 //! `cadre migrate` — build123d-style Python → Cadre skeleton (H8).
 
 use std::fs;
-use std::path::PathBuf;
 
 use cadre_lang::migrate_build123d_skeleton;
 use serde_json::json;
