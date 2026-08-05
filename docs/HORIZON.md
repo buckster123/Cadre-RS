@@ -179,7 +179,7 @@ Same rhythm that worked for #14–#22:
 - [x] **H6** Slicer execute + 2nd DFM profile  
 - [x] **H7** MCP resources + write_source policy  
 - [x] **H8** build123d skeleton migrator  
-- [ ] **H9** Klipper/Moonraker gated adapter  
+- [x] **H9** Klipper/Moonraker gated adapter  
 - [ ] **H10** truck experimental lane (non-parity)  
 
 ---

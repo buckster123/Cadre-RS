@@ -7,8 +7,9 @@ use std::path::PathBuf;
 use cadre_fab::{
     bundled_profiles, check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256,
     load_profile_json, plate_with_holes_dxf, resolve_bundled_profile, run_slice, BambuAdapter,
-    FacePick, FlatPart, Printer, PrinterVolume, SliceRequest, SlicerInfo, SlicerKind, StartRequest,
-    CONFIRM_SLICE, CONFIRM_START,
+    ExternalLiveTransport, ExternalMoonrakerTransport, FacePick, FlatPart, KlipperAdapter, Printer,
+    PrinterVolume, SliceRequest, SlicerInfo, SlicerKind, StartRequest, CONFIRM_SLICE,
+    CONFIRM_START,
 };
 use cadre_inspect::inspect_refs;
 use serde_json::json;
@@ -498,38 +499,88 @@ fn fab_gcode_check(cli: &Cli, a: &FabGcodeCheckArgs) -> ExitCode {
 }
 
 fn printer_status(cli: &Cli, a: &crate::cli::PrinterStatusArgs) -> ExitCode {
-    let mut p = BambuAdapter::from_env(&a.id, &a.host, &a.model, a.serial.clone(), None);
-    if let Some(s) = &a.serial {
-        p = p.with_serial(s.clone());
-    }
-    match p.status() {
-        Ok(v) => {
-            emit(cli.json, &v, true);
-            ExitCode::Ok
-        }
-        Err(e) => {
-            emit(
-                cli.json,
-                &json!({"ok": false, "error": e.to_string()}),
-                false,
+    use crate::cli::PrinterBackend;
+    let backend = resolve_backend(a.backend, &a.id);
+    match backend {
+        PrinterBackend::Klipper | PrinterBackend::Moonraker => {
+            let p = KlipperAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(),
             );
-            ExitCode::Network
+            match p.status() {
+                Ok(v) => {
+                    emit(cli.json, &v, true);
+                    ExitCode::Ok
+                }
+                Err(e) => {
+                    emit(
+                        cli.json,
+                        &json!({"ok": false, "error": e.to_string()}),
+                        false,
+                    );
+                    ExitCode::Network
+                }
+            }
+        }
+        PrinterBackend::Bambu => {
+            let mut p = BambuAdapter::from_env(&a.id, &a.host, &a.model, a.serial.clone(), None);
+            if let Some(s) = &a.serial {
+                p = p.with_serial(s.clone());
+            }
+            match p.status() {
+                Ok(v) => {
+                    emit(cli.json, &v, true);
+                    ExitCode::Ok
+                }
+                Err(e) => {
+                    emit(
+                        cli.json,
+                        &json!({"ok": false, "error": e.to_string()}),
+                        false,
+                    );
+                    ExitCode::Network
+                }
+            }
         }
     }
 }
 
 fn printer_dry_run(cli: &Cli, a: &crate::cli::PrinterDryRunArgs) -> ExitCode {
-    let p = BambuAdapter::from_env(
-        &a.id,
-        &a.host,
-        &a.model,
-        a.serial.clone(),
-        a.access_code.clone(),
-    );
-    match p.dry_run(&a.gcode, &PrinterVolume::default()) {
+    use crate::cli::PrinterBackend;
+    let backend = resolve_backend(a.backend, &a.id);
+    let result = match backend {
+        PrinterBackend::Klipper | PrinterBackend::Moonraker => {
+            let p = KlipperAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(),
+            );
+            p.dry_run(&a.gcode, &PrinterVolume::default())
+        }
+        PrinterBackend::Bambu => {
+            let p = BambuAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.serial.clone(),
+                a.access_code.clone(),
+            );
+            p.dry_run(&a.gcode, &PrinterVolume::default())
+        }
+    };
+    match result {
         Ok(r) => {
             let ok = r.ok;
-            emit(cli.json, &json!({"ok": ok, "dry_run": r}), ok);
+            emit(
+                cli.json,
+                &json!({"ok": ok, "backend": format!("{backend:?}").to_ascii_lowercase(), "dry_run": r}),
+                ok,
+            );
             if ok {
                 ExitCode::Ok
             } else {
@@ -548,34 +599,10 @@ fn printer_dry_run(cli: &Cli, a: &crate::cli::PrinterDryRunArgs) -> ExitCode {
 }
 
 fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
-    use cadre_fab::ExternalLiveTransport;
+    use crate::cli::PrinterBackend;
     use std::sync::Arc;
 
-    let mut p = BambuAdapter::from_env(
-        &a.id,
-        &a.host,
-        &a.model,
-        a.serial.clone(),
-        a.access_code.clone(),
-    );
-    if a.live {
-        match ExternalLiveTransport::detect() {
-            Ok(t) => p = p.with_transport(Arc::new(t)),
-            Err(e) => {
-                emit(
-                    cli.json,
-                    &json!({
-                        "ok": false,
-                        "error": e.to_string(),
-                        "hint": "live start needs curl + mosquitto_pub on PATH (or CADRE_CURL / CADRE_MOSQUITTO_PUB)"
-                    }),
-                    false,
-                );
-                return ExitCode::Usage;
-            }
-        }
-    }
-
+    let backend = resolve_backend(a.backend, &a.id);
     let mut allow = BTreeSet::new();
     if let Some(list) = &a.allowlist {
         for part in list.split(',') {
@@ -593,17 +620,81 @@ fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
         live: a.live,
         remote_name: a.remote_name.clone(),
     };
-    match p.start(&req, &allow) {
+
+    let gate = match backend {
+        PrinterBackend::Klipper | PrinterBackend::Moonraker => {
+            let mut p = KlipperAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(),
+            );
+            if a.live {
+                match ExternalMoonrakerTransport::detect() {
+                    Ok(t) => p = p.with_transport(Arc::new(t)),
+                    Err(e) => {
+                        emit(
+                            cli.json,
+                            &json!({
+                                "ok": false,
+                                "error": e.to_string(),
+                                "hint": "klipper live start needs curl on PATH (or CADRE_CURL)"
+                            }),
+                            false,
+                        );
+                        return ExitCode::Usage;
+                    }
+                }
+            }
+            p.start(&req, &allow)
+        }
+        PrinterBackend::Bambu => {
+            let mut p = BambuAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.serial.clone(),
+                a.access_code.clone(),
+            );
+            if a.live {
+                match ExternalLiveTransport::detect() {
+                    Ok(t) => p = p.with_transport(Arc::new(t)),
+                    Err(e) => {
+                        emit(
+                            cli.json,
+                            &json!({
+                                "ok": false,
+                                "error": e.to_string(),
+                                "hint": "live start needs curl + mosquitto_pub on PATH (or CADRE_CURL / CADRE_MOSQUITTO_PUB)"
+                            }),
+                            false,
+                        );
+                        return ExitCode::Usage;
+                    }
+                }
+            }
+            p.start(&req, &allow)
+        }
+    };
+
+    match gate {
         Ok(gate) => {
             emit(
                 cli.json,
                 &json!({
                     "ok": gate.ok,
+                    "backend": format!("{backend:?}").to_ascii_lowercase(),
                     "gate": gate,
                     "required_confirm": CONFIRM_START,
                     "live_requested": a.live,
                     "note": if a.live {
-                        "live path: FTPS upload + MQTT gcode_file after gates"
+                        match backend {
+                            PrinterBackend::Bambu => "live path: FTPS upload + MQTT gcode_file after gates",
+                            PrinterBackend::Klipper | PrinterBackend::Moonraker => {
+                                "live path: Moonraker upload + printer/print/start after gates"
+                            }
+                        }
                     } else {
                         "default is safe: gates only; pass --live to contact printer"
                     }
@@ -625,4 +716,15 @@ fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
             ExitCode::Safety
         }
     }
+}
+
+fn resolve_backend(explicit: crate::cli::PrinterBackend, id: &str) -> crate::cli::PrinterBackend {
+    use crate::cli::PrinterBackend;
+    // Id prefix wins when user left default backend but used klipper: id
+    if matches!(explicit, PrinterBackend::Bambu)
+        && (id.starts_with("klipper:") || id.starts_with("moonraker:"))
+    {
+        return PrinterBackend::Klipper;
+    }
+    explicit
 }
