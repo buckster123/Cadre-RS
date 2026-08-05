@@ -63,3 +63,9 @@
 
 - **`OcctKernel` is Send via unsafe.** Unique ownership only — never share one kernel across
   concurrent jobs. Don't remove the safety comment when touching Send.
+
+- **Selector indices are 1-based in tokens.** `#o1.1.f1` is the first face after stable sort,
+  never zero. Don't emit 0-based tokens to agents.
+
+- **Cache get must re-hash artifacts.** A hit that skips `artifact_sha256` check will serve
+  corrupted STEP as success — never.

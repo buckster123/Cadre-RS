@@ -9,3 +9,5 @@ description = "Cadre-RS facade — re-exports core crates"
 [dependencies]
 cadre-kernel = { workspace = true }
 cadre-lang = { workspace = true }
+cadre-model = { workspace = true }
+cadre-inspect = { workspace = true }

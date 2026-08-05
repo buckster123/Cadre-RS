@@ -146,3 +146,5 @@ Dated entries. A decision changes here first, then in the code.
   hermetic `load()` refuse; diagnostic JSON shape pinned in `docs/design.md`.
 - **2026-08-05** — S3: `cadre-occt` + `execute_ir`; fillet/chamfer IR ops; calibration block
   STEP e2e green locally (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). CI excludes OCCT package.
+- **2026-08-05** — S4: `cadre-model` selectors + build cache; `cadre-inspect` refs/measure;
+  stable sort keys (centroid/area); cache keyed by source+params+versions (FR-105).

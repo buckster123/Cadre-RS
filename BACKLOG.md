@@ -16,7 +16,8 @@ split further when a slice stops being reviewable in one PR.
       booleans/`solid` → feature IR v0; structured diagnostics JSON; overrides (2026-08-05)
 - [x] **S3 — M0 e2e part 1**: `cadre-occt` GeomKernel; IR execute; fillet/chamfer in lang;
       calibration block → STEP + facts (OCCT local; CI excludes package) (2026-08-05)
-- [ ] **S4 — M1 build cache + selectors**: content-hash cache; `#o…` tokens stable; `inspect refs|measure`
+- [x] **S4 — M1 build cache + selectors**: `cadre-model` (selectors + content-hash cache);
+      `cadre-inspect` (refs/measure); stable `#o…` tokens (2026-08-05)
 - [ ] **S5 — M1 CLI face**: `cadre-cli` `build` / `inspect` / `export step|stl|glb` with `--json`
 - [ ] **S6 — M1 parity parts 1–4**: deterministic suite green on Linux CI
 - [ ] **S7 — M2 snapshot + viewer alpha**: PNG packet + orbit GIF; `cadre view` deep links

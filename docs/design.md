@@ -50,8 +50,28 @@ Crate boundaries are requirements (charter D16). Internal module layout is free.
 
 Bootstrap shipped `crates/cadre`. **S1** added `crates/cadre-kernel` (`GeomKernel` +
 `MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0).
-**S3** added `crates/cadre-occt` (LGPL OCCT backend) + `execute_ir`. Default workspace
-members exclude OCCT so CI stays fast; see [`occt-binding.md`](occt-binding.md).
+**S3** added `crates/cadre-occt` (LGPL OCCT backend) + `execute_ir`. **S4** added
+`crates/cadre-model` (selectors + content-hash cache) and `crates/cadre-inspect`
+(refs/measure). Default workspace members exclude OCCT so CI stays fast; see
+[`occt-binding.md`](occt-binding.md).
+
+### Selectors (v0)
+
+Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).
+
+Ordering (kernel-independent):
+- solids: sort by quantized `(cz, cy, cx, volume)`
+- faces: sort by quantized `(cz, cy, cx, area)` then normal.z
+- edges: sort by quantized midpoint then length
+
+`inspect refs` emits a JSON inventory; `inspect measure` supports distance / angle /
+diameter / thickness against that inventory (from a `TopologySnapshot`).
+
+### Build cache (v0)
+
+Key = SHA-256 of `{source_sha, params_sha, cadre_version, kernel_id, kernel_version, ir_version}`.
+Store under `<project>/.cadre/cache/<key_digest>/` with `entry.json` + artifact; get verifies
+artifact hash (corruption → miss). Warm hit is filesystem metadata + hash check only.
 
 ### Feature IR (v0, from `cadre-lang`)
 

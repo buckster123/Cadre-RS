@@ -5,16 +5,20 @@
 
 #![deny(unsafe_code)]
 
+pub use cadre_inspect as inspect;
 pub use cadre_kernel as kernel;
 pub use cadre_lang as lang;
+pub use cadre_model as model;
 
 /// Workspace facade version.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(test)]
 mod tests {
-    use cadre_kernel::{GeomKernel, MockKernel, Placement};
+    use cadre_inspect::{box_topology, inspect_refs, TopologySnapshot};
+    use cadre_kernel::{GeomKernel, MockKernel, Placement, Point3};
     use cadre_lang::{evaluate, EvalOptions};
+    use cadre_model::{parse_selector, BuildCache, CacheKey};
 
     #[test]
     fn version_is_semverish() {
@@ -40,5 +44,20 @@ def gen_step():
 "#;
         let r = evaluate(src, &EvalOptions::new("facade.cad.star"));
         assert!(r.ok, "{:?}", r.diagnostics);
+    }
+
+    #[test]
+    fn facade_reexports_model_inspect() {
+        assert_eq!(parse_selector("#o1.1.f2").unwrap().to_string(), "#o1.1.f2");
+        let snap = TopologySnapshot::single_solid(box_topology(10.0, 10.0, 10.0, Point3::ORIGIN));
+        let r = inspect_refs(&snap, true);
+        assert_eq!(r.faces, 6);
+        let dir = std::env::temp_dir().join(format!("cadre-facade-cache-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let cache = BuildCache::open(&dir).unwrap();
+        let key = CacheKey::from_source("s", "{}", "0.1.0", "mock", "0", None);
+        cache.put(&key, b"x", "a.step", None, None).unwrap();
+        assert!(cache.get(&key).unwrap().is_some());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
