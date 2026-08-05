@@ -56,8 +56,8 @@ Priority suggestions when resuming:
 
 | # | Slice | Status |
 |---|-------|--------|
-| H1 | Live agent harness driver (`--cmd` / MCP score) | next |
-| H2 | Stdlib depth (mirror, patterns, cone/sphere, …) | pending |
+| H1 | Live agent harness driver (`--cmd` / MCP score) | ✅ this slice |
+| H2 | Stdlib depth (mirror, patterns, cone/sphere, …) | next |
 | H3 | OCCT transform quality (drop STEP rotate round-trip) | pending |
 | H4 | Fillet/chamfer in OCCT parity + diagnostics | pending |
 | H5 | Viewer: G-code scrub + URDF jog alpha | pending |
@@ -67,7 +67,7 @@ Priority suggestions when resuming:
 | H9 | Klipper/Moonraker gated adapter | pending |
 | H10 | truck experimental non-parity lane | pending |
 
-Default when resuming with no pref: **H1**.
+Default when resuming with no pref: **H2**.
 
 ## Post-v1 parking (Horizon-2+)
 

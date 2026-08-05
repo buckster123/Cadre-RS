@@ -1,4 +1,4 @@
-//! Run harness tasks.
+//! Run harness tasks (scripted + live).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -9,6 +9,7 @@ use cadre_kernel::{GeomKernel, MockKernel, ShapeFacts};
 use cadre_lang::{evaluate, execute_ir, EvalOptions, FeatureIr};
 use cadre_render::{mesh_from_ir, write_snapshot_packet, SnapshotOptions, ViewName};
 
+use crate::live::{run_task_live, LiveOpts};
 use crate::scenario::{AssertSpec, Step, Task};
 use crate::score::{Scorecard, TaskResult, SUITE_AGENT10};
 
@@ -16,15 +17,19 @@ use crate::score::{Scorecard, TaskResult, SUITE_AGENT10};
 pub struct RunOpts {
     /// Override tasks directory.
     pub tasks_root: Option<PathBuf>,
+    /// When set, run live external agent instead of scripted loops.
+    pub live: Option<LiveOpts>,
 }
 
-struct LoopState {
-    last_facts: Option<ShapeFacts>,
-    last_ir: Option<FeatureIr>,
-    last_label: Option<String>,
-    last_snap: Option<TopologySnapshot>,
-    snapshot_ok: bool,
-    work: PathBuf,
+/// Mutable state for one scripted/live verify loop.
+#[derive(Debug)]
+pub(crate) struct LoopState {
+    pub(crate) last_facts: Option<ShapeFacts>,
+    pub(crate) last_ir: Option<FeatureIr>,
+    pub(crate) last_label: Option<String>,
+    pub(crate) last_snap: Option<TopologySnapshot>,
+    pub(crate) snapshot_ok: bool,
+    pub(crate) work: PathBuf,
 }
 
 /// Default `harness/tasks` next to repo root.
@@ -53,14 +58,25 @@ pub fn run_suite(suite: &str, opts: &RunOpts) -> Result<Scorecard, String> {
         }
         other => return Err(format!("unknown harness suite: {other}")),
     };
+    let mode = if opts.live.is_some() {
+        "live"
+    } else {
+        "scripted"
+    };
     let mut results = Vec::new();
     for id_prefix in ids {
         let path = find_task_file(&root, &id_prefix)?;
         let task = load_task(&path)?;
-        results.push(run_task(&task, &root)?);
+        let r = if let Some(live) = &opts.live {
+            run_task_live(&task, &path, live)?
+        } else {
+            run_task(&task, &root)?
+        };
+        results.push(r);
     }
     Ok(Scorecard::from_tasks(
         suite,
+        mode,
         results,
         started.elapsed().as_millis() as u64,
     ))
@@ -123,6 +139,7 @@ pub fn run_task(task: &Task, tasks_root: &Path) -> Result<TaskResult, String> {
                     wall_ms: started.elapsed().as_millis() as u64,
                     detail: format!("passed on loop {loop_n}/{max}"),
                     prompt: task.prompt.clone(),
+                    mode: "scripted".into(),
                 });
             }
             Err(e) => {
@@ -141,6 +158,7 @@ pub fn run_task(task: &Task, tasks_root: &Path) -> Result<TaskResult, String> {
         wall_ms: started.elapsed().as_millis() as u64,
         detail: last_err,
         prompt: task.prompt.clone(),
+        mode: "scripted".into(),
     })
 }
 
@@ -288,7 +306,7 @@ fn apply_assert(a: &AssertSpec, st: &LoopState) -> Result<(), String> {
     Ok(())
 }
 
-fn topo_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
+pub(crate) fn topo_from_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
     use cadre_inspect::{box_topology, cylinder_topology, SolidRec};
     use cadre_kernel::Point3;
     use cadre_lang::{BooleanKind, IrNode};
@@ -370,6 +388,41 @@ mod tests {
             card.score_over_10, card.target
         );
         assert!(card.passed >= 6);
+        assert_eq!(card.total, 10);
+    }
+
+    #[test]
+    fn agent10_live_oracle_meets_target() {
+        let root = default_tasks_root();
+        let driver =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../harness/drivers/oracle_agent.py");
+        let driver = driver.canonicalize().unwrap_or_else(|_| driver.clone());
+        assert!(driver.is_file(), "missing {}", driver.display());
+        // Quote path for Windows spaces; use python launcher.
+        let py = if cfg!(windows) { "python" } else { "python3" };
+        let live = LiveOpts {
+            cmd: format!("{py} \"{}\"", driver.display()),
+            timeout_secs: 60,
+            part_rel: "part.cad.star".into(),
+            snapshot: true,
+        };
+        let card = run_suite(
+            SUITE_AGENT10,
+            &RunOpts {
+                tasks_root: Some(root),
+                live: Some(live),
+            },
+        )
+        .expect("live suite");
+        if !card.meets_target {
+            for t in &card.tasks {
+                if !t.ok {
+                    eprintln!("FAIL {} — {}", t.id, t.detail);
+                }
+            }
+        }
+        assert!(card.meets_target, "live score {}/10", card.score_over_10);
+        assert_eq!(card.mode, "live");
         assert_eq!(card.total, 10);
     }
 }

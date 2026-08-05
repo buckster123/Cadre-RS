@@ -14,11 +14,21 @@ pub struct TaskResult {
     pub wall_ms: u64,
     pub detail: String,
     pub prompt: String,
+    /// `scripted` or `live`.
+    #[serde(default = "default_mode")]
+    pub mode: String,
+}
+
+fn default_mode() -> String {
+    "scripted".into()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Scorecard {
     pub suite: String,
+    /// `scripted` or `live`.
+    #[serde(default = "default_mode")]
+    pub mode: String,
     pub ok: bool,
     pub passed: u32,
     pub failed: u32,
@@ -32,7 +42,7 @@ pub struct Scorecard {
 }
 
 impl Scorecard {
-    pub fn from_tasks(suite: &str, tasks: Vec<TaskResult>, wall_ms: u64) -> Self {
+    pub fn from_tasks(suite: &str, mode: &str, tasks: Vec<TaskResult>, wall_ms: u64) -> Self {
         let total = tasks.len() as u32;
         let passed = tasks.iter().filter(|t| t.ok).count() as u32;
         let failed = total.saturating_sub(passed);
@@ -59,6 +69,7 @@ impl Scorecard {
         };
         Self {
             suite: suite.into(),
+            mode: mode.into(),
             ok: failed == 0,
             passed,
             failed,

@@ -171,7 +171,7 @@ Same rhythm that worked for #14–#22:
 
 ## 6. Checklist (tick when merged)
 
-- [ ] **H1** Live agent harness driver  
+- [x] **H1** Live agent harness driver  
 - [ ] **H2** Stdlib depth pack  
 - [ ] **H3** OCCT transform quality  
 - [ ] **H4** Fillet/chamfer parity + diagnostics  
