@@ -39,9 +39,18 @@ cargo run -p cadre-cli -- bench run --suite parts1-10 --json   # full Parity-10
 ```
 
 Volumes are calibrated against **MockKernel** analytic booleans so default CI stays OCCT-free.
-OCCT goldens for 5–10 are a follow-up (translate/rotate on OCCT still trait-default unsupported).
 
-## Stdlib growth (this slice)
+### OCCT lane
+```sh
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-occt --test transform_smoke
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo run -p cadre-cli --features occt -- \
+  bench run --suite parts5-10-occt
+```
+
+OCCT `translate` uses location; `rotate` uses `BRepBuilderAPI_Transform` via STEP
+round-trip (opencascade `Shape.inner` is crate-private). Run OCCT tests single-threaded.
+
+## Stdlib growth
 
 - `translate(shape, dx, dy, dz)`
 - `rotate(shape, "x"|"y"|"z", deg)` / `rotate_z(shape, deg)`

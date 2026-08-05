@@ -1,0 +1,37 @@
+{
+  "bbox_mm": {
+    "max": [
+      45.0,
+      45.0,
+      67.0
+    ],
+    "min": [
+      -45.0,
+      -45.0,
+      0.0
+    ]
+  },
+  "bbox_tol_mm": 2.5,
+  "description": "OCCT tessellation golden for 09_spiral_stair",
+  "faces_min": 1,
+  "id": "09_spiral_stair",
+  "label": "spiral_stair",
+  "measures": [],
+  "params": {
+    "post_r": 5.0,
+    "rail_r": 2.0,
+    "rise": 8.0,
+    "tread_d": 18.0,
+    "tread_t": 3.0,
+    "tread_w": 40.0
+  },
+  "required_ops": [
+    "cylinder",
+    "box",
+    "rotate",
+    "boolean",
+    "label"
+  ],
+  "volume_mm3": 23236.734398458186,
+  "volume_tol_frac": 0.12
+}

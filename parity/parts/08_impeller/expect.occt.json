@@ -1,0 +1,37 @@
+{
+  "bbox_mm": {
+    "max": [
+      33.0,
+      33.0,
+      14.0
+    ],
+    "min": [
+      -33.0,
+      -33.0,
+      0.0
+    ]
+  },
+  "bbox_tol_mm": 2.5,
+  "description": "OCCT tessellation golden for 08_impeller",
+  "faces_min": 1,
+  "id": "08_impeller",
+  "label": "impeller",
+  "measures": [],
+  "params": {
+    "blade_h": 10.0,
+    "blade_l": 25.0,
+    "blade_t": 2.0,
+    "hub_h": 12.0,
+    "hub_r": 8.0,
+    "shroud_t": 2.0
+  },
+  "required_ops": [
+    "cylinder",
+    "box",
+    "rotate",
+    "boolean",
+    "label"
+  ],
+  "volume_mm3": 13251.754117622382,
+  "volume_tol_frac": 0.12
+}

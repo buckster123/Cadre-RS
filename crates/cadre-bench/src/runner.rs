@@ -10,7 +10,10 @@ use cadre_lang::{evaluate, execute_ir, EvalOptions, FeatureIr, IrNode};
 use serde::{Deserialize, Serialize};
 
 use crate::expect::{Expect, FindFace};
-use crate::{SUITE_PARTS_1_10, SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT, SUITE_PARTS_5_10};
+use crate::{
+    SUITE_PARTS_1_10, SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT, SUITE_PARTS_5_10,
+    SUITE_PARTS_5_10_OCCT,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -88,7 +91,11 @@ pub fn run_suite(parity_root: &Path, suite: &str) -> Result<SuiteReport, String>
     let opts = match suite {
         SUITE_PARTS_1_4 | "parity4" | "m1" | SUITE_PARTS_5_10 | SUITE_PARTS_1_10 | "parity10"
         | "m2" => RunOpts::mock(),
-        SUITE_PARTS_1_4_OCCT | "parity4-occt" | "m1-occt" => RunOpts::occt(),
+        SUITE_PARTS_1_4_OCCT
+        | "parity4-occt"
+        | "m1-occt"
+        | SUITE_PARTS_5_10_OCCT
+        | "parity5-10-occt" => RunOpts::occt(),
         other => return Err(format!("unknown suite: {other}")),
     };
     run_suite_with(parity_root, suite, &opts)
@@ -110,6 +117,14 @@ pub fn run_suite_with(
             ]
         }
         SUITE_PARTS_5_10 => vec![
+            "05_open_enclosure",
+            "06_clevis_bracket",
+            "07_finned_cylinder",
+            "08_impeller",
+            "09_spiral_stair",
+            "10_planetary_stage",
+        ],
+        SUITE_PARTS_5_10_OCCT | "parity5-10-occt" => vec![
             "05_open_enclosure",
             "06_clevis_bracket",
             "07_finned_cylinder",
@@ -658,5 +673,31 @@ mod tests {
             report.passed + report.failed
         );
         assert_eq!(report.parts.len(), 4);
+    }
+
+    #[test]
+    #[cfg(feature = "occt")]
+    fn parts_5_10_occt_pass() {
+        let root = default_parity_root();
+        let report = run_suite(&root, SUITE_PARTS_5_10_OCCT).expect("suite");
+        if !report.ok {
+            for p in &report.parts {
+                if !p.ok {
+                    eprintln!("FAIL {} ({}):", p.id, p.kernel);
+                    for c in &p.checks {
+                        if !c.ok {
+                            eprintln!("  {} — {}", c.name, c.detail);
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            report.ok,
+            "occt 5-10 failed: {}/{} passed",
+            report.passed,
+            report.passed + report.failed
+        );
+        assert_eq!(report.parts.len(), 6);
     }
 }

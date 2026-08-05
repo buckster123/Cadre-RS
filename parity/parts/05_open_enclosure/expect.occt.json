@@ -1,0 +1,36 @@
+{
+  "bbox_mm": {
+    "max": [
+      40.0,
+      30.0,
+      40.0
+    ],
+    "min": [
+      -40.0,
+      -30.0,
+      0.0
+    ]
+  },
+  "bbox_tol_mm": 2.5,
+  "description": "OCCT tessellation golden for 05_open_enclosure",
+  "faces_min": 1,
+  "id": "05_open_enclosure",
+  "label": "open_enclosure",
+  "measures": [],
+  "params": {
+    "boss_d": 8.0,
+    "boss_h": 6.0,
+    "outer_d": 60.0,
+    "outer_h": 40.0,
+    "outer_w": 80.0,
+    "wall": 3.0
+  },
+  "required_ops": [
+    "box",
+    "boolean",
+    "cylinder",
+    "label"
+  ],
+  "volume_mm3": 45352.37267242235,
+  "volume_tol_frac": 0.12
+}

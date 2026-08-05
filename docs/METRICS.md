@@ -9,6 +9,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 3 | Selectors + inspect | stable `#o…` + measure | **green** | S4/S5 CLI tests |
 | 4 | Parity parts 1–4 | deterministic suite | **green** | `cargo test -p cadre-bench` |
 | 4b | Parity parts 1–10 | full mock suite | **green** | `bench run --suite parts1-10` |
+| 24 | OCCT translate/rotate | GeomKernel | **green** | transform_smoke + parts5-10-occt |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |
