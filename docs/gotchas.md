@@ -56,3 +56,10 @@
 
 - **Starlark `box` is `r#box` in Rust.** The stdlib exports the name `box` to Starlark; don't
   rename it to `make_box` in the language surface (PRD / agent fluency).
+
+- **OCCT build needs CMake policy on CMake ≥ 4.** `export CMAKE_POLICY_VERSION_MINIMUM=3.5`
+  before `cargo test -p cadre-occt`. Don't "fix" by forking occt-sys in-tree without a
+  charter note.
+
+- **`OcctKernel` is Send via unsafe.** Unique ownership only — never share one kernel across
+  concurrent jobs. Don't remove the safety comment when touching Send.

@@ -19,9 +19,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: fmt
         run: cargo fmt --all -- --check
-      - name: clippy
-        run: cargo clippy --workspace -- -D warnings
-      - name: test
-        run: cargo test --workspace
-      - name: build
-        run: cargo build --workspace
+      - name: clippy (default members, no OCCT)
+        run: cargo clippy -- -D warnings
+      - name: test (default members, no OCCT)
+        run: cargo test
+      - name: build (default members, no OCCT)
+        run: cargo build
+
+  # Optional: enable when runners have OCCT prebuilts / cache budget.
+  # occt:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@stable
+  #     - run: cargo test -p cadre-occt

@@ -49,9 +49,9 @@ Crate boundaries are requirements (charter D16). Internal module layout is free.
 | `cadre-skills` | Skill-pack generator + bundled original doctrine |
 
 Bootstrap shipped `crates/cadre`. **S1** added `crates/cadre-kernel` (`GeomKernel` +
-`MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0). Later
-slices add remaining members under `crates/*` without rewriting this contract. OCCT bind
-approach: [`occt-binding.md`](occt-binding.md) (D19).
+`MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0).
+**S3** added `crates/cadre-occt` (LGPL OCCT backend) + `execute_ir`. Default workspace
+members exclude OCCT so CI stays fast; see [`occt-binding.md`](occt-binding.md).
 
 ### Feature IR (v0, from `cadre-lang`)
 

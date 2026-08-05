@@ -1,7 +1,6 @@
 //! Feature IR — the hashed, diffable representation between Starlark and the kernel.
 //!
-//! S2 ships a **stub** sufficient for box/cylinder/boolean/label. Later slices add fillet,
-//! chamfer, assemblies, etc. Node ids are dense `u32` indexes into `FeatureIr::nodes`.
+//! Node ids are dense `u32` indexes into `FeatureIr::nodes`.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -36,6 +35,20 @@ pub enum IrNode {
         kind: BooleanKind,
         a: NodeId,
         b: NodeId,
+    },
+    /// Fillet; empty `edges` means all edges (kernel-defined order).
+    Fillet {
+        of: NodeId,
+        radius: f64,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        edges: Vec<u32>,
+    },
+    /// Chamfer; empty `edges` means all edges.
+    Chamfer {
+        of: NodeId,
+        distance: f64,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        edges: Vec<u32>,
     },
     /// Product-structure label on a shape (may share geometry with `of`).
     Label { of: NodeId, name: String },
@@ -73,7 +86,7 @@ impl FeatureIr {
     }
 }
 
-/// In-evaluation builder held in `Evaluator::extra`.
+/// In-evaluation builder.
 #[derive(Debug, Default)]
 pub struct IrBuilder {
     pub params: BTreeMap<String, f64>,

@@ -19,11 +19,13 @@ extern crate starlark;
 
 mod diagnostic;
 mod eval;
+mod execute;
 mod ir;
 mod stdlib;
 
 pub use diagnostic::{Diagnostic, Severity, Span};
 pub use eval::{evaluate, EvalMeta, EvalOptions, EvalResult};
+pub use execute::execute_ir;
 pub use ir::{BooleanKind, FeatureIr, IrNode, NodeId, IR_VERSION};
 
 /// Crate version.

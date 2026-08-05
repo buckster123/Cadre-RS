@@ -1,7 +1,8 @@
 # OCCT binding strategy (S1 spike)
 
-> Status: **GO** for the path below (charter amendment 2026-08-05 / D19).
-> This is the binding-eval artifact for M0 — not yet an implementation of `cadre-occt`.
+> Status: **GO** (D19). S3 landed `crates/cadre-occt` + IR execute + calibration STEP e2e.
+> Default CI still excludes OCCT (CMake/OCCT compile cost). Local: `CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-occt`.
+
 
 ## Goal
 
@@ -81,7 +82,23 @@ Record any switch as a dated charter amendment — do not silent-pivot.
 - [x] `cadre-kernel` crate with `GeomKernel` v0 + `MockKernel` tests
 - [x] This document
 - [x] Charter D19 + amendment dated 2026-08-05
-- [ ] Live OCCT box→STEP (deferred to S3; binding *approach* is GO)
+
+## S3 exit evidence
+
+- [x] `cadre-occt` implements `GeomKernel` (box/cylinder/boolean/fillet/chamfer/STEP)
+- [x] `cadre_lang::execute_ir` lowers IR onto any kernel
+- [x] Calibration block `.cad.star` → fillet → STEP (1524 ents) + volume/bbox facts
+- [x] Default CI excludes OCCT; local recipe documented (CMake 4 policy env)
+- [ ] Prebuilt `cadre engine install` artifacts (still M6 / packaging)
+
+### Local OCCT gotchas (2026-08-05)
+
+- **CMake 4.x:** vendored OCCT CMakeLists use `cmake_minimum_required` &lt; 3.5. Set
+  `CMAKE_POLICY_VERSION_MINIMUM=3.5` when building `cadre-occt` on CMake ≥ 4.
+- **Volume facts:** S3 uses tessellation-based volume (public API has no GProp helpers
+  without `opencascade-sys` internals). Tolerances in e2e are ~5–8% relative.
+- **Shape clone:** STEP round-trip clone (no public `Clone` on `Shape`).
+
 
 ## Open follow-ups (not blocking S1)
 

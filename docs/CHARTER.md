@@ -144,3 +144,5 @@ Dated entries. A decision changes here first, then in the code.
   (dynamic/separate engine); see `docs/occt-binding.md`. `cadre-kernel` + `MockKernel` landed.
 - **2026-08-05** — S2: `cadre-lang` Starlark host + feature IR v0 (box/cylinder/boolean/label);
   hermetic `load()` refuse; diagnostic JSON shape pinned in `docs/design.md`.
+- **2026-08-05** — S3: `cadre-occt` + `execute_ir`; fillet/chamfer IR ops; calibration block
+  STEP e2e green locally (`CMAKE_POLICY_VERSION_MINIMUM=3.5`). CI excludes OCCT package.
