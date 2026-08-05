@@ -1,0 +1,32 @@
+{
+  "id": "02_bolt_circle_flange",
+  "label": "bolt_circle_flange",
+  "description": "Disc flange with center bore and 6-bolt circle",
+  "volume_mm3": 41492.0,
+  "volume_tol_frac": 0.03,
+  "bbox_mm": {
+    "min": [-40.0, -40.0, 0.0],
+    "max": [40.0, 40.0, 10.0]
+  },
+  "bbox_tol_mm": 0.5,
+  "faces_min": 3,
+  "edges_min": 2,
+  "required_ops": ["cylinder", "boolean", "label"],
+  "params": {
+    "outer_d": 80.0,
+    "thickness": 10.0,
+    "bore_d": 25.0,
+    "bolt_circle_d": 55.0,
+    "bolt_d": 6.5,
+    "n_bolts": 6.0
+  },
+  "measures": [
+    {
+      "kind": "thickness",
+      "find_a": { "kind": "face", "normal": [0.0, 0.0, 1.0] },
+      "find_b": { "kind": "face", "normal": [0.0, 0.0, -1.0] },
+      "value": 10.0,
+      "tol": 0.1
+    }
+  ]
+}

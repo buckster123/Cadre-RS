@@ -20,7 +20,8 @@ split further when a slice stops being reviewable in one PR.
       `cadre-inspect` (refs/measure); stable `#o…` tokens (2026-08-05)
 - [x] **S5 — M1 CLI face**: `cadre-cli` binary `cadre` — `build` / `inspect refs|measure` /
       `export step|stl|glb` with `--json`; mock default, optional `--features occt` (2026-08-05)
-- [ ] **S6 — M1 parity parts 1–4**: deterministic suite green on Linux CI
+- [x] **S6 — M1 parity parts 1–4**: `parity/parts/01–04` + `cadre-bench` runner +
+      `cadre bench run --suite parts1-4`; mock CI green (2026-08-05)
 - [ ] **S7 — M2 snapshot + viewer alpha**: PNG packet + orbit GIF; `cadre view` deep links
 - [ ] **S8 — M2 MCP stdio + skill-pack alpha**: tools budget ≤ 4k tokens; agent part 1 with snapshot review
 - [ ] **S9 — M3 assemblies + parts.lock + HTTP API**: S3 scenario; jobs/SSE/OpenAPI; harness ≥ 6/10

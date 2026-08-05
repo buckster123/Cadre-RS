@@ -1,0 +1,35 @@
+{
+  "id": "04_stepped_shaft",
+  "label": "stepped_shaft",
+  "description": "Three-step shaft with rectangular keyway",
+  "volume_mm3": 13700.0,
+  "volume_tol_frac": 0.05,
+  "bbox_mm": {
+    "min": [-10.0, -10.0, 0.0],
+    "max": [10.0, 10.0, 65.0]
+  },
+  "bbox_tol_mm": 0.5,
+  "faces_min": 3,
+  "edges_min": 2,
+  "required_ops": ["cylinder", "box", "boolean", "label"],
+  "params": {
+    "d1": 20.0,
+    "h1": 30.0,
+    "d2": 15.0,
+    "h2": 20.0,
+    "d3": 10.0,
+    "h3": 15.0,
+    "key_w": 4.0,
+    "key_d": 2.5,
+    "key_len": 18.0
+  },
+  "measures": [
+    {
+      "kind": "distance",
+      "find_a": { "kind": "face", "normal": [0.0, 0.0, 1.0] },
+      "find_b": { "kind": "face", "normal": [0.0, 0.0, -1.0] },
+      "value_min": 10.0,
+      "tol": 50.0
+    }
+  ]
+}

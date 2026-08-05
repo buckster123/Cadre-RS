@@ -7,6 +7,7 @@ members = [
     "crates/cadre-model",
     "crates/cadre-inspect",
     "crates/cadre-cli",
+    "crates/cadre-bench",
     "crates/cadre-occt",
 ]
 # Default CI / `cargo test` skips OCCT (long C++ build, LGPL link).
@@ -17,6 +18,7 @@ default-members = [
     "crates/cadre-model",
     "crates/cadre-inspect",
     "crates/cadre-cli",
+    "crates/cadre-bench",
 ]
 
 [workspace.package]
@@ -40,4 +42,5 @@ cadre-lang = { path = "crates/cadre-lang" }
 cadre-model = { path = "crates/cadre-model" }
 cadre-inspect = { path = "crates/cadre-inspect" }
 cadre-cli = { path = "crates/cadre-cli" }
+cadre-bench = { path = "crates/cadre-bench" }
 cadre-occt = { path = "crates/cadre-occt" }
