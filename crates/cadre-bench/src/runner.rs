@@ -10,7 +10,47 @@ use cadre_lang::{evaluate, execute_ir, EvalOptions, FeatureIr, IrNode};
 use serde::{Deserialize, Serialize};
 
 use crate::expect::{Expect, FindFace};
-use crate::SUITE_PARTS_1_4;
+use crate::{SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum KernelKind {
+    Mock,
+    Occt,
+}
+
+#[derive(Debug, Clone)]
+pub struct RunOpts {
+    pub kernel: KernelKind,
+    /// e.g. `expect.json` or `expect.occt.json`
+    pub expect_file: String,
+    /// Face normal match tolerance (1.0 = exact unit vector; mesh needs ~0.15).
+    pub normal_tol: f64,
+}
+
+impl Default for RunOpts {
+    fn default() -> Self {
+        Self {
+            kernel: KernelKind::Mock,
+            expect_file: "expect.json".into(),
+            normal_tol: 1e-6,
+        }
+    }
+}
+
+impl RunOpts {
+    pub fn mock() -> Self {
+        Self::default()
+    }
+
+    pub fn occt() -> Self {
+        Self {
+            kernel: KernelKind::Occt,
+            expect_file: "expect.occt.json".into(),
+            normal_tol: 0.15,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartResult {
@@ -20,6 +60,8 @@ pub struct PartResult {
     pub checks: Vec<CheckResult>,
     pub facts: Option<serde_json::Value>,
     pub label: Option<String>,
+    #[serde(default)]
+    pub kernel: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,25 +79,42 @@ pub struct SuiteReport {
     pub passed: u32,
     pub failed: u32,
     pub wall_ms: u64,
+    #[serde(default)]
+    pub kernel: String,
 }
 
 /// Discover and run suite under `parity_root` (repo `parity/` dir).
 pub fn run_suite(parity_root: &Path, suite: &str) -> Result<SuiteReport, String> {
+    let opts = match suite {
+        SUITE_PARTS_1_4 | "parity4" | "m1" => RunOpts::mock(),
+        SUITE_PARTS_1_4_OCCT | "parity4-occt" | "m1-occt" => RunOpts::occt(),
+        other => return Err(format!("unknown suite: {other}")),
+    };
+    run_suite_with(parity_root, suite, &opts)
+}
+
+pub fn run_suite_with(
+    parity_root: &Path,
+    suite: &str,
+    opts: &RunOpts,
+) -> Result<SuiteReport, String> {
     let started = Instant::now();
     let part_dirs = match suite {
-        SUITE_PARTS_1_4 | "parity4" | "m1" => vec![
-            "01_calibration_block",
-            "02_bolt_circle_flange",
-            "03_l_bracket",
-            "04_stepped_shaft",
-        ],
+        SUITE_PARTS_1_4 | "parity4" | "m1" | SUITE_PARTS_1_4_OCCT | "parity4-occt" | "m1-occt" => {
+            vec![
+                "01_calibration_block",
+                "02_bolt_circle_flange",
+                "03_l_bracket",
+                "04_stepped_shaft",
+            ]
+        }
         other => return Err(format!("unknown suite: {other}")),
     };
 
     let mut parts = Vec::new();
     for name in part_dirs {
         let dir = parity_root.join("parts").join(name);
-        let r = run_part(&dir)?;
+        let r = run_part_with(&dir, opts)?;
         parts.push(r);
     }
     let passed = parts.iter().filter(|p| p.ok).count() as u32;
@@ -67,14 +126,19 @@ pub fn run_suite(parity_root: &Path, suite: &str) -> Result<SuiteReport, String>
         passed,
         failed,
         wall_ms: started.elapsed().as_millis() as u64,
+        kernel: format!("{:?}", opts.kernel).to_ascii_lowercase(),
     })
 }
 
-/// Run a single part directory containing `part.cad.star` + `expect.json`.
+/// Run a single part directory (mock + expect.json).
 pub fn run_part(dir: &Path) -> Result<PartResult, String> {
+    run_part_with(dir, &RunOpts::mock())
+}
+
+pub fn run_part_with(dir: &Path, opts: &RunOpts) -> Result<PartResult, String> {
     let started = Instant::now();
     let star = dir.join("part.cad.star");
-    let exp_path = dir.join("expect.json");
+    let exp_path = dir.join(&opts.expect_file);
     if !star.is_file() {
         return Err(format!("missing {}", star.display()));
     }
@@ -84,9 +148,13 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
     let source = fs::read_to_string(&star).map_err(|e| e.to_string())?;
     let expect: Expect =
         serde_json::from_str(&fs::read_to_string(&exp_path).map_err(|e| e.to_string())?)
-            .map_err(|e| format!("expect.json: {e}"))?;
+            .map_err(|e| format!("{}: {e}", opts.expect_file))?;
 
     let mut checks = Vec::new();
+    let kernel_name = match opts.kernel {
+        KernelKind::Mock => "mock",
+        KernelKind::Occt => "occt",
+    };
 
     // 1. Evaluate
     let eval = evaluate(
@@ -110,6 +178,7 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
             checks,
             facts: None,
             label: None,
+            kernel: kernel_name.into(),
         });
     }
     checks.push(CheckResult {
@@ -171,26 +240,24 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
         detail: ops_detail,
     });
 
-    // 5. Execute on mock + facts
-    let mut kernel = MockKernel::new();
-    let shape = match execute_ir(&mut kernel, &ir) {
-        Ok(s) => s,
+    // 5. Execute + facts + topology
+    let (facts, snap) = match execute_and_topo(&ir, opts.kernel) {
+        Ok(x) => x,
         Err(e) => {
             checks.push(CheckResult {
                 name: "execute".into(),
                 ok: false,
-                detail: e.to_string(),
+                detail: e,
             });
-            return Ok(finish(expect, checks, None, started));
+            return Ok(finish(expect, checks, None, started, kernel_name));
         }
     };
     checks.push(CheckResult {
         name: "execute".into(),
         ok: true,
-        detail: "mock".into(),
+        detail: kernel_name.into(),
     });
 
-    let facts = kernel.facts(shape).map_err(|e| e.to_string())?;
     let vol_err = (facts.volume_mm3 - expect.volume_mm3).abs() / expect.volume_mm3.max(1e-9);
     let vol_ok = vol_err <= expect.volume_tol_frac;
     checks.push(CheckResult {
@@ -218,8 +285,7 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
         ),
     });
 
-    // 6. Topology / refs from IR
-    let snap = crate_topo(&ir)?;
+    // 6. Topology / refs
     let report = inspect_refs(&snap, true);
     let faces_ok = report.faces >= expect.faces_min;
     checks.push(CheckResult {
@@ -234,7 +300,6 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
         detail: format!("edges={} min={}", report.edges, expect.edges_min),
     });
 
-    // Stable selectors: re-run twice
     let report2 = inspect_refs(&snap, false);
     let sel_ok = report.refs.iter().map(|r| &r.selector).collect::<Vec<_>>()
         == report2.refs.iter().map(|r| &r.selector).collect::<Vec<_>>();
@@ -246,7 +311,7 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
 
     // 7. Measures
     for (i, m) in expect.measures.iter().enumerate() {
-        let a = match find_selector(&report, &m.find_a) {
+        let a = match find_selector(&report, &m.find_a, opts.normal_tol) {
             Ok(s) => s,
             Err(e) => {
                 checks.push(CheckResult {
@@ -258,7 +323,7 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
             }
         };
         let b = if let Some(fb) = &m.find_b {
-            Some(match find_selector(&report, fb) {
+            Some(match find_selector(&report, fb, opts.normal_tol) {
                 Ok(s) => s,
                 Err(e) => {
                     checks.push(CheckResult {
@@ -317,7 +382,39 @@ pub fn run_part(dir: &Path) -> Result<PartResult, String> {
     }
 
     let facts_json = serde_json::to_value(&facts).ok();
-    Ok(finish(expect, checks, facts_json, started))
+    Ok(finish(expect, checks, facts_json, started, kernel_name))
+}
+
+fn execute_and_topo(
+    ir: &FeatureIr,
+    kernel: KernelKind,
+) -> Result<(cadre_kernel::ShapeFacts, TopologySnapshot), String> {
+    match kernel {
+        KernelKind::Mock => {
+            let mut k = MockKernel::new();
+            let shape = execute_ir(&mut k, ir).map_err(|e| e.to_string())?;
+            let facts = k.facts(shape).map_err(|e| e.to_string())?;
+            let snap = crate_topo_ir(ir)?;
+            Ok((facts, snap))
+        }
+        KernelKind::Occt => {
+            #[cfg(feature = "occt")]
+            {
+                let mut k = cadre_occt::OcctKernel::new();
+                let shape = execute_ir(&mut k, ir).map_err(|e| e.to_string())?;
+                let facts = k.facts(shape).map_err(|e| e.to_string())?;
+                let snap = k.topology_snapshot(shape).map_err(|e| e.to_string())?;
+                Ok((facts, snap))
+            }
+            #[cfg(not(feature = "occt"))]
+            {
+                Err(
+                    "occt kernel not compiled into cadre-bench (rebuild with --features occt)"
+                        .into(),
+                )
+            }
+        }
+    }
 }
 
 fn finish(
@@ -325,6 +422,7 @@ fn finish(
     checks: Vec<CheckResult>,
     facts: Option<serde_json::Value>,
     started: Instant,
+    kernel: &str,
 ) -> PartResult {
     let ok = checks.iter().all(|c| c.ok);
     PartResult {
@@ -334,6 +432,7 @@ fn finish(
         checks,
         facts,
         label: Some(expect.label),
+        kernel: kernel.into(),
     }
 }
 
@@ -354,8 +453,7 @@ fn collect_ops(ir: &FeatureIr) -> Vec<String> {
         .collect()
 }
 
-fn crate_topo(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
-    // Reuse CLI logic inline — duplicate small walker to avoid depending on cadre-cli.
+fn crate_topo_ir(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
     use cadre_inspect::{box_topology, cylinder_topology, SolidRec};
     use cadre_kernel::Point3;
     use cadre_lang::BooleanKind;
@@ -409,23 +507,28 @@ fn crate_topo(ir: &FeatureIr) -> Result<TopologySnapshot, String> {
     Ok(TopologySnapshot::single_solid(root))
 }
 
-fn find_selector(report: &cadre_inspect::RefsReport, find: &FindFace) -> Result<String, String> {
+fn find_selector(
+    report: &cadre_inspect::RefsReport,
+    find: &FindFace,
+    normal_tol: f64,
+) -> Result<String, String> {
     if find.kind != "face" {
         return Err(format!("find kind {} not supported yet", find.kind));
     }
     let n = find.normal.ok_or("find face needs normal")?;
+    let want = cadre_kernel::Vec3::new(n[0], n[1], n[2]);
     let hit = report.refs.iter().find(|r| {
         r.kind == "face"
             && r.normal
                 .map(|nr| {
-                    (nr.x - n[0]).abs() < 1e-6
-                        && (nr.y - n[1]).abs() < 1e-6
-                        && (nr.z - n[2]).abs() < 1e-6
+                    let d =
+                        (nr.x - want.x).powi(2) + (nr.y - want.y).powi(2) + (nr.z - want.z).powi(2);
+                    d.sqrt() <= normal_tol
                 })
                 .unwrap_or(false)
     });
     hit.map(|r| r.selector.clone())
-        .ok_or_else(|| format!("no face with normal {n:?}"))
+        .ok_or_else(|| format!("no face with normal {n:?} (tol={normal_tol})"))
 }
 
 fn approx3(a: f64, b: f64, tol: f64) -> bool {
@@ -434,7 +537,6 @@ fn approx3(a: f64, b: f64, tol: f64) -> bool {
 
 /// Locate repo `parity/` from CARGO_MANIFEST_DIR or cwd.
 pub fn default_parity_root() -> PathBuf {
-    // cadre-bench crate is crates/cadre-bench → ../../parity
     let from_crate = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../parity");
     if from_crate.is_dir() {
         return from_crate.canonicalize().unwrap_or(from_crate);
@@ -476,6 +578,32 @@ mod tests {
         assert!(
             report.ok,
             "suite failed: {}/{} passed",
+            report.passed,
+            report.passed + report.failed
+        );
+        assert_eq!(report.parts.len(), 4);
+    }
+
+    #[test]
+    #[cfg(feature = "occt")]
+    fn parts_1_4_occt_pass() {
+        let root = default_parity_root();
+        let report = run_suite(&root, SUITE_PARTS_1_4_OCCT).expect("suite");
+        if !report.ok {
+            for p in &report.parts {
+                if !p.ok {
+                    eprintln!("FAIL {} ({}):", p.id, p.kernel);
+                    for c in &p.checks {
+                        if !c.ok {
+                            eprintln!("  {} — {}", c.name, c.detail);
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            report.ok,
+            "occt suite failed: {}/{} passed",
             report.passed,
             report.passed + report.failed
         );

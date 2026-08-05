@@ -14,7 +14,7 @@ path = "src/main.rs"
 [features]
 default = []
 # Real STEP/tessellation via Open CASCADE (LGPL). Requires CMake policy on CMake ≥ 4.
-occt = ["dep:cadre-occt"]
+occt = ["dep:cadre-occt", "cadre-bench/occt"]
 
 [dependencies]
 anyhow = { workspace = true }

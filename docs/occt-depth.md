@@ -25,6 +25,19 @@ CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo run -p cadre-cli --features occt -- \
 ```
 
 ## Next
-1. Tighter tessellation tolerance for volume goldens
-2. OCCT expect.json lane in cadre-bench (`parts1-4-occt`)
+1. OCCT expect.json lane in cadre-bench (`parts1-4-occt`) — **done**
+2. Tighter tessellation tolerance for volume goldens
 3. Face→DXF from live face refs
+
+## Bench lane
+```sh
+# mock (default CI)
+cargo test -p cadre-bench
+cargo run -p cadre-cli -- bench run --suite parts1-4 --json
+
+# OCCT (local / feature)
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-bench --features occt
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo run -p cadre-cli --features occt -- \
+  bench run --suite parts1-4-occt --json
+```
+Goldens live beside each part as `expect.occt.json` (looser volume tol for tessellation).
