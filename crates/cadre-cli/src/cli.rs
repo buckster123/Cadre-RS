@@ -301,7 +301,7 @@ pub struct SnapshotArgs {
 
 #[derive(Debug, clap::Args)]
 pub struct ViewArgs {
-    /// Paths to open (`.snap` dirs, images, or `.cad.star` which is snapshotted first).
+    /// Paths: `.snap` dirs, `.cad.star`, images, `.gcode` / `.gco`, `.robot.json` / `.urdf`.
     pub paths: Vec<PathBuf>,
 
     /// Bind port (default 7411).
@@ -312,7 +312,7 @@ pub struct ViewArgs {
     #[arg(long, default_value = "127.0.0.1")]
     pub host: String,
 
-    /// Open once: prepare snaps only, do not serve (CI-friendly).
+    /// Open once: prepare artifacts only, do not serve (CI-friendly).
     #[arg(long)]
     pub once: bool,
 }
