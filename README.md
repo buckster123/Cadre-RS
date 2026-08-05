@@ -12,7 +12,7 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 <img alt="license" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue">
 <img alt="rust" src="https://img.shields.io/badge/rust-2021-orange?logo=rust&logoColor=white">
 <img alt="ci" src="https://img.shields.io/github/actions/workflow/status/buckster123/Cadre-RS/ci.yml?label=ci">
-<img alt="status" src="https://img.shields.io/badge/status-v0.1%20%C2%B7%20bootstrap-brightgreen">
+<img alt="status" src="https://img.shields.io/badge/status-v1%20surface%20·%20S0–S12-brightgreen">
 </p>
 
 </div>
@@ -23,13 +23,19 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 > Model code has zero ambient authority (no clock, net, or filesystem). Hardware and vendor
 > effects are dry-run-first and consent-gated on every surface — nothing prints by default.
 
+## Status
+
+**v1 surface complete (S0–S12 / M0–M6).** Default path is mock-kernel CI-green on Linux + Windows.
+Live OCCT STEP and live printer start remain optional/deferred — see
+[`docs/METRICS.md`](docs/METRICS.md) and the compact [`docs/STATUS.md`](docs/STATUS.md).
+
 ## What it is
 
 Cadre is a single workspace that turns agent-written parametric CAD (Starlark) into B-rep
-geometry via an OCCT-backed kernel, then gives the agent numeric facts, stable selectors,
-mandatory visual review packets, and paths to parts catalogs, robot descriptions, and fab
-tools. Prompt-ware (exported skill packs) is half the product: doctrine for the loop, not
-just binaries.
+geometry via an optional OCCT-backed kernel, then gives the agent numeric facts, stable
+selectors, mandatory visual review packets, and paths to parts catalogs, robot descriptions,
+and fab tools. Prompt-ware (exported skill packs) is half the product: doctrine for the loop,
+not just binaries.
 
 ## Install
 
@@ -44,81 +50,71 @@ cargo build -p cadre-cli --release
 ## Use
 
 ```sh
-cargo run -p cadre-cli -- build cad/block.cad.star --json
-cargo run -p cadre-cli -- inspect refs cad/block.cad.star --facts --json
-cargo run -p cadre-cli -- inspect measure cad/block.cad.star '#o1.1.f1' '#o1.1.f2' --kind thickness --json
-# STEP/STL with OCCT:
-# cargo run -p cadre-cli --features occt -- --kernel occt build cad/block.cad.star --json
-```
-
-Shipped through S5: kernel · Starlark · OCCT backend · selectors/cache · CLI.
-S6: parity parts 1–4 (`cargo test -p cadre-bench` / `cadre bench run`).
-S7: `cadre snapshot` / `cadre view` (PNG packet + orbit GIF).
-S8: `cadre mcp` + `cadre skills export` (skill pack in `skills/cadre`).
-S9: `cadre serve api` + `parts.lock` + assembly validate (`examples/assembly`).
-S10: `cadre robot gen|validate` (URDF/SRDF/SDF, urdf-rs parse).
-S11: `cadre fab` / `cadre printer` (DXF, DFM, gcode-check, gated dry-run).
-S12: metrics + licensing + Windows CI + dual-agent skills export.
-**v1 surface complete** through M6 hardening — see [`docs/METRICS.md`](docs/METRICS.md).
-
-### Quick test snapshot
-```sh
+cargo run -p cadre-cli -- build parity/parts/01_calibration_block/part.cad.star --json
+cargo run -p cadre-cli -- inspect refs parity/parts/01_calibration_block/part.cad.star --facts --json
 cargo run -p cadre-cli -- snapshot parity/parts/01_calibration_block/part.cad.star --json
+# STEP/STL with OCCT:
+# cargo run -p cadre-cli --features occt -- --kernel occt build … --json
 ```
 
-### Quick test API
+### Shipped slices (S0–S12)
+
+| Slice | Surface |
+|-------|---------|
+| S0–S5 | kernel · Starlark · OCCT · selectors · CLI build/inspect/export |
+| S6 | parity parts 1–4 (`cadre bench`) |
+| S7 | `snapshot` / `view` (PNG + orbit GIF) |
+| S8 | `mcp` + `skills export` |
+| S9 | `serve api` + parts.lock + assembly |
+| S10 | `robot gen\|validate` (URDF/SRDF/SDF) |
+| S11 | `fab` / `printer` (DXF, DFM, gcode, gated dry-run) |
+| S12 | metrics · licensing · Windows CI · `skills export --all` |
+
+### Quick tests
+
 ```sh
+cargo run -p cadre-cli -- version --json
+cargo run -p cadre-cli -- snapshot parity/parts/01_calibration_block/part.cad.star --json
 cargo run -p cadre-cli -- serve api --port 7410 --project examples/assembly --token dev
-curl -s http://127.0.0.1:7410/v1/health
+# second terminal:
 curl -s -H "Authorization: Bearer dev" -H 'content-type: application/json' \
   -d '{"path":"plate_bolt.assy.json"}' http://127.0.0.1:7410/v1/assembly/validate
-```
-
-### Quick test robot
-```sh
 cargo run -p cadre-cli -- robot gen examples/robots/simple_arm.robot.json -o /tmp/arm --json
-```
-
-### Quick test fab
-```sh
 cargo run -p cadre-cli -- fab check --part-json examples/fab/plate.flat.json --json
 cargo run -p cadre-cli -- fab gcode-check examples/fab/sample.gcode --json
 cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode --json
-```
-
-### Skills export (both agents)
-```sh
 cargo run -p cadre-cli -- skills export --all -o dist/skills --json
 ```
-
 
 ## How it works
 
 ```
-agent/human ──CLI/MCP/HTTP──▶ cadre-lang (Starlark) → IR → GeomKernel (OCCT)
+agent/human ──CLI/MCP/HTTP──▶ cadre-lang (Starlark) → IR → GeomKernel (mock | OCCT)
                               inspect · snapshot · export · parts · robot · fab
 ```
 
 Contract: [`docs/design.md`](docs/design.md). Binding decisions: [`docs/CHARTER.md`](docs/CHARTER.md).
-Full PRD: [`docs/cadre-prd.md`](docs/cadre-prd.md).
+Full PRD: [`docs/cadre-prd.md`](docs/cadre-prd.md). Live status: [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Docs
 
 | File | What's in it |
 |------|--------------|
+| [`docs/STATUS.md`](docs/STATUS.md) | Live as-built status (start here after pull) |
 | [`docs/design.md`](docs/design.md) | The contract — wire format, API, invariants |
 | [`docs/CHARTER.md`](docs/CHARTER.md) | Binding decisions, phases, scope fence |
 | [`docs/METRICS.md`](docs/METRICS.md) | v1 exit metrics scorecard |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | Dual-license + OCCT LGPL fence |
 | [`docs/WINDOWS.md`](docs/WINDOWS.md) | Windows build notes |
-| [`docs/occt-binding.md`](docs/occt-binding.md) | OCCT backend strategy (S1 GO) |
+| [`docs/gotchas.md`](docs/gotchas.md) | Operator pitfalls |
+| [`docs/occt-binding.md`](docs/occt-binding.md) | OCCT backend strategy |
 | [`docs/cadre-prd.md`](docs/cadre-prd.md) | Product requirements, parity matrix, NFRs |
-| [`BACKLOG.md`](BACKLOG.md) | Slice ledger — what's shipped, what's next |
+| [`BACKLOG.md`](BACKLOG.md) | Slice ledger — S0–S12 done; post-v1 parking |
 
 ## License
 
 MIT OR Apache-2.0 — see [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE).
 The optional OCCT engine component is LGPL-2.1 with the OCCT exception and is distributed
-separately (see charter D4/D6).
+separately (see [`docs/LICENSING.md`](docs/LICENSING.md)).
 
 <sub>Banner generated with <a href="https://github.com/buckster123/Imaginarium-RS">Imaginarium-RS</a> (job <code>01KZ94QZ21JH73Y7J64A2ENW90</code>).</sub>

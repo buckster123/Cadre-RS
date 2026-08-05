@@ -27,4 +27,5 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 
 **v1 ship bar (this table):** rows 1–16 green; 17–20 may remain amber/red with honesty notes.
 
-Last updated: 2026-08-05 (S12).
+Last updated: 2026-08-05 (S12 merged on `main`; docs sync same day).
+As-built companion: [`STATUS.md`](STATUS.md).

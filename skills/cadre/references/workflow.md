@@ -19,3 +19,24 @@
 - IR always: `*.ir.json`
 - STEP/STL: `cadre --kernel occt` (binary with `--features occt`)
 - Snap packet: `*.snap/`
+
+## Robots
+```sh
+cadre robot gen arm.robot.json -o out/ --json
+cadre robot validate out/arm.urdf --json
+```
+Geometry JSON uses external tags: `{"box":{"size":[x,y,z]}}`. Units SI in URDF.
+
+## Fab
+```sh
+cadre fab check --part-json plate.flat.json --json
+cadre fab gcode-check print.gcode --json
+cadre printer dry-run print.gcode --json
+# start: allowlist + sha256 + --confirm START (live start may still be refused)
+```
+
+## Surfaces
+- CLI: `cadre … --json`
+- MCP: `cadre mcp` (stdout = protocol only)
+- HTTP: `cadre serve api --token …` → `/v1/*`
+- Skills: `cadre skills export --all -o dist/skills`
