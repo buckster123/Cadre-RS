@@ -447,11 +447,11 @@ pub struct PrinterArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum PrinterCmd {
-    /// Simulated status (no network in S11).
+    /// Local metadata status (no MQTT poll yet).
     Status(PrinterStatusArgs),
-    /// Dry-run upload gates + gcode-check (no network).
+    /// Dry-run: gcode-check + sha256 (no network).
     DryRun(PrinterDryRunArgs),
-    /// Gated start (always refused for live print in S11; gates still evaluated).
+    /// Gated start. Network only with --live after allowlist+hash+confirm=START.
     Start(PrinterStartArgs),
 }
 
@@ -463,6 +463,8 @@ pub struct PrinterStatusArgs {
     pub host: String,
     #[arg(long, default_value = "X1C")]
     pub model: String,
+    #[arg(long, env = "CADRE_BAMBU_SERIAL")]
+    pub serial: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -474,22 +476,40 @@ pub struct PrinterDryRunArgs {
     pub host: String,
     #[arg(long, default_value = "X1C")]
     pub model: String,
+    #[arg(long, env = "CADRE_BAMBU_SERIAL")]
+    pub serial: Option<String>,
+    #[arg(long, env = "CADRE_BAMBU_ACCESS_CODE")]
+    pub access_code: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
 pub struct PrinterStartArgs {
     pub gcode: PathBuf,
-    /// SHA-256 of the gcode file (must match).
+    /// SHA-256 of the gcode file (must match file on disk).
     #[arg(long)]
     pub sha256: String,
-    /// Must be exactly START.
+    /// Must be exactly START (human consent gate).
     #[arg(long)]
     pub confirm: Option<String>,
     #[arg(long, default_value = "bambu:x1c-01")]
     pub id: String,
     #[arg(long, default_value = "192.168.1.50")]
     pub host: String,
+    #[arg(long, default_value = "X1C")]
+    pub model: String,
     /// Comma-separated allow-list of printer ids.
     #[arg(long)]
     pub allowlist: Option<String>,
+    /// Opt-in to real FTPS upload + MQTT start after gates pass.
+    #[arg(long, default_value_t = false)]
+    pub live: bool,
+    /// Printer serial (MQTT topic). Env: CADRE_BAMBU_SERIAL.
+    #[arg(long, env = "CADRE_BAMBU_SERIAL")]
+    pub serial: Option<String>,
+    /// LAN access code. Env: CADRE_BAMBU_ACCESS_CODE.
+    #[arg(long, env = "CADRE_BAMBU_ACCESS_CODE")]
+    pub access_code: Option<String>,
+    /// Remote filename on printer (default: local basename).
+    #[arg(long)]
+    pub remote_name: Option<String>,
 }

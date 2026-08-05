@@ -17,8 +17,9 @@ pub use dxf::{plate_with_holes_dxf, write_dxf_r12, DxfEntity, DxfLayer};
 pub use face_dxf::{face_to_dxf, FaceDxfReport, FacePick};
 pub use gcode::{check_gcode, GcodeFlavor, GcodeReport, PrinterVolume};
 pub use printer::{
-    evaluate_start_gates, hex_sha256, BambuAdapter, DryRunReport, Printer, PrinterError,
-    PrinterInfo, StartGate, StartRequest, CONFIRM_START,
+    evaluate_start_gates, hex_sha256, BambuAdapter, BambuTransport, DryRunReport,
+    ExternalLiveTransport, NullTransport, Printer, PrinterError, PrinterInfo, RecordingTransport,
+    StartGate, StartRequest, CONFIRM_START,
 };
 pub use slicer::{discover_slicers, slice_command_preview, SlicerInfo, SlicerKind};
 
