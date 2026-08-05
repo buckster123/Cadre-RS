@@ -69,6 +69,17 @@ Exit codes: 0 ok, 2 usage, 3 eval, 4 validation, 5 kernel, 6 io, 9 internal.
 `build` refuses directories. Mock kernel writes IR + facts; STEP needs `--kernel occt`.
 S5 `export --format glb` writes JSON glTF (embedded buffers) when tessellation is available.
 
+### Parity suite (parts 1–4)
+
+Fixtures live under `parity/parts/NN_name/{part.cad.star,expect.json}`.
+Runner: `cadre-bench` / `cadre bench run --suite parts1-4 --json`.
+
+Checks per part: eval · label · params · IR ops · mock execute · volume · bbox ·
+faces/edges min · selector stability · optional measures.
+
+Volumes are **MockKernel-calibrated** for default CI (no OCCT). True B-rep goldens
+are a later `parity-geom` lane.
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).

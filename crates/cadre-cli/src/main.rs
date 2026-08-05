@@ -1,5 +1,6 @@
 //! Cadre CLI binary.
 
+mod bench_cmd;
 mod build_cmd;
 mod cli;
 mod export_cmd;
@@ -20,6 +21,7 @@ fn main() {
         Commands::Build(args) => build_cmd::run(&cli, args),
         Commands::Inspect(args) => inspect_cmd::run(&cli, args),
         Commands::Export(args) => export_cmd::run(&cli, args),
+        Commands::Bench(args) => bench_cmd::run(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,

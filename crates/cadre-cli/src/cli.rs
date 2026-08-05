@@ -50,6 +50,8 @@ pub enum Commands {
     Inspect(InspectArgs),
     /// Secondary format export from an existing STEP (or rebuild from source).
     Export(ExportArgs),
+    /// Deterministic parity suite (`parts1-4`, …).
+    Bench(BenchArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -141,4 +143,27 @@ pub enum ExportFormat {
     Step,
     Stl,
     Glb,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct BenchArgs {
+    #[command(subcommand)]
+    pub cmd: BenchCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum BenchCmd {
+    /// Run a deterministic suite (default: parts1-4).
+    Run(BenchRunArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct BenchRunArgs {
+    /// Suite id: parts1-4 | parity4 | m1
+    #[arg(long, default_value = "parts1-4")]
+    pub suite: String,
+
+    /// Path to parity root (default: auto-detect `parity/` from cwd or crate layout).
+    #[arg(long)]
+    pub parity_root: Option<PathBuf>,
 }

@@ -150,3 +150,5 @@ Dated entries. A decision changes here first, then in the code.
   stable sort keys (centroid/area); cache keyed by source+params+versions (FR-105).
 - **2026-08-05** — S5: `cadre-cli` (`cadre` bin) build/inspect/export + `--json`; mock default;
   optional `occt` feature; dir-wide builds refused; IR companion always written.
+- **2026-08-05** — S6: Parity parts 1–4 fixtures + `cadre-bench` + `cadre bench run`; mock
+  volume goldens; selectors/measure checks in CI.

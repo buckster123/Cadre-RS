@@ -1,0 +1,23 @@
+{
+  "id": "03_l_bracket",
+  "label": "l_bracket",
+  "description": "L-bracket with gusset and holes in two directions",
+  "volume_mm3": 12250.0,
+  "volume_tol_frac": 0.08,
+  "bbox_mm": {
+    "min": [0.0, -15.0, 0.0],
+    "max": [40.0, 15.0, 40.0]
+  },
+  "bbox_tol_mm": 1.0,
+  "faces_min": 6,
+  "edges_min": 12,
+  "required_ops": ["box", "cylinder", "boolean", "label"],
+  "params": {
+    "leg": 40.0,
+    "width": 30.0,
+    "thick": 5.0,
+    "hole_d": 6.0,
+    "hole_off": 15.0
+  },
+  "measures": []
+}
