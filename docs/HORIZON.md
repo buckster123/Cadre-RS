@@ -174,7 +174,7 @@ Same rhythm that worked for #14–#22:
 - [x] **H1** Live agent harness driver  
 - [x] **H2** Stdlib depth pack  
 - [x] **H3** OCCT transform quality  
-- [ ] **H4** Fillet/chamfer parity + diagnostics  
+- [x] **H4** Fillet/chamfer parity + diagnostics  
 - [ ] **H5** Viewer G-code + URDF jog  
 - [ ] **H6** Slicer execute + 2nd DFM profile  
 - [ ] **H7** MCP resources + write_source policy  

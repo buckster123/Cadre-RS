@@ -93,64 +93,82 @@ impl Shape {
         self.inner.ShapeType().into()
     }
 
-    pub fn fillet_edge(&mut self, radius: f64, edge: &Edge) {
-        let mut make_fillet = ffi::BRepFilletAPI_MakeFillet_ctor(&self.inner);
-        make_fillet.pin_mut().add_edge(radius, &edge.inner);
-
-        let filleted_shape = make_fillet.pin_mut().Shape();
-
-        self.inner = ffi::TopoDS_Shape_to_owned(filleted_shape);
+    pub fn fillet_edge(&mut self, radius: f64, edge: &Edge) -> Result<(), Error> {
+        self.fillet_edges(radius, std::iter::once(edge))
     }
 
-    pub fn chamfer_edge(&mut self, distance: f64, edge: &Edge) {
-        let mut make_chamfer = ffi::BRepFilletAPI_MakeChamfer_ctor(&self.inner);
-        make_chamfer.pin_mut().add_edge(distance, &edge.inner);
-
-        let chamfered_shape = make_chamfer.pin_mut().Shape();
-
-        self.inner = ffi::TopoDS_Shape_to_owned(chamfered_shape);
+    pub fn chamfer_edge(&mut self, distance: f64, edge: &Edge) -> Result<(), Error> {
+        self.chamfer_edges(distance, std::iter::once(edge))
     }
 
     pub fn fillet_edges<T: AsRef<Edge>>(
         &mut self,
         radius: f64,
         edges: impl IntoIterator<Item = T>,
-    ) {
+    ) -> Result<(), Error> {
         let mut make_fillet = ffi::BRepFilletAPI_MakeFillet_ctor(&self.inner);
 
+        let mut n = 0usize;
         for edge in edges.into_iter() {
             make_fillet.pin_mut().add_edge(radius, &edge.as_ref().inner);
+            n += 1;
+        }
+        if n == 0 {
+            return Err(Error::FilletFailed);
+        }
+
+        make_fillet
+            .pin_mut()
+            .Build(&ffi::Message_ProgressRange_ctor());
+        if !make_fillet.IsDone() {
+            return Err(Error::FilletFailed);
         }
 
         let filleted_shape = make_fillet.pin_mut().Shape();
-
         self.inner = ffi::TopoDS_Shape_to_owned(filleted_shape);
+        Ok(())
     }
 
     pub fn chamfer_edges<T: AsRef<Edge>>(
         &mut self,
         distance: f64,
         edges: impl IntoIterator<Item = T>,
-    ) {
+    ) -> Result<(), Error> {
         let mut make_chamfer = ffi::BRepFilletAPI_MakeChamfer_ctor(&self.inner);
 
+        let mut n = 0usize;
         for edge in edges.into_iter() {
-            make_chamfer.pin_mut().add_edge(distance, &edge.as_ref().inner);
+            make_chamfer
+                .pin_mut()
+                .add_edge(distance, &edge.as_ref().inner);
+            n += 1;
+        }
+        if n == 0 {
+            return Err(Error::ChamferFailed);
+        }
+
+        make_chamfer
+            .pin_mut()
+            .Build(&ffi::Message_ProgressRange_ctor());
+        if !make_chamfer.IsDone() {
+            return Err(Error::ChamferFailed);
         }
 
         let chamfered_shape = make_chamfer.pin_mut().Shape();
-
         self.inner = ffi::TopoDS_Shape_to_owned(chamfered_shape);
+        Ok(())
     }
 
     /// Performs fillet of `radius` on all edges of the shape
-    pub fn fillet(&mut self, radius: f64) {
-        self.fillet_edges(radius, self.edges());
+    pub fn fillet(&mut self, radius: f64) -> Result<(), Error> {
+        let edges: Vec<_> = self.edges().collect();
+        self.fillet_edges(radius, &edges)
     }
 
     /// Performs chamfer of `distance` on all edges of the shape
-    pub fn chamfer(&mut self, distance: f64) {
-        self.chamfer_edges(distance, self.edges());
+    pub fn chamfer(&mut self, distance: f64) -> Result<(), Error> {
+        let edges: Vec<_> = self.edges().collect();
+        self.chamfer_edges(distance, &edges)
     }
 
     pub fn subtract(&self, other: &Shape) -> BooleanShape {

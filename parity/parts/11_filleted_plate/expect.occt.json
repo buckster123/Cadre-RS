@@ -1,0 +1,36 @@
+{
+  "bbox_mm": {
+    "max": [
+      40.0,
+      25.0,
+      8.0
+    ],
+    "min": [
+      -40.0,
+      -25.0,
+      -8.0
+    ]
+  },
+  "bbox_tol_mm": 2.0,
+  "description": "OCCT golden (H4 fillet/chamfer) for 11_filleted_plate",
+  "edges_min": 1,
+  "faces_min": 28,
+  "id": "11_filleted_plate",
+  "label": "filleted_plate",
+  "params": {
+    "depth": 50.0,
+    "fillet_r": 2.0,
+    "height": 16.0,
+    "hole_d": 10.0,
+    "width": 80.0
+  },
+  "required_ops": [
+    "box",
+    "cylinder",
+    "boolean",
+    "fillet",
+    "label"
+  ],
+  "volume_mm3": 62793.41463243406,
+  "volume_tol_frac": 0.12
+}

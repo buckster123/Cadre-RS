@@ -14,9 +14,10 @@ without STEP write/read thrash. Cadre-RS needs in-memory translate/rotate/mirror
 | `deep_copy()` | identity transform, `copy=true` |
 | `apply_transform(&gp_Trsf)` | direct BRep transform |
 | `transformed_with(setup)` | build `gp_Trsf` + apply |
-| `sphere(radius)` | `BRepPrimAPI_MakeSphere` → Shape |
+| `Shape::sphere(radius)` | `BRepPrimAPI_MakeSphere` → Shape |
+| `fillet` / `chamfer` (+ edges variants) | `Result` + `Build`/`IsDone` (H4) |
 
-Also `Error::TransformFailed` / `PrimitiveFailed`.
+Also `Error::TransformFailed` / `PrimitiveFailed` / `FilletFailed` / `ChamferFailed`.
 
 ## Wire-up
 

@@ -28,3 +28,6 @@ pub const SUITE_PARTS_5_10_OCCT: &str = "parts5-10-occt";
 
 /// Full Parity-10 mock suite.
 pub const SUITE_PARTS_1_10: &str = "parts1-10";
+
+/// OCCT-only fillet/chamfer parts (H4) — no mock expect.
+pub const SUITE_FILLET_OCCT: &str = "fillet-occt";
