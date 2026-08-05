@@ -17,6 +17,7 @@ pub enum KernelBox {
     Mock(MockKernel),
     #[cfg(feature = "occt")]
     Occt(cadre_occt::OcctKernel),
+    Truck(cadre_truck::TruckKernel),
 }
 
 impl KernelBox {
@@ -25,6 +26,7 @@ impl KernelBox {
             Self::Mock(k) => k,
             #[cfg(feature = "occt")]
             Self::Occt(k) => k,
+            Self::Truck(k) => k,
         }
     }
 
@@ -33,6 +35,7 @@ impl KernelBox {
             Self::Mock(_) => "mock",
             #[cfg(feature = "occt")]
             Self::Occt(_) => "occt",
+            Self::Truck(_) => "truck",
         }
     }
 
@@ -41,6 +44,7 @@ impl KernelBox {
             Self::Mock(k) => k.backend_version().to_string(),
             #[cfg(feature = "occt")]
             Self::Occt(k) => k.backend_version().to_string(),
+            Self::Truck(k) => k.backend_version().to_string(),
         }
     }
 }
@@ -48,6 +52,7 @@ impl KernelBox {
 pub fn open_kernel(id: KernelId) -> Result<KernelBox, (ExitCode, serde_json::Value)> {
     match id {
         KernelId::Mock => Ok(KernelBox::Mock(MockKernel::new())),
+        KernelId::Truck => Ok(KernelBox::Truck(cadre_truck::TruckKernel::new())),
         KernelId::Occt => {
             #[cfg(feature = "occt")]
             {

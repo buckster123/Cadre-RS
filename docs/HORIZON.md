@@ -180,7 +180,7 @@ Same rhythm that worked for #14–#22:
 - [x] **H7** MCP resources + write_source policy  
 - [x] **H8** build123d skeleton migrator  
 - [x] **H9** Klipper/Moonraker gated adapter  
-- [ ] **H10** truck experimental lane (non-parity)  
+- [x] **H10** truck experimental lane (non-parity)  
 
 ---
 

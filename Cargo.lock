@@ -483,6 +483,7 @@ dependencies = [
  "cadre-parts",
  "cadre-render",
  "cadre-robot",
+ "cadre-truck",
  "clap",
  "predicates",
  "serde",
@@ -634,6 +635,13 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.19",
  "urdf-rs",
+]
+
+[[package]]
+name = "cadre-truck"
+version = "0.1.0"
+dependencies = [
+ "cadre-kernel",
 ]
 
 [[package]]
