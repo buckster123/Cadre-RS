@@ -241,11 +241,72 @@ fn cadre_stdlib(builder: &mut GlobalsBuilder) {
         })
     }
 
+    /// Fillet edges. Omit `edges` (or pass empty list) to fillet all edges.
+    fn fillet<'v>(
+        shape: Value<'v>,
+        radius: Value<'v>,
+        edges: Option<Value<'v>>,
+    ) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let radius = value_f64(radius, "radius")?;
+        require_positive("radius", radius)?;
+        let edges = optional_edge_list(edges)?;
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            let id = store.builder.push(IrNode::Fillet { of, radius, edges });
+            Ok(id.0 as i32)
+        })
+    }
+
+    /// Chamfer edges. Omit `edges` (or pass empty list) to chamfer all edges.
+    fn chamfer<'v>(
+        shape: Value<'v>,
+        distance: Value<'v>,
+        edges: Option<Value<'v>>,
+    ) -> anyhow::Result<i32> {
+        let of = shape_id(shape)?;
+        let distance = value_f64(distance, "distance")?;
+        require_positive("distance", distance)?;
+        let edges = optional_edge_list(edges)?;
+        with_builder_mut(|store| {
+            if store.builder.get(of).is_none() {
+                anyhow::bail!("unknown shape id {}", of.0);
+            }
+            let id = store.builder.push(IrNode::Chamfer {
+                of,
+                distance,
+                edges,
+            });
+            Ok(id.0 as i32)
+        })
+    }
+
     /// Discard print (hermetic).
     fn print<'v>(msg: Value<'v>) -> anyhow::Result<NoneType> {
         let _ = msg;
         Ok(NoneType)
     }
+}
+
+fn optional_edge_list(edges: Option<Value<'_>>) -> anyhow::Result<Vec<u32>> {
+    let Some(v) = edges else {
+        return Ok(Vec::new());
+    };
+    let list = ListRef::from_value(v)
+        .ok_or_else(|| anyhow::anyhow!("edges= expects a list of edge indices"))?;
+    let mut out = Vec::new();
+    for item in list.iter() {
+        let i = item
+            .unpack_i32()
+            .ok_or_else(|| anyhow::anyhow!("edge index must be int"))?;
+        if i < 0 {
+            anyhow::bail!("edge index must be >= 0, got {i}");
+        }
+        out.push(i as u32);
+    }
+    Ok(out)
 }
 
 fn boolean_op<'v>(kind: BooleanKind, a: Value<'v>, b: Value<'v>) -> anyhow::Result<i32> {
