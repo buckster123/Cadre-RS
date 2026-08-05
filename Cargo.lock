@@ -567,6 +567,7 @@ dependencies = [
 name = "cadre-occt"
 version = "0.1.0"
 dependencies = [
+ "cadre-inspect",
  "cadre-kernel",
  "cadre-lang",
  "glam",

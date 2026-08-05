@@ -3,6 +3,8 @@
 //! Links LGPL OCCT via the `opencascade` crate. Not part of default CI
 //! (`cargo test --workspace --exclude cadre-occt`). See `docs/occt-binding.md`.
 
+mod topology;
+
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -14,6 +16,8 @@ use cadre_kernel::{
 use glam::dvec3;
 use opencascade::adhoc::AdHocShape;
 use opencascade::primitives::{IntoShape, Shape};
+
+// re-export topology helper path via OcctKernel::topology_snapshot
 
 static CLONE_SEQ: AtomicU64 = AtomicU64::new(0);
 
@@ -61,6 +65,10 @@ impl OcctKernel {
         self.shapes
             .get(&id.0)
             .ok_or_else(|| KernelError::unknown_shape(id))
+    }
+
+    pub(crate) fn get_pub(&self, id: ShapeId) -> KernelResult<&Shape> {
+        self.get(id)
     }
 
     fn map_occt_err(op: &str, err: opencascade::Error) -> KernelError {
@@ -224,12 +232,10 @@ impl GeomKernel for OcctKernel {
         } else {
             let wanted: std::collections::HashSet<u32> = edges.iter().map(|e| e.0).collect();
             let mut selected = Vec::new();
-            let mut i = 0u32;
-            for edge in work.edges() {
-                if wanted.contains(&i) {
+            for (i, edge) in work.edges().enumerate() {
+                if wanted.contains(&(i as u32)) {
                     selected.push(edge);
                 }
-                i += 1;
             }
             if selected.len() != wanted.len() {
                 return Err(KernelError::diagnostic(
@@ -264,12 +270,10 @@ impl GeomKernel for OcctKernel {
         } else {
             let wanted: std::collections::HashSet<u32> = edges.iter().map(|e| e.0).collect();
             let mut selected = Vec::new();
-            let mut i = 0u32;
-            for edge in work.edges() {
-                if wanted.contains(&i) {
+            for (i, edge) in work.edges().enumerate() {
+                if wanted.contains(&(i as u32)) {
                     selected.push(edge);
                 }
-                i += 1;
             }
             work.chamfer_edges(distance, &selected);
         }

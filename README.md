@@ -108,6 +108,7 @@ Full PRD: [`docs/cadre-prd.md`](docs/cadre-prd.md). Live status: [`docs/STATUS.m
 | [`docs/WINDOWS.md`](docs/WINDOWS.md) | Windows build notes |
 | [`docs/gotchas.md`](docs/gotchas.md) | Operator pitfalls |
 | [`docs/occt-binding.md`](docs/occt-binding.md) | OCCT backend strategy |
+| [`docs/occt-depth.md`](docs/occt-depth.md) | Live topology + known cut abort |
 | [`docs/cadre-prd.md`](docs/cadre-prd.md) | Product requirements, parity matrix, NFRs |
 | [`BACKLOG.md`](BACKLOG.md) | Slice ledger — S0–S12 done; post-v1 parking |
 
