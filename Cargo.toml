@@ -14,6 +14,7 @@ members = [
     "crates/cadre-api",
     "crates/cadre-robot",
     "crates/cadre-fab",
+    "crates/cadre-harness",
     "crates/cadre-occt",
 ]
 default-members = [
@@ -30,6 +31,7 @@ default-members = [
     "crates/cadre-api",
     "crates/cadre-robot",
     "crates/cadre-fab",
+    "crates/cadre-harness",
 ]
 
 [workspace.package]
@@ -59,4 +61,5 @@ cadre-parts = { path = "crates/cadre-parts" }
 cadre-api = { path = "crates/cadre-api" }
 cadre-robot = { path = "crates/cadre-robot" }
 cadre-fab = { path = "crates/cadre-fab" }
+cadre-harness = { path = "crates/cadre-harness" }
 cadre-occt = { path = "crates/cadre-occt" }

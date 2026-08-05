@@ -1,0 +1,29 @@
+{
+  "id": "09_snapshot_policy",
+  "prompt": "Always snapshot after build",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    return solid(box(25.0, 15.0, 8.0, at=CENTER), label=\"brick\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "snapshot_ok": true,
+        "volume_min": 2900,
+        "volume_max": 3100
+      }
+    ]
+  ]
+}

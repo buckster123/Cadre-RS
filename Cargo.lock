@@ -473,6 +473,7 @@ dependencies = [
  "cadre-api",
  "cadre-bench",
  "cadre-fab",
+ "cadre-harness",
  "cadre-inspect",
  "cadre-kernel",
  "cadre-lang",
@@ -504,6 +505,19 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror 2.0.19",
+]
+
+[[package]]
+name = "cadre-harness"
+version = "0.1.0"
+dependencies = [
+ "cadre-inspect",
+ "cadre-kernel",
+ "cadre-lang",
+ "cadre-render",
+ "serde",
+ "serde_json",
  "thiserror 2.0.19",
 ]
 

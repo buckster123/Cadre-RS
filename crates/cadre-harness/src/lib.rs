@@ -1,0 +1,17 @@
+//! Agent-loop harness — deterministic scripted cycles + scorecard.
+//!
+//! This is **not** a live LLM judge. It exercises the same surfaces an agent uses
+//! (write → build → inspect → snapshot → optional repair) and scores
+//! loops-to-success. An external agent can be plugged later via CLI `--cmd`.
+
+#![deny(unsafe_code)]
+
+mod runner;
+mod scenario;
+mod score;
+
+pub use runner::{default_tasks_root, run_suite, run_task, RunOpts};
+pub use scenario::{AssertSpec, Step, Task};
+pub use score::{Scorecard, TaskResult, SUITE_AGENT10};
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

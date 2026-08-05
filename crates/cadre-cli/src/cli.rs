@@ -52,6 +52,8 @@ pub enum Commands {
     Export(ExportArgs),
     /// Deterministic parity suite (`parts1-4`, …).
     Bench(BenchArgs),
+    /// Agent-loop harness scorecard (`agent10`).
+    Harness(HarnessArgs),
     /// Multi-view PNG packet (+ orbit GIF).
     Snapshot(SnapshotArgs),
     /// Local embedded viewer (deep links).
@@ -175,13 +177,35 @@ pub enum BenchCmd {
 
 #[derive(Debug, clap::Args)]
 pub struct BenchRunArgs {
-    /// Suite id: parts1-4 | parity4 | m1
+    /// Suite id: parts1-4 | parity4 | m1 | parts1-4-occt
     #[arg(long, default_value = "parts1-4")]
     pub suite: String,
 
     /// Path to parity root (default: auto-detect `parity/` from cwd or crate layout).
     #[arg(long)]
     pub parity_root: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct HarnessArgs {
+    #[command(subcommand)]
+    pub cmd: HarnessCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum HarnessCmd {
+    /// Run agent-loop suite and print scorecard.
+    Run(HarnessRunArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct HarnessRunArgs {
+    /// Suite id: agent10 (default)
+    #[arg(long, default_value = "agent10")]
+    pub suite: String,
+    /// Path to harness/tasks (auto-detect by default).
+    #[arg(long)]
+    pub tasks_root: Option<PathBuf>,
 }
 
 #[derive(Debug, clap::Args)]

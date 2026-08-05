@@ -44,9 +44,9 @@ Priority suggestions when resuming:
 2. **OCCT bench lane** — `parts1-4-occt` + expect.occt.json ✅ (PR #15)
 3. **Face→DXF** — project planar face selector to DXF ✅ (PR #16)
 4. **Live Bambu** — FTPS/MQTT behind gates + `--live` ✅ (PR #17)
-5. **Streamable-HTTP MCP** — POST /mcp + SSE ✅ (this slice)
-6. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
-7. **Agent harness score** — external eval ≥6/10
+5. **Streamable-HTTP MCP** — POST /mcp + SSE ✅ (PR #18)
+6. **Agent harness score** — scripted agent10 ≥6/10 ✅ (this slice)
+7. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
 8. **Diff/align/frame** CLI polish beyond assembly align_check
 
 ## Post-v1 parking

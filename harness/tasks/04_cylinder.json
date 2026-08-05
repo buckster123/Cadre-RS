@@ -1,0 +1,36 @@
+{
+  "id": "04_cylinder",
+  "prompt": "r=10 h=30 cylinder",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "P = params(r=10.0, h=30.0)\ndef gen_step():\n    return solid(cylinder(P.r, P.h, at=CENTER), label=\"pin\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "volume_min": 9000,
+        "volume_max": 10000,
+        "label": "pin",
+        "faces_min": 2,
+        "snapshot_ok": true
+      }
+    ]
+  ]
+}
