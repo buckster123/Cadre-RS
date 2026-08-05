@@ -2,7 +2,10 @@
 
 use std::fs;
 
-use cadre_inspect::{inspect_refs, measure, MeasureKind, MeasureRequest, TopologySnapshot};
+use cadre_inspect::{
+    align_refs, diff_snapshots, frame_of, inspect_refs, measure, AlignExpect, MeasureKind,
+    MeasureRequest, TopologySnapshot,
+};
 #[cfg(feature = "occt")]
 use cadre_lang::execute_ir;
 use cadre_lang::{evaluate, EvalOptions, FeatureIr};
@@ -10,7 +13,7 @@ use serde_json::json;
 
 use crate::build_cmd::parse_sets;
 use crate::cli::Cli;
-use crate::cli::{InspectArgs, InspectCmd, MeasureKindArg};
+use crate::cli::{AlignExpectArg, InspectArgs, InspectCmd, MeasureKindArg};
 use crate::kernel_pick::open_kernel;
 #[cfg(feature = "occt")]
 use crate::kernel_pick::KernelBox;
@@ -28,6 +31,9 @@ pub fn run(cli: &Cli, args: &InspectArgs) -> ExitCode {
             a.kind,
             &a.set,
         ),
+        InspectCmd::Align(a) => align_cmd(cli, a),
+        InspectCmd::Frame(a) => frame_cmd(cli, a),
+        InspectCmd::Diff(a) => diff_cmd(cli, a),
     }
 }
 
@@ -222,4 +228,107 @@ fn measure_cmd(
             ExitCode::Validation
         }
     }
+}
+
+fn load_topo(
+    cli: &Cli,
+    target: &std::path::Path,
+    sets: &[String],
+) -> Result<(TopologySnapshot, &'static str), (ExitCode, serde_json::Value)> {
+    let ir = load_ir(target, sets)?;
+    resolve_topology(cli, &ir)
+}
+
+fn align_cmd(cli: &Cli, a: &crate::cli::AlignArgs) -> ExitCode {
+    let (snap, source_kind) = match load_topo(cli, &a.target, &a.set) {
+        Ok(x) => x,
+        Err((c, v)) => {
+            emit(cli.json, &v, false);
+            return c;
+        }
+    };
+    let expect = match a.expect {
+        AlignExpectArg::Coplanar => AlignExpect::Coplanar,
+        AlignExpectArg::Coaxial => AlignExpect::Coaxial,
+        AlignExpectArg::Distance => AlignExpect::Distance,
+    };
+    match align_refs(&snap, &a.a, &a.b, expect, a.distance, a.tol, a.tol_deg) {
+        Ok(r) => {
+            emit(
+                cli.json,
+                &json!({"ok": r.ok, "align": r, "meta": {"topology": source_kind}}),
+                r.ok,
+            );
+            if r.ok {
+                ExitCode::Ok
+            } else {
+                ExitCode::Validation
+            }
+        }
+        Err(e) => {
+            emit(
+                cli.json,
+                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-ALIGN","message": e.to_string()}]}),
+                false,
+            );
+            ExitCode::Validation
+        }
+    }
+}
+
+fn frame_cmd(cli: &Cli, a: &crate::cli::FrameArgs) -> ExitCode {
+    let (snap, source_kind) = match load_topo(cli, &a.target, &a.set) {
+        Ok(x) => x,
+        Err((c, v)) => {
+            emit(cli.json, &v, false);
+            return c;
+        }
+    };
+    match frame_of(&snap, &a.selector) {
+        Ok(r) => {
+            emit(
+                cli.json,
+                &json!({"ok": true, "frame": r, "meta": {"topology": source_kind}}),
+                true,
+            );
+            ExitCode::Ok
+        }
+        Err(e) => {
+            emit(
+                cli.json,
+                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-FRAME","message": e.to_string()}]}),
+                false,
+            );
+            ExitCode::Validation
+        }
+    }
+}
+
+fn diff_cmd(cli: &Cli, a: &crate::cli::DiffArgs) -> ExitCode {
+    let (old, _) = match load_topo(cli, &a.old, &a.set_old) {
+        Ok(x) => x,
+        Err((c, v)) => {
+            emit(cli.json, &v, false);
+            return c;
+        }
+    };
+    let (new, _) = match load_topo(cli, &a.new, &a.set_new) {
+        Ok(x) => x,
+        Err((c, v)) => {
+            emit(cli.json, &v, false);
+            return c;
+        }
+    };
+    let report = diff_snapshots(&old, &new);
+    emit(
+        cli.json,
+        &json!({
+            "ok": true,
+            "diff": report,
+            "old": a.old,
+            "new": a.new,
+        }),
+        true,
+    );
+    ExitCode::Ok
 }

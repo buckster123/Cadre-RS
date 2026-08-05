@@ -104,6 +104,12 @@ pub enum InspectCmd {
     Refs(RefsArgs),
     /// Measure distance / angle / diameter / thickness between refs.
     Measure(MeasureArgs),
+    /// Mating / alignment check between two refs.
+    Align(AlignArgs),
+    /// Local frame (origin + axes) for a ref.
+    Frame(FrameArgs),
+    /// Diff two builds (volume/faces + selector remap hints).
+    Diff(DiffArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -131,6 +137,52 @@ pub struct MeasureArgs {
     pub kind: MeasureKindArg,
     #[arg(long = "set", value_name = "KEY=VAL")]
     pub set: Vec<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct AlignArgs {
+    pub target: PathBuf,
+    pub a: String,
+    pub b: String,
+    #[arg(long, value_enum, default_value_t = AlignExpectArg::Distance)]
+    pub expect: AlignExpectArg,
+    /// Expected distance mm when --expect distance.
+    #[arg(long)]
+    pub distance: Option<f64>,
+    #[arg(long, default_value_t = 0.1)]
+    pub tol: f64,
+    #[arg(long, default_value_t = 1.0)]
+    pub tol_deg: f64,
+    #[arg(long = "set", value_name = "KEY=VAL")]
+    pub set: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum AlignExpectArg {
+    Coplanar,
+    Coaxial,
+    Distance,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FrameArgs {
+    pub target: PathBuf,
+    /// Selector e.g. `#o1.1.f1`
+    pub selector: String,
+    #[arg(long = "set", value_name = "KEY=VAL")]
+    pub set: Vec<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct DiffArgs {
+    /// Older build source `.cad.star`
+    pub old: PathBuf,
+    /// Newer build source `.cad.star`
+    pub new: PathBuf,
+    #[arg(long = "set-old", value_name = "KEY=VAL")]
+    pub set_old: Vec<String>,
+    #[arg(long = "set-new", value_name = "KEY=VAL")]
+    pub set_new: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]

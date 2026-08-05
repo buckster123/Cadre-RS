@@ -46,8 +46,8 @@ Priority suggestions when resuming:
 4. **Live Bambu** — FTPS/MQTT behind gates + `--live` ✅ (PR #17)
 5. **Streamable-HTTP MCP** — POST /mcp + SSE ✅ (PR #18)
 6. **Agent harness score** — scripted agent10 ≥6/10 ✅ (this slice)
-7. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
-8. **Diff/align/frame** CLI polish beyond assembly align_check
+8. **Diff/align/frame** CLI polish beyond assembly align_check ✅ (this slice)
+9. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
 
 ## Post-v1 parking
 
