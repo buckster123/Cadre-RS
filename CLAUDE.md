@@ -58,7 +58,8 @@ are pre-filled — delete what doesn't apply, add what's yours.
 **Locked means locked — do not re-litigate these mid-session; amend deliberately, with a date.**
 
 - **Language**: Rust — one Cargo workspace, every binary in it
-- **Kernel exception**: OCCT via FFI is the default backend (D4); pure-Rust preferred elsewhere
+- **Kernel exception**: OCCT via FFI is the default backend (D4/D19); pure-Rust preferred elsewhere.
+  Bind path: `docs/occt-binding.md`. `cadre-kernel` is pure; OCCT stays optional.
 - **Authoring**: Starlark `.cad.star` (etc.), hermetic, STEP-first (D2, D3)
 - **License**: MIT OR Apache-2.0 dual for core; OCCT separate LGPL engine component (D6)
 - **Faces**: CLI + MCP + local Axum HTTP; single schema source (D5, D13)
@@ -190,6 +191,7 @@ Load only the relevant doc when entering a subsystem — do not load all of them
 | `docs/CHARTER.md` | **Binding decisions D1–Dn, phases, scope fence — read before non-trivial work** |
 | `docs/design.md` | **The contract** — wire format, API, invariants |
 | `docs/cadre-prd.md` | Full PRD, parity matrix, NFRs, milestone detail |
+| `docs/occt-binding.md` | OCCT bind/vendor strategy (D19) — load before `cadre-occt` work |
 | `docs/gotchas.md` | **Any subsystem change — grep it first** |
 | `BACKLOG.md` | Outstanding work — slice ledger + parked items |
 

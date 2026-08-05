@@ -68,6 +68,7 @@ Full PRD: [`docs/cadre-prd.md`](docs/cadre-prd.md).
 |------|--------------|
 | [`docs/design.md`](docs/design.md) | The contract — wire format, API, invariants |
 | [`docs/CHARTER.md`](docs/CHARTER.md) | Binding decisions, phases, scope fence |
+| [`docs/occt-binding.md`](docs/occt-binding.md) | OCCT backend strategy (S1 GO) |
 | [`docs/cadre-prd.md`](docs/cadre-prd.md) | Product requirements, parity matrix, NFRs |
 | [`BACKLOG.md`](BACKLOG.md) | Slice ledger — what's shipped, what's next |
 

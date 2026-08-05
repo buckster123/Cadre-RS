@@ -79,6 +79,12 @@ rationale is lost gets re-litigated within a month.
   honest; final transport choice is confirmed at M2 with a dated amendment if hand-rolled wins.
 - **D18 — Working name `cadre` pending trademark/crates.io sweep.** Binary and crate
   namespace stay `cadre` until OQ-1 closes; rename is a deliberate charter amendment.
+- **D19 — OCCT bind path GO (S1).** Default parity backend will be `cadre-occt` implementing
+  `GeomKernel`, layered on bschwind `opencascade`/`opencascade-sys` with **dynamic or
+  separately installed engine** preferred over static `occt-sys` in the default binary.
+  Fallback ladder: thin cxx to prebuilt OCCT → `occt-wasm` engine process. Do **not** adopt
+  `cadrum`/high-level crates as the authoring surface. Full write-up: `docs/occt-binding.md`.
+  Live OCCT box→STEP remains S3; this decision locks the *approach*, not the finished binding.
 
 ## Phases
 
@@ -134,3 +140,5 @@ From PRD §16 — still unresolved; do not silently assume answers in code:
 Dated entries. A decision changes here first, then in the code.
 
 - **2026-08-05** — charter adopted from `docs/cadre-prd.md` (Draft v0.1, 2026-07-28) at Launchpad-RS bootstrap.
+- **2026-08-05** — D19: S1 kernel spike GO on OCCT via `GeomKernel` + opencascade-rs family
+  (dynamic/separate engine); see `docs/occt-binding.md`. `cadre-kernel` + `MockKernel` landed.
