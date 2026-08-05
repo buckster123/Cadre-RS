@@ -25,9 +25,10 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 
 ## Status
 
-**v1 surface complete (S0–S12 / M0–M6).** Default path is mock-kernel CI-green on Linux + Windows.
-Live OCCT STEP and live printer start remain optional/deferred — see
-[`docs/METRICS.md`](docs/METRICS.md) and the compact [`docs/STATUS.md`](docs/STATUS.md).
+**v1 surface complete (S0–S12 / M0–M6)** plus post-v1 cook **#14–#22** (OCCT depth through
+parity 5–10 + transforms). Default path is mock-kernel CI-green on Linux + Windows.
+Next ordered board: [`docs/HORIZON.md`](docs/HORIZON.md) (H1–H10). Compact status:
+[`docs/STATUS.md`](docs/STATUS.md) · scorecard: [`docs/METRICS.md`](docs/METRICS.md).
 
 ## What it is
 

@@ -48,14 +48,32 @@ Priority suggestions when resuming:
 6. **Agent harness score** — scripted agent10 ≥6/10 ✅ (PR #19)
 8. **Diff/align/frame** CLI polish beyond assembly align_check ✅ (PR #20)
 9. **Parity 5–10** — full parts1-10 mock suite + translate/rotate ✅ (PR #21)
-10. **OCCT translate/rotate + expect.occt 5–10** ✅ (this slice)
+10. **OCCT translate/rotate + expect.occt 5–10** ✅ (PR #22)
 
-## Post-v1 parking
+## Horizon-1 board (ordered)
 
-- Implicit SDF CAD (FR-9xx) — experimental, STEP-first preferred
+**Source of truth:** [`docs/HORIZON.md`](docs/HORIZON.md) — cook order, exit criteria, anti-goals.
+
+| # | Slice | Status |
+|---|-------|--------|
+| H1 | Live agent harness driver (`--cmd` / MCP score) | next |
+| H2 | Stdlib depth (mirror, patterns, cone/sphere, …) | pending |
+| H3 | OCCT transform quality (drop STEP rotate round-trip) | pending |
+| H4 | Fillet/chamfer in OCCT parity + diagnostics | pending |
+| H5 | Viewer: G-code scrub + URDF jog alpha | pending |
+| H6 | Slicer execute (gated) + 2nd DFM profile | pending |
+| H7 | MCP resources + write_source policy | pending |
+| H8 | build123d → skeleton migrator (clean-room) | pending |
+| H9 | Klipper/Moonraker gated adapter | pending |
+| H10 | truck experimental non-parity lane | pending |
+
+Default when resuming with no pref: **H1**.
+
+## Post-v1 parking (Horizon-2+)
+
+- Implicit SDF CAD (FR-9xx) — experimental, STEP-first preferred; not Horizon-1
 - WASM component authoring against IR
-- truck kernel promotion toward default (only with parity evidence)
-- build123d → skeleton `.cad.star` migration assistant (clean-room from public docs only)
-- Klipper/Moonraker/OctoPrint adapters; additional DFM vendor profiles
+- truck **promotion toward default** (only after H10 seed + parity evidence)
 - STEP PMI/GD&T; drawing sheets
 - Public multi-tenant hardening of the HTTP API
+- Klipper/Moonraker/OctoPrint **beyond H9**; additional DFM vendor profiles beyond H6
