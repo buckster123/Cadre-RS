@@ -64,10 +64,10 @@ Priority suggestions when resuming:
 | H6 | Slicer execute (gated) + 2nd DFM profile | ✅ PR #30 |
 | H7 | MCP resources + write_source policy | ✅ PR #31 |
 | H8 | build123d → skeleton migrator (clean-room) | ✅ PR #32 |
-| H9 | Klipper/Moonraker gated adapter | ✅ this slice |
-| H10 | truck experimental non-parity lane | next |
+| H9 | Klipper/Moonraker gated adapter | ✅ PR #33 |
+| H10 | truck experimental non-parity lane | ✅ this slice |
 
-Default when resuming with no pref: **H10**.
+Default when resuming with no pref: **board empty — pick Horizon-2 or park**.
 
 ## Post-v1 parking (Horizon-2+)
 

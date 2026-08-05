@@ -96,14 +96,23 @@ fn resolve_topology(
     ir: &FeatureIr,
 ) -> Result<(TopologySnapshot, &'static str), (ExitCode, serde_json::Value)> {
     match cli.kernel {
-        crate::cli::KernelId::Mock => topology_from_ir(ir).map(|s| (s, "ir-analytic")).map_err(
-            |m| {
+        crate::cli::KernelId::Mock | crate::cli::KernelId::Truck => topology_from_ir(ir)
+            .map(|s| {
+                (
+                    s,
+                    if matches!(cli.kernel, crate::cli::KernelId::Truck) {
+                        "truck-analytic-nonparity"
+                    } else {
+                        "ir-analytic"
+                    },
+                )
+            })
+            .map_err(|m| {
                 (
                     ExitCode::Internal,
                     json!({"ok": false, "diagnostics": [{"code": "CADRE-E-TOPO", "message": m}]}),
                 )
-            },
-        ),
+            }),
         crate::cli::KernelId::Occt => {
             #[cfg(feature = "occt")]
             {
@@ -124,7 +133,7 @@ fn resolve_topology(
                                 json!({"ok": false, "diagnostics": [{"code": "CADRE-E-TOPO", "message": e.to_string()}]}),
                             )
                         }),
-                    KernelBox::Mock(_) => unreachable!("occt kernel box"),
+                    _ => unreachable!("occt kernel box"),
                 }
             }
             #[cfg(not(feature = "occt"))]
@@ -165,6 +174,7 @@ fn refs(cli: &Cli, target: std::path::PathBuf, facts: bool, sets: &[String]) -> 
             "kernel": match cli.kernel {
                 crate::cli::KernelId::Mock => "mock",
                 crate::cli::KernelId::Occt => "occt",
+                crate::cli::KernelId::Truck => "truck",
             },
         },
     });

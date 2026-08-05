@@ -170,7 +170,7 @@ fn fab_dxf_face(cli: &Cli, a: &FabDxfFaceArgs) -> ExitCode {
                 return ExitCode::Usage;
             }
         }
-        crate::cli::KernelId::Mock => match topology_from_ir(&ir) {
+        crate::cli::KernelId::Mock | crate::cli::KernelId::Truck => match topology_from_ir(&ir) {
             Ok(s) => s,
             Err(e) => {
                 emit(
@@ -265,6 +265,7 @@ fn fab_dxf_face(cli: &Cli, a: &FabDxfFaceArgs) -> ExitCode {
             "kernel": match cli.kernel {
                 crate::cli::KernelId::Mock => "mock",
                 crate::cli::KernelId::Occt => "occt",
+                crate::cli::KernelId::Truck => "truck",
             },
         }),
         true,

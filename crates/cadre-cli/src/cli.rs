@@ -24,7 +24,7 @@ pub struct Cli {
     #[arg(long, global = true, env = "CADRE_PROJECT")]
     pub project: Option<PathBuf>,
 
-    /// Geometry kernel: mock (default, no OCCT) or occt (needs --features occt build).
+    /// Geometry kernel: mock (default) | occt | truck (experimental NON-PARITY).
     #[arg(long, global = true, env = "CADRE_KERNEL", default_value = "mock")]
     pub kernel: KernelId,
 
@@ -40,6 +40,8 @@ pub struct Cli {
 pub enum KernelId {
     Mock,
     Occt,
+    /// Experimental pure-Rust lane (NON-PARITY; never default).
+    Truck,
 }
 
 #[derive(Debug, Subcommand)]

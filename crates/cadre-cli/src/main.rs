@@ -47,6 +47,7 @@ fn main() {
                 "kernel_default": kernel_pick::default_kernel_id(),
                 "features": {
                     "occt": cfg!(feature = "occt"),
+                    "truck": true,
                 },
                 "crates": {
                     "cadre_kernel": cadre_kernel::VERSION,
@@ -61,6 +62,12 @@ fn main() {
                     "cadre_robot": cadre_robot::VERSION,
                     "cadre_fab": cadre_fab::VERSION,
                     "cadre_harness": cadre_harness::VERSION,
+                    "cadre_truck": cadre_truck::VERSION,
+                },
+                "kernels": {
+                    "default": kernel_pick::default_kernel_id(),
+                    "truck_parity_eligible": false,
+                    "truck_note": "experimental pure-Rust CSG seed — NON-PARITY; never default",
                 },
                 "metrics_doc": "docs/METRICS.md",
                 "licensing_doc": "docs/LICENSING.md",
