@@ -97,6 +97,19 @@ Renderer is a **software z-buffer** (no GPU / wgpu yet) so CI stays headless-gre
 IR→mesh is analytic (box/cylinder); boolean **cut/intersect keep operand A** in the
 preview mesh and record that in `manifest.notes` / `preview_mesh: true`.
 
+### MCP + skills (v0 / S8)
+
+```sh
+cargo run -p cadre-cli -- mcp                 # stdio, Content-Length framing
+cargo run -p cadre-cli -- skills export -o dist/skills/cadre --json
+```
+
+Tools (short schemas): `build`, `write_source`, `read_source`, `inspect_refs`, `measure`,
+`snapshot` (optional base64 PNG content for iso/front).
+
+Doctrine pack: `skills/cadre/SKILL.md` + `references/workflow.md`.
+Hand-rolled JSON-RPC (OQ-7 SDK deferred). Logs on **stderr** only.
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).

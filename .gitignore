@@ -3,3 +3,6 @@
 .env
 .cadre/
 .DS_Store
+**/*.snap/
+*.step
+*.ir.json

@@ -56,6 +56,10 @@ pub enum Commands {
     Snapshot(SnapshotArgs),
     /// Local embedded viewer (deep links).
     View(ViewArgs),
+    /// MCP server (stdio JSON-RPC; logs on stderr).
+    Mcp(McpArgs),
+    /// Skill-pack export for agents.
+    Skills(SkillsArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -214,7 +218,35 @@ pub struct ViewArgs {
     #[arg(long, default_value = "127.0.0.1")]
     pub host: String,
 
-    /// Open once and exit after printing links (still serves until Ctrl-C unless --once).
+    /// Open once: prepare snaps only, do not serve (CI-friendly).
     #[arg(long)]
     pub once: bool,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct McpArgs {
+    // reserved for --http later
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SkillsArgs {
+    #[command(subcommand)]
+    pub cmd: SkillsCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum SkillsCmd {
+    /// Export bundled Cadre skill pack to a directory.
+    Export(SkillsExportArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SkillsExportArgs {
+    /// Output directory (default: dist/skills/cadre).
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+
+    /// Target agent ecosystem label (affects INSTALL.md only).
+    #[arg(long, default_value = "claude-code")]
+    pub agent: String,
 }

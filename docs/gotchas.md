@@ -80,3 +80,6 @@
   not shown. Agents must still trust numeric inspect, not pixels alone.
 
 - **`cadre view` blocks.** Use `--once` in CI (prepare only). Default serves until Ctrl-C.
+
+- **MCP stdout is protocol-only.** Never print human banners on stdout in `cadre mcp`.
+- **`part.cad.star` is not a repo file.** Fixtures live under `parity/parts/*/part.cad.star`.

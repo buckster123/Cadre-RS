@@ -154,3 +154,5 @@ Dated entries. A decision changes here first, then in the code.
   volume goldens; selectors/measure checks in CI.
 - **2026-08-05** — S7: `cadre-render` software z-buffer snapshots (PNG multi-view + orbit GIF);
   `cadre snapshot` / `cadre view` (loopback HTML + deep links). Preview mesh notes for cuts.
+- **2026-08-05** — S8: hand-rolled MCP stdio (`cadre mcp`) with 6 tools; skill-pack alpha at
+  `skills/cadre` + `cadre skills export`. Snapshot tool can return image content blocks.
