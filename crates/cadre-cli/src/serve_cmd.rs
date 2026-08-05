@@ -16,6 +16,7 @@ pub fn run(cli: &Cli, args: &ServeArgs) -> ExitCode {
             a.token.clone(),
             a.project.clone(),
         ),
+        ServeCmd::Mcp(a) => serve_mcp(cli, a.port, a.host.clone(), a.token.clone()),
     }
 }
 
@@ -38,7 +39,6 @@ fn serve_api(
     };
 
     if cli.json {
-        // emit once then block serving
         let body = json!({
             "ok": true,
             "bind": bind,
@@ -66,6 +66,53 @@ fn serve_api(
         Ok(()) => ExitCode::Ok,
         Err(e) => {
             eprintln!("serve error: {e}");
+            ExitCode::Io
+        }
+    }
+}
+
+fn serve_mcp(cli: &Cli, port: u16, host: String, token: Option<String>) -> ExitCode {
+    let bind = format!("{host}:{port}");
+    let cfg = cadre_mcp::HttpMcpConfig {
+        bind: bind.clone(),
+        token: token.clone(),
+    };
+
+    if cli.json {
+        emit(
+            true,
+            &json!({
+                "ok": true,
+                "bind": bind,
+                "transport": "streamable-http",
+                "rpc": format!("http://{bind}/mcp"),
+                "sse": format!("http://{bind}/mcp"),
+                "health": format!("http://{bind}/health"),
+                "auth": token.is_some(),
+            }),
+            true,
+        );
+    } else if !cli.quiet {
+        eprintln!("cadre serve mcp on http://{bind}");
+        eprintln!("  POST http://{bind}/mcp   — JSON-RPC (tools/list, tools/call, …)");
+        eprintln!("  GET  http://{bind}/mcp   — SSE heartbeats");
+        eprintln!("  GET  http://{bind}/health");
+        if token.is_some() {
+            eprintln!("  auth: bearer token required");
+        }
+    }
+
+    let rt = match tokio::runtime::Runtime::new() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("tokio runtime: {e}");
+            return ExitCode::Internal;
+        }
+    };
+    match rt.block_on(cadre_mcp::serve_http(cfg)) {
+        Ok(()) => ExitCode::Ok,
+        Err(e) => {
+            eprintln!("mcp serve error: {e}");
             ExitCode::Io
         }
     }

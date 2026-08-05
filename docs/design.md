@@ -41,7 +41,7 @@ Crate boundaries are requirements (charter D16). Internal module layout is free.
 | `cadre-parts` | `PartProvider`, `parts.lock`, assembly specs | shipped |
 | `cadre-robot` | URDF/SRDF/SDF gen + validators; analytic inertials | shipped |
 | `cadre-fab` | DFM rulepacks; slicer discovery; G-code checks; `Printer` | shipped |
-| `cadre-mcp` | MCP server (stdio; hand-rolled) | shipped |
+| `cadre-mcp` | MCP server (stdio + streamable HTTP) | shipped |
 | `cadre-api` | Axum HTTP API, jobs, SSE, OpenAPI | shipped |
 | `cadre-cli` | Clap front end — the `cadre` binary | shipped |
 
@@ -102,6 +102,12 @@ preview mesh and record that in `manifest.notes` / `preview_mesh: true`.
 
 ```sh
 cargo run -p cadre-cli -- mcp                 # stdio, Content-Length framing
+cargo run -p cadre-cli -- serve mcp --port 7420 --token dev   # streamable HTTP
+# POST http://127.0.0.1:7420/mcp  Authorization: Bearer dev
+# body: {"jsonrpc":"2.0","id":1,"method":"tools/list"}
+# GET  http://127.0.0.1:7420/mcp  — SSE heartbeats
+# GET  http://127.0.0.1:7420/health
+
 cargo run -p cadre-cli -- skills export -o dist/skills/cadre --json
 ```
 

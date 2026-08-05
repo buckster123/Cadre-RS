@@ -1,12 +1,14 @@
-//! Cadre MCP server — stdio JSON-RPC (MCP-shaped), tool surface budget-tight.
+//! Cadre MCP server — stdio + streamable HTTP JSON-RPC.
 
 #![deny(unsafe_code)]
 
+mod http;
 mod protocol;
 mod server;
 mod tools;
 
-pub use server::run_stdio;
+pub use http::{serve_http, HttpMcpConfig};
+pub use server::{dispatch, handle_http_body, run_stdio};
 pub use tools::{call_tool, tool_defs, ToolError};
 
 /// Crate version.
