@@ -81,6 +81,88 @@ impl OcctKernel {
             .map_err(|e| Self::map_occt_err("deep_copy", e))
     }
 
+    /// Select edges by `EdgeRef` indices (stable OCCT explorer order).
+    /// Empty `edges` → all edges; `refs` always lists what will be filleted/chamfered.
+    fn select_edges(
+        work: &Shape,
+        edges: &[EdgeRef],
+        shape: ShapeId,
+    ) -> KernelResult<(Vec<opencascade::primitives::Edge>, Vec<String>)> {
+        use opencascade::primitives::Edge;
+        if edges.is_empty() {
+            let all: Vec<Edge> = work.edges().collect();
+            let refs: Vec<String> = (0..all.len()).map(|i| format!("#e{i}")).collect();
+            return Ok((all, refs));
+        }
+        let wanted: std::collections::HashSet<u32> = edges.iter().map(|e| e.0).collect();
+        let mut selected = Vec::new();
+        let mut refs = Vec::new();
+        for (i, edge) in work.edges().enumerate() {
+            let idx = i as u32;
+            if wanted.contains(&idx) {
+                selected.push(edge);
+                refs.push(format!("#e{idx}"));
+            }
+        }
+        if selected.len() != wanted.len() {
+            return Err(KernelError::diagnostic(
+                "CADRE-E-UNKNOWN-EDGE",
+                format!(
+                    "requested {} edges, found {} on shape {shape} (shape has {} edges)",
+                    wanted.len(),
+                    selected.len(),
+                    work.edges().count()
+                ),
+                Some("run inspect edges / use smaller indices; selectors are #e0..#eN".into()),
+            )
+            .with_shape(shape)
+            .with_refs(wanted.iter().map(|i| format!("#e{i}"))));
+        }
+        Ok((selected, refs))
+    }
+
+    fn fillet_fail(
+        shape: ShapeId,
+        radius: f64,
+        edge_count: u32,
+        refs: &[String],
+        err: opencascade::Error,
+    ) -> KernelError {
+        KernelError::diagnostic(
+            "CADRE-E-FILLET-FAILED",
+            format!(
+                "fillet r={radius} failed on shape {shape} ({edge_count} edges available): {err}"
+            ),
+            Some(
+                "reduce radius; fillet fewer edges via edges=[…]; mock kernel always Unsupported — use OCCT"
+                    .into(),
+            ),
+        )
+        .with_shape(shape)
+        .with_refs(refs.iter().cloned())
+    }
+
+    fn chamfer_fail(
+        shape: ShapeId,
+        distance: f64,
+        edge_count: u32,
+        refs: &[String],
+        err: opencascade::Error,
+    ) -> KernelError {
+        KernelError::diagnostic(
+            "CADRE-E-CHAMFER-FAILED",
+            format!(
+                "chamfer d={distance} failed on shape {shape} ({edge_count} edges available): {err}"
+            ),
+            Some(
+                "reduce distance; chamfer fewer edges via edges=[…]; mock kernel always Unsupported — use OCCT"
+                    .into(),
+            ),
+        )
+        .with_shape(shape)
+        .with_refs(refs.iter().cloned())
+    }
+
     fn bbox_from_mesh(shape: &Shape) -> BBox {
         let mesh = shape.mesh();
         if mesh.vertices.is_empty() {
@@ -227,30 +309,17 @@ impl GeomKernel for OcctKernel {
             )));
         }
         let mut work = Self::clone_shape(self.get(shape)?)?;
-        if edges.is_empty() {
-            work.fillet(radius);
+        let edge_count = work.edges().count() as u32;
+        let (selected, refs) = Self::select_edges(&work, edges, shape)?;
+        let res = if edges.is_empty() {
+            work.fillet(radius)
         } else {
-            let wanted: std::collections::HashSet<u32> = edges.iter().map(|e| e.0).collect();
-            let mut selected = Vec::new();
-            for (i, edge) in work.edges().enumerate() {
-                if wanted.contains(&(i as u32)) {
-                    selected.push(edge);
-                }
-            }
-            if selected.len() != wanted.len() {
-                return Err(KernelError::diagnostic(
-                    "CADRE-E-UNKNOWN-EDGE",
-                    format!(
-                        "requested {} edges, found {} on shape {shape}",
-                        wanted.len(),
-                        selected.len()
-                    ),
-                    Some("run inspect edges / use smaller indices".into()),
-                ));
-            }
-            work.fillet_edges(radius, &selected);
+            work.fillet_edges(radius, &selected)
+        };
+        match res {
+            Ok(()) => Ok(self.alloc(work)),
+            Err(e) => Err(Self::fillet_fail(shape, radius, edge_count, &refs, e)),
         }
-        Ok(self.alloc(work))
     }
 
     fn chamfer(
@@ -265,19 +334,17 @@ impl GeomKernel for OcctKernel {
             )));
         }
         let mut work = Self::clone_shape(self.get(shape)?)?;
-        if edges.is_empty() {
-            work.chamfer(distance);
+        let edge_count = work.edges().count() as u32;
+        let (selected, refs) = Self::select_edges(&work, edges, shape)?;
+        let res = if edges.is_empty() {
+            work.chamfer(distance)
         } else {
-            let wanted: std::collections::HashSet<u32> = edges.iter().map(|e| e.0).collect();
-            let mut selected = Vec::new();
-            for (i, edge) in work.edges().enumerate() {
-                if wanted.contains(&(i as u32)) {
-                    selected.push(edge);
-                }
-            }
-            work.chamfer_edges(distance, &selected);
+            work.chamfer_edges(distance, &selected)
+        };
+        match res {
+            Ok(()) => Ok(self.alloc(work)),
+            Err(e) => Err(Self::chamfer_fail(shape, distance, edge_count, &refs, e)),
         }
-        Ok(self.alloc(work))
     }
 
     fn set_label(&mut self, shape: ShapeId, label: ShapeLabel) -> KernelResult<ShapeId> {

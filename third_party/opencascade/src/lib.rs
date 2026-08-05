@@ -18,4 +18,8 @@ pub enum Error {
     TransformFailed,
     #[error("Primitive construction failed")]
     PrimitiveFailed,
+    #[error("Fillet failed (radius too large or edges unsuitable)")]
+    FilletFailed,
+    #[error("Chamfer failed (distance too large or edges unsuitable)")]
+    ChamferFailed,
 }

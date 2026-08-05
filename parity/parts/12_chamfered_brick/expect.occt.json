@@ -1,0 +1,33 @@
+{
+  "bbox_mm": {
+    "max": [
+      20.0,
+      15.0,
+      9.999999999999998
+    ],
+    "min": [
+      -20.0,
+      -15.0,
+      -9.999999999999998
+    ]
+  },
+  "bbox_tol_mm": 2.0,
+  "description": "OCCT golden (H4 fillet/chamfer) for 12_chamfered_brick",
+  "edges_min": 1,
+  "faces_min": 24,
+  "id": "12_chamfered_brick",
+  "label": "chamfered_brick",
+  "params": {
+    "cham": 2.0,
+    "dx": 40.0,
+    "dy": 30.0,
+    "dz": 20.0
+  },
+  "required_ops": [
+    "box",
+    "chamfer",
+    "label"
+  ],
+  "volume_mm3": 23322.666666666668,
+  "volume_tol_frac": 0.12
+}

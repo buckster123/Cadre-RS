@@ -13,6 +13,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 25 | Live harness | `--cmd` / `@oracle` | **green** | agent10 live 10/10 |
 | 26 | Stdlib depth H2 | sphere/cone/mirror/patterns | **green** | IR v2 + pattern_hub |
 | 27 | OCCT transform H3 | no STEP thrash | **green** | transform_smoke + parts5-10-occt |
+| 28 | Fillet/chamfer H4 | OCCT diagnostics + suite | **green** | fillet_smoke + fillet-occt |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::expect::{Expect, FindFace};
 use crate::{
-    SUITE_PARTS_1_10, SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT, SUITE_PARTS_5_10,
+    SUITE_FILLET_OCCT, SUITE_PARTS_1_10, SUITE_PARTS_1_4, SUITE_PARTS_1_4_OCCT, SUITE_PARTS_5_10,
     SUITE_PARTS_5_10_OCCT,
 };
 
@@ -95,7 +95,8 @@ pub fn run_suite(parity_root: &Path, suite: &str) -> Result<SuiteReport, String>
         | "parity4-occt"
         | "m1-occt"
         | SUITE_PARTS_5_10_OCCT
-        | "parity5-10-occt" => RunOpts::occt(),
+        | "parity5-10-occt"
+        | SUITE_FILLET_OCCT => RunOpts::occt(),
         other => return Err(format!("unknown suite: {other}")),
     };
     run_suite_with(parity_root, suite, &opts)
@@ -132,6 +133,7 @@ pub fn run_suite_with(
             "09_spiral_stair",
             "10_planetary_stage",
         ],
+        SUITE_FILLET_OCCT => vec!["11_filleted_plate", "12_chamfered_brick"],
         SUITE_PARTS_1_10 | "parity10" | "m2" => vec![
             "01_calibration_block",
             "02_bolt_circle_flange",
@@ -710,5 +712,31 @@ mod tests {
             report.passed + report.failed
         );
         assert_eq!(report.parts.len(), 6);
+    }
+
+    #[test]
+    #[cfg(feature = "occt")]
+    fn fillet_occt_pass() {
+        let root = default_parity_root();
+        let report = run_suite(&root, SUITE_FILLET_OCCT).expect("suite");
+        if !report.ok {
+            for p in &report.parts {
+                if !p.ok {
+                    eprintln!("FAIL {} ({}):", p.id, p.kernel);
+                    for c in &p.checks {
+                        if !c.ok {
+                            eprintln!("  {} — {}", c.name, c.detail);
+                        }
+                    }
+                }
+            }
+        }
+        assert!(
+            report.ok,
+            "fillet-occt failed: {}/{} passed",
+            report.passed,
+            report.passed + report.failed
+        );
+        assert_eq!(report.parts.len(), 2);
     }
 }
