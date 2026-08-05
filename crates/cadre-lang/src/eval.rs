@@ -303,4 +303,26 @@ def gen_step():
         assert!(v["ir"]["nodes"].is_array());
         assert!(v["meta"]["wall_ms"].is_number());
     }
+
+    /// Property: random-ish junk must not panic; may fail eval.
+    #[test]
+    fn property_junk_sources_do_not_panic() {
+        let long = "x".repeat(10_000);
+        let samples = [
+            "",
+            "\0\0\0",
+            "def gen_step():\n  return 1/0\n",
+            "load('x.star','y')\ndef gen_step():\n  pass\n",
+            "def gen_step():\n  return solid(box(1,1,1))\n",
+            long.as_str(),
+            "def gen_step():\n  return solid(box(1e308, 1e308, 1e308))\n",
+            "def gen_step():\n  return 1\n",
+        ];
+        for (i, src) in samples.iter().enumerate() {
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let _ = evaluate(src, &EvalOptions::new(&format!("fuzz{i}.star")));
+            }));
+            assert!(r.is_ok(), "evaluate panicked on sample {i}");
+        }
+    }
 }

@@ -1,7 +1,7 @@
 //! `cadre mcp` + `cadre skills`
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde_json::json;
 
@@ -21,47 +21,128 @@ pub fn run_mcp(_cli: &Cli, _args: &McpArgs) -> ExitCode {
 
 pub fn run_skills(cli: &Cli, args: &SkillsArgs) -> ExitCode {
     match &args.cmd {
-        SkillsCmd::Export(a) => export_skills(cli, a.out.clone(), &a.agent),
+        SkillsCmd::Export(a) => {
+            if a.all {
+                export_all_agents(cli, a.out.clone())
+            } else {
+                export_skills(cli, a.out.clone(), &a.agent)
+            }
+        }
     }
+}
+
+const AGENTS: &[&str] = &["claude-code", "codex", "hermes"];
+
+fn export_all_agents(cli: &Cli, out: Option<PathBuf>) -> ExitCode {
+    let root = out.unwrap_or_else(|| PathBuf::from("dist/skills"));
+    let mut packs = Vec::new();
+    for agent in AGENTS {
+        let dest = root.join(agent).join("cadre");
+        match export_one(&dest, agent) {
+            Ok(files) => packs.push(json!({
+                "agent": agent,
+                "out": dest,
+                "files": files,
+            })),
+            Err(e) => {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-SKILLS","message": e}]}),
+                    false,
+                );
+                return ExitCode::Io;
+            }
+        }
+    }
+    emit(
+        cli.json,
+        &json!({"ok": true, "all": true, "root": root, "packs": packs}),
+        true,
+    );
+    ExitCode::Ok
 }
 
 fn export_skills(cli: &Cli, out: Option<PathBuf>, agent: &str) -> ExitCode {
     let dest = out.unwrap_or_else(|| PathBuf::from("dist/skills/cadre"));
+    match export_one(&dest, agent) {
+        Ok(files) => {
+            emit(
+                cli.json,
+                &json!({"ok": true, "agent": agent, "out": dest, "files": files}),
+                true,
+            );
+            ExitCode::Ok
+        }
+        Err(e) => {
+            emit(
+                cli.json,
+                &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-SKILLS","message": e}]}),
+                false,
+            );
+            ExitCode::Io
+        }
+    }
+}
+
+fn export_one(dest: &Path, agent: &str) -> Result<Vec<String>, String> {
     let src = skill_source_dir();
     if !src.join("SKILL.md").is_file() {
-        let v = json!({
-            "ok": false,
-            "diagnostics": [{
-                "code": "CADRE-E-SKILLS",
-                "message": format!("bundled skill missing at {}", src.display()),
-            }]
-        });
-        emit(cli.json, &v, false);
-        return ExitCode::Io;
+        return Err(format!("bundled skill missing at {}", src.display()));
     }
-    if let Err(e) = copy_dir(&src, &dest) {
-        let v = json!({"ok": false, "diagnostics": [{"code": "CADRE-E-IO", "message": e}]});
-        emit(cli.json, &v, false);
-        return ExitCode::Io;
-    }
-    // agent-specific note file
-    let note = format!(
-        "# Install notes ({agent})\n\nCopy this folder into your agent's skills directory.\n\n- Claude Code: project `.claude/skills/cadre/` or user skills path\n- Codex: plugin/skills path per current Codex docs\n- Hermes: `~/.hermes/skills/cadre/` or profile skills\n\nThen restart / reload skills. Prefer MCP `cadre mcp` for tool calls.\n"
-    );
-    let _ = fs::write(dest.join("INSTALL.md"), note);
+    copy_dir(&src, dest)?;
+    let note = install_notes(agent);
+    fs::write(dest.join("INSTALL.md"), note).map_err(|e| e.to_string())?;
+    // agent stamp for tooling
+    fs::write(
+        dest.join("AGENT.txt"),
+        format!("{agent}\nexported_by=cadre-cli\n"),
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(list_files(dest))
+}
 
-    let body = json!({
-        "ok": true,
-        "agent": agent,
-        "out": dest,
-        "files": list_files(&dest),
-    });
-    emit(cli.json, &body, true);
-    ExitCode::Ok
+fn install_notes(agent: &str) -> String {
+    match agent {
+        "claude-code" => r#"# Install — Claude Code
+
+Copy this folder to one of:
+- Project: `.claude/skills/cadre/`
+- User skills directory (see Claude Code docs)
+
+Reload the session / restart Claude Code.
+
+Prefer MCP: run `cadre mcp` and register as a stdio MCP server when available.
+"#
+        .into(),
+        "codex" => r#"# Install — Codex
+
+Copy this folder into your Codex skills/plugins path (see current OpenAI Codex docs
+for the active skills directory).
+
+Name the skill `cadre`. Restart Codex after install.
+
+For tool calls, prefer the Cadre MCP server (`cadre mcp`) if your Codex build supports MCP.
+"#
+        .into(),
+        "hermes" => r#"# Install — Hermes Agent
+
+Copy to:
+- `~/.hermes/skills/cadre/` (default profile), or
+- `~/.hermes/profiles/<name>/skills/cadre/`
+
+Then `/reload-skills` or restart the session.
+
+Hermes can also run `cadre mcp` via MCP config (`hermes mcp add` / config.yaml).
+"#
+        .into(),
+        other => format!(
+            "# Install notes ({other})\n\nCopy this folder into your agent's skills directory.\n\n\
+             Prefer MCP `cadre mcp` for tool calls when supported.\n"
+        ),
+    }
 }
 
 fn skill_source_dir() -> PathBuf {
-    // repo layout: skills/cadre next to crates/
     let from_cli = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skills/cadre");
     if from_cli.join("SKILL.md").is_file() {
         return from_cli.canonicalize().unwrap_or(from_cli);
@@ -69,7 +150,7 @@ fn skill_source_dir() -> PathBuf {
     PathBuf::from("skills/cadre")
 }
 
-fn copy_dir(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
+fn copy_dir(src: &Path, dst: &Path) -> Result<(), String> {
     fs::create_dir_all(dst).map_err(|e| e.to_string())?;
     for ent in fs::read_dir(src).map_err(|e| e.to_string())? {
         let ent = ent.map_err(|e| e.to_string())?;
@@ -84,21 +165,21 @@ fn copy_dir(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> 
     Ok(())
 }
 
-fn list_files(dir: &std::path::Path) -> Vec<String> {
+fn list_files(dir: &Path) -> Vec<String> {
     let mut out = Vec::new();
-    fn walk(d: &std::path::Path, acc: &mut Vec<String>) {
+    fn walk2(root: &Path, d: &Path, acc: &mut Vec<String>) {
         if let Ok(rd) = fs::read_dir(d) {
             for e in rd.flatten() {
                 let p = e.path();
                 if p.is_dir() {
-                    walk(&p, acc);
-                } else {
-                    acc.push(p.display().to_string());
+                    walk2(root, &p, acc);
+                } else if let Ok(rel) = p.strip_prefix(root) {
+                    acc.push(rel.display().to_string());
                 }
             }
         }
     }
-    walk(dir, &mut out);
+    walk2(dir, dir, &mut out);
     out.sort();
     out
 }

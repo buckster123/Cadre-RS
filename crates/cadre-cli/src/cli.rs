@@ -250,13 +250,17 @@ pub enum SkillsCmd {
 
 #[derive(Debug, clap::Args)]
 pub struct SkillsExportArgs {
-    /// Output directory (default: dist/skills/cadre).
+    /// Output directory (default: dist/skills/cadre, or dist/skills with --all).
     #[arg(long, short = 'o')]
     pub out: Option<PathBuf>,
 
-    /// Target agent ecosystem label (affects INSTALL.md only).
+    /// Target agent ecosystem label (affects INSTALL.md).
     #[arg(long, default_value = "claude-code")]
     pub agent: String,
+
+    /// Export packs for claude-code, codex, and hermes under `<out>/<agent>/cadre`.
+    #[arg(long)]
+    pub all: bool,
 }
 
 #[derive(Debug, clap::Args)]

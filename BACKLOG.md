@@ -33,7 +33,8 @@ split further when a slice stops being reviewable in one PR.
 - [x] **S11 — M5 fab path**: `cadre-fab` DXF + DFM (SendCutSend-style) + slicer discover +
       gcode-check + Bambu dry-run/gated start (no live print); `cadre fab` / `cadre printer`
       (2026-08-05)
-- [ ] **S12 — M6 1.0 hardening**: Windows, fuzz, skills export both agents, licensing review, metrics table
+- [x] **S12 — M6 1.0 hardening**: metrics table, licensing review, Windows CI job, dual-agent
+      skills export (`--all`), property/fuzz-style parser tests, release checklist (2026-08-05)
 
 ## Post-v1 parking
 

@@ -58,7 +58,8 @@ S8: `cadre mcp` + `cadre skills export` (skill pack in `skills/cadre`).
 S9: `cadre serve api` + `parts.lock` + assembly validate (`examples/assembly`).
 S10: `cadre robot gen|validate` (URDF/SRDF/SDF, urdf-rs parse).
 S11: `cadre fab` / `cadre printer` (DXF, DFM, gcode-check, gated dry-run).
-Next: 1.0 hardening — see [`BACKLOG.md`](BACKLOG.md).
+S12: metrics + licensing + Windows CI + dual-agent skills export.
+**v1 surface complete** through M6 hardening — see [`docs/METRICS.md`](docs/METRICS.md).
 
 ### Quick test snapshot
 ```sh
@@ -85,6 +86,11 @@ cargo run -p cadre-cli -- fab gcode-check examples/fab/sample.gcode --json
 cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode --json
 ```
 
+### Skills export (both agents)
+```sh
+cargo run -p cadre-cli -- skills export --all -o dist/skills --json
+```
+
 
 ## How it works
 
@@ -102,6 +108,9 @@ Full PRD: [`docs/cadre-prd.md`](docs/cadre-prd.md).
 |------|--------------|
 | [`docs/design.md`](docs/design.md) | The contract — wire format, API, invariants |
 | [`docs/CHARTER.md`](docs/CHARTER.md) | Binding decisions, phases, scope fence |
+| [`docs/METRICS.md`](docs/METRICS.md) | v1 exit metrics scorecard |
+| [`docs/LICENSING.md`](docs/LICENSING.md) | Dual-license + OCCT LGPL fence |
+| [`docs/WINDOWS.md`](docs/WINDOWS.md) | Windows build notes |
 | [`docs/occt-binding.md`](docs/occt-binding.md) | OCCT backend strategy (S1 GO) |
 | [`docs/cadre-prd.md`](docs/cadre-prd.md) | Product requirements, parity matrix, NFRs |
 | [`BACKLOG.md`](BACKLOG.md) | Slice ledger — what's shipped, what's next |

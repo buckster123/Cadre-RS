@@ -164,3 +164,6 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — S11: `cadre-fab` DXF R12, DFM engine + bundled SendCutSend-style profile,
   slicer discovery/command preview, gcode-check, Bambu adapter dry-run + hard start gates
   (live MQTT start still refused); `cadre fab` / `cadre printer`.
+- **2026-08-05** — S12: v1 hardening — `docs/METRICS.md`, `docs/LICENSING.md`, Windows CI,
+  `skills export --all` (claude-code/codex/hermes), property tests on lang/gcode/selectors,
+  release checklist.
