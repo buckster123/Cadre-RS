@@ -40,13 +40,15 @@ As-built map: `docs/STATUS.md`.
 
 Priority suggestions when resuming:
 
-1. **OCCT depth** — topology wiring for inspect; parity goldens beyond mock volumes
+1. **OCCT depth** — live topology + inspect --kernel occt + AdHoc boolean cut fix
+   *(see docs/occt-depth.md; cal-block e2e green again)*
 2. **Live Bambu** — FTPS/MQTT behind existing start gates (still confirm-gated)
 3. **Face→DXF** — project planar face selector to DXF (replace plate helper path)
 4. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
 5. **Streamable-HTTP MCP** — OQ-7 leftover
 6. **Agent harness score** — external eval ≥6/10
 7. **Diff/align/frame** CLI polish beyond assembly align_check
+8. **OCCT bench lane** — `parts1-4-occt` expect goldens in CI-optional job
 
 ## Post-v1 parking
 

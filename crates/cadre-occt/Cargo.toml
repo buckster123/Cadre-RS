@@ -8,6 +8,7 @@ description = "Open CASCADE GeomKernel backend for Cadre-RS (LGPL-linked OCCT)"
 
 [dependencies]
 cadre-kernel = { workspace = true }
+cadre-inspect = { workspace = true }
 glam = "0.23"
 opencascade = "0.2"
 thiserror = { workspace = true }

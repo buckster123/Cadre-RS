@@ -1,0 +1,30 @@
+# OCCT depth notes (post-v1)
+
+## Shipped
+- `OcctKernel::topology_snapshot(shape)` — mesh-clustered faces (normals + area + COM) and
+  mesh edges; safe on boolean-cut solids
+- `cadre inspect … --kernel occt` uses live topology when binary built `--features occt`
+- Boolean ops via **AdHocShape** (avoids `Shape::subtract` → `SectionEdges` crash)
+- Tests: box topology + thickness; union; cut; calibration STEP e2e; parity-01 volume
+
+## Boolean cut fix
+`Shape::subtract` / `union` in opencascade-rs 0.2 call `SectionEdges()` after the op, which
+throws C++ `StdFail_NotDone` on some OCCT builds. **Fix:** route all booleans through
+`AdHocShape::{subtract,union,intersect}`, which only take `.Shape()`.
+
+## Topology safety
+`Face::center_of_mass` / `normal_at_center` can also throw uncatchable C++ exceptions on cut
+faces (cxx does not turn them into Rust panics). **Fix:** build topology from `shape.mesh()`
+triangle normal clustering — no B-rep face property calls.
+
+## Local verify
+```sh
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo test -p cadre-occt
+CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo run -p cadre-cli --features occt -- \
+  --kernel occt inspect refs parity/parts/01_calibration_block/part.cad.star --facts --json
+```
+
+## Next
+1. Tighter tessellation tolerance for volume goldens
+2. OCCT expect.json lane in cadre-bench (`parts1-4-occt`)
+3. Face→DXF from live face refs
