@@ -1,10 +1,10 @@
 [package]
 name = "cadre-mcp"
 version = "0.1.0"
-edition.workspace = true
+edition = "2021"
 license.workspace = true
 repository.workspace = true
-description = "MCP stdio server for Cadre-RS (hand-rolled JSON-RPC, budget-tight tools)"
+description = "MCP server for Cadre-RS (stdio + streamable HTTP)"
 
 [dependencies]
 cadre-inspect = { workspace = true }
@@ -15,3 +15,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 base64 = "0.22"
+axum = { version = "0.8", features = ["macros"] }
+tokio = { workspace = true }
+tokio-stream = { version = "0.1", features = ["time"] }
+tower = "0.5"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

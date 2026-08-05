@@ -273,6 +273,8 @@ pub struct ServeArgs {
 pub enum ServeCmd {
     /// Run local Axum HTTP API (`/v1/*`).
     Api(ServeApiArgs),
+    /// Run streamable HTTP MCP (`POST /mcp`, `GET /mcp` SSE).
+    Mcp(ServeMcpArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -287,6 +289,17 @@ pub struct ServeApiArgs {
     /// Project root for relative paths (default: cwd / --project).
     #[arg(long)]
     pub project: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct ServeMcpArgs {
+    #[arg(long, default_value = "127.0.0.1")]
+    pub host: String,
+    #[arg(long, default_value_t = 7420, env = "CADRE_MCP_PORT")]
+    pub port: u16,
+    /// Optional bearer token (also `CADRE_MCP_TOKEN`).
+    #[arg(long, env = "CADRE_MCP_TOKEN")]
+    pub token: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]

@@ -1,4 +1,4 @@
-//! Stdio MCP server loop.
+//! Stdio + shared JSON-RPC dispatch.
 
 use std::io::{self, BufReader, Write};
 
@@ -25,15 +25,10 @@ pub fn run_stdio() -> io::Result<()> {
             }
         };
 
-        // notifications (no id) — handle initialize-related silently if needed
-        let is_notif = req.id.is_none();
         let resp = dispatch(req);
         if let Some(resp) = resp {
-            if !is_notif || resp.error.is_some() {
-                // still write responses for requests; skip pure notif acks without id
-                if resp.id.is_some() || resp.error.is_some() {
-                    write_response(&mut stdout, &resp)?;
-                }
+            if resp.id.is_some() || resp.error.is_some() {
+                write_response(&mut stdout, &resp)?;
             }
         }
     }
@@ -46,7 +41,8 @@ fn write_response(stdout: &mut impl Write, resp: &JsonRpcResponse) -> io::Result
     write_message(stdout, &bytes)
 }
 
-fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
+/// Handle one JSON-RPC request (shared by stdio + HTTP).
+pub fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
     let id = req.id.clone();
     match req.method.as_str() {
         "initialize" => Some(JsonRpcResponse::ok(
@@ -58,7 +54,8 @@ fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                 },
                 "serverInfo": {
                     "name": "cadre",
-                    "version": crate::VERSION
+                    "version": crate::VERSION,
+                    "transports": ["stdio", "streamable-http"]
                 }
             }),
         )),
@@ -94,6 +91,13 @@ fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
             }
         }
     }
+}
+
+/// Parse body as one JSON-RPC request and return response JSON value.
+pub fn handle_http_body(body: &[u8]) -> Result<Option<Value>, String> {
+    let req: JsonRpcRequest =
+        serde_json::from_slice(body).map_err(|e| format!("parse error: {e}"))?;
+    Ok(dispatch(req).map(|r| serde_json::to_value(r).unwrap_or(Value::Null)))
 }
 
 #[cfg(test)]
@@ -168,5 +172,12 @@ def gen_step():
         .unwrap();
         let n = tools.result.unwrap()["tools"].as_array().unwrap().len();
         assert_eq!(n, 6);
+    }
+
+    #[test]
+    fn http_body_tools_list() {
+        let body = br#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#;
+        let v = handle_http_body(body).unwrap().unwrap();
+        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 6);
     }
 }

@@ -43,9 +43,9 @@ Priority suggestions when resuming:
 1. **OCCT depth** — live topology + AdHoc booleans + mesh topology ✅ (PR #14)
 2. **OCCT bench lane** — `parts1-4-occt` + expect.occt.json ✅ (PR #15)
 3. **Face→DXF** — project planar face selector to DXF ✅ (PR #16)
-4. **Live Bambu** — FTPS/MQTT behind gates + `--live` ✅ (this slice)
-5. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
-6. **Streamable-HTTP MCP** — OQ-7 leftover
+4. **Live Bambu** — FTPS/MQTT behind gates + `--live` ✅ (PR #17)
+5. **Streamable-HTTP MCP** — POST /mcp + SSE ✅ (this slice)
+6. **Parity 5–10** — remaining PRD parts when stdlib grows (rotate, etc.)
 7. **Agent harness score** — external eval ≥6/10
 8. **Diff/align/frame** CLI polish beyond assembly align_check
 
