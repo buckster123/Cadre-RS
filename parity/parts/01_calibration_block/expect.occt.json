@@ -1,0 +1,30 @@
+{
+  "id": "01_calibration_block",
+  "label": "calibration_block",
+  "description": "OCCT tessellation golden — plate with 2×2 through-hole pattern",
+  "volume_mm3": 115576.6375,
+  "volume_tol_frac": 0.10,
+  "bbox_mm": {
+    "min": [-50.0, -30.0, -10.0],
+    "max": [50.0, 30.0, 10.0]
+  },
+  "bbox_tol_mm": 1.0,
+  "faces_min": 6,
+  "edges_min": 12,
+  "required_ops": ["box", "cylinder", "boolean", "label"],
+  "params": {
+    "width": 100.0,
+    "depth": 60.0,
+    "height": 20.0,
+    "hole_d": 8.0
+  },
+  "measures": [
+    {
+      "kind": "thickness",
+      "find_a": { "kind": "face", "normal": [0.0, 0.0, 1.0] },
+      "find_b": { "kind": "face", "normal": [0.0, 0.0, -1.0] },
+      "value": 20.0,
+      "tol": 1.5
+    }
+  ]
+}

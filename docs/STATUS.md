@@ -2,8 +2,9 @@
 
 > AI-oriented status block. Prefer this + `docs/METRICS.md` + `BACKLOG.md` over README narrative.
 
-**As of:** 2026-08-05 · **tip:** `main` @ S12 merge · **version:** 0.1.0  
+**As of:** 2026-08-05 · **tip:** `main` + OCCT depth (#14) + bench lane · **version:** 0.1.0  
 **agent_id:** `CADRE` · **repo:** https://github.com/buckster123/Cadre-RS
+**kernels:** mock (default CI) · occt (`parts1-4-occt` + `expect.occt.json`, `--features occt`)
 
 ## Ship state
 - **v1 surface (M0–M6 / S0–S12): COMPLETE** on default (mock) path
@@ -20,7 +21,7 @@
 | cadre-model | selectors + BuildCache |
 | cadre-inspect | refs / measure |
 | cadre-render | software z-buffer PNG + orbit GIF |
-| cadre-bench | parity suite parts 1–4 |
+| cadre-bench | parity suite parts1-4 (mock) + parts1-4-occt |
 | cadre-mcp | stdio MCP (6 tools) |
 | cadre-api | Axum `/v1/*` + jobs/SSE/OpenAPI |
 | cadre-parts | parts.lock + LocalFsProvider + AssemblySpec |
