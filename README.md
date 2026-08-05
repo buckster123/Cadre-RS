@@ -56,7 +56,8 @@ S6: parity parts 1–4 (`cargo test -p cadre-bench` / `cadre bench run`).
 S7: `cadre snapshot` / `cadre view` (PNG packet + orbit GIF).
 S8: `cadre mcp` + `cadre skills export` (skill pack in `skills/cadre`).
 S9: `cadre serve api` + `parts.lock` + assembly validate (`examples/assembly`).
-Next: robots (URDF) — see [`BACKLOG.md`](BACKLOG.md).
+S10: `cadre robot gen|validate` (URDF/SRDF/SDF, urdf-rs parse).
+Next: fab path — see [`BACKLOG.md`](BACKLOG.md).
 
 ### Quick test snapshot
 ```sh
@@ -69,6 +70,11 @@ cargo run -p cadre-cli -- serve api --port 7410 --project examples/assembly --to
 curl -s http://127.0.0.1:7410/v1/health
 curl -s -H "Authorization: Bearer dev" -H 'content-type: application/json' \
   -d '{"path":"plate_bolt.assy.json"}' http://127.0.0.1:7410/v1/assembly/validate
+```
+
+### Quick test robot
+```sh
+cargo run -p cadre-cli -- robot gen examples/robots/simple_arm.robot.json -o /tmp/arm --json
 ```
 
 

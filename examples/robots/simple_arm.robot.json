@@ -1,0 +1,95 @@
+{
+  "name": "simple_arm",
+  "links": [
+    {
+      "name": "base_link",
+      "inertial": {
+        "origin_xyz": [0.0, 0.0, 0.0],
+        "origin_rpy": [0.0, 0.0, 0.0],
+        "mass": 3.9,
+        "ixx": 0.0040625,
+        "ixy": 0.0,
+        "ixz": 0.0,
+        "iyy": 0.0040625,
+        "iyz": 0.0,
+        "izz": 0.0065
+      },
+      "visual": [
+        {
+          "origin": { "xyz": [0.0, 0.0, 0.0], "rpy": [0.0, 0.0, 0.0] },
+          "geometry": { "box": { "size": [0.1, 0.1, 0.05] } },
+          "material": { "name": "grey", "rgba": [0.5, 0.5, 0.5, 1.0] }
+        }
+      ],
+      "collision": [
+        {
+          "origin": { "xyz": [0.0, 0.0, 0.0], "rpy": [0.0, 0.0, 0.0] },
+          "geometry": { "box": { "size": [0.1, 0.1, 0.05] } }
+        }
+      ]
+    },
+    {
+      "name": "link1",
+      "inertial": {
+        "mass": 2.496,
+        "ixx": 0.0086528,
+        "ixy": 0.0,
+        "ixz": 0.0,
+        "iyy": 0.0086528,
+        "iyz": 0.0,
+        "izz": 0.0013312,
+        "origin_xyz": [0.0, 0.0, 0.0],
+        "origin_rpy": [0.0, 0.0, 0.0]
+      },
+      "visual": [
+        {
+          "origin": { "xyz": [0.0, 0.0, 0.1], "rpy": [0.0, 0.0, 0.0] },
+          "geometry": { "box": { "size": [0.04, 0.04, 0.2] } }
+        }
+      ],
+      "collision": []
+    },
+    {
+      "name": "link2",
+      "inertial": {
+        "mass": 1.053,
+        "ixx": 0.002205,
+        "ixy": 0.0,
+        "ixz": 0.0,
+        "iyy": 0.002205,
+        "iyz": 0.0,
+        "izz": 0.000316,
+        "origin_xyz": [0.0, 0.0, 0.0],
+        "origin_rpy": [0.0, 0.0, 0.0]
+      },
+      "visual": [],
+      "collision": []
+    }
+  ],
+  "joints": [
+    {
+      "name": "joint1",
+      "type": "revolute",
+      "parent": "base_link",
+      "child": "link1",
+      "origin": { "xyz": [0.0, 0.0, 0.025], "rpy": [0.0, 0.0, 0.0] },
+      "axis": [0.0, 0.0, 1.0],
+      "lower": -3.14,
+      "upper": 3.14,
+      "effort": 10.0,
+      "velocity": 1.0
+    },
+    {
+      "name": "joint2",
+      "type": "revolute",
+      "parent": "link1",
+      "child": "link2",
+      "origin": { "xyz": [0.0, 0.0, 0.2], "rpy": [0.0, 0.0, 0.0] },
+      "axis": [0.0, 1.0, 0.0],
+      "lower": -1.57,
+      "upper": 1.57,
+      "effort": 5.0,
+      "velocity": 1.0
+    }
+  ]
+}

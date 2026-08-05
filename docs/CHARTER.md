@@ -159,3 +159,5 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — S9: `cadre-parts` (parts.lock fail-closed, LocalFsProvider, AssemblySpec +
   align_check); `cadre-api` Axum `/v1/*` + jobs/SSE + OpenAPI; `cadre serve api`; example
   plate+bolt assembly under `examples/assembly/`.
+- **2026-08-05** — S10: `cadre-robot` URDF writer + structural/inertial validation + urdf-rs
+  parse; SRDF/SDF emit; `cadre robot gen|validate`; `examples/robots/simple_arm`.

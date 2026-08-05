@@ -8,6 +8,7 @@ mod inspect_cmd;
 mod kernel_pick;
 mod mcp_cmd;
 mod output;
+mod robot_cmd;
 mod serve_cmd;
 mod snapshot_cmd;
 mod topo_from_ir;
@@ -31,6 +32,7 @@ fn main() {
         Commands::Mcp(args) => mcp_cmd::run_mcp(&cli, args),
         Commands::Skills(args) => mcp_cmd::run_skills(&cli, args),
         Commands::Serve(args) => serve_cmd::run(&cli, args),
+        Commands::Robot(args) => robot_cmd::run(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,

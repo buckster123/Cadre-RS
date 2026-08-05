@@ -126,6 +126,17 @@ cargo run -p cadre-cli -- serve api --port 7410 --token secret
 missing/mismatched checksums. Assembly JSON: named components, placements, joints.
 Example: `examples/assembly/plate_bolt.assy.json`.
 
+### Robots (v0 / S10)
+
+```sh
+cargo run -p cadre-cli -- robot gen examples/robots/simple_arm.robot.json -o /tmp/arm --json
+cargo run -p cadre-cli -- robot validate /tmp/arm/simple_arm.urdf --json
+```
+
+`RobotSpec` JSON → URDF (SI units) with analytic box/cylinder inertials; validated for
+tree integrity + positive mass/inertia; re-parsed with **urdf-rs**. SRDF group from
+non-fixed joints; minimal SDF model emit.
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).
