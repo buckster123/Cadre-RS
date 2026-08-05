@@ -11,8 +11,8 @@ mod printer;
 mod slicer;
 
 pub use dfm::{
-    check_dfm, load_profile_json, sendcutsend_laser_v1, DfmFinding, DfmProfile, DfmReport,
-    DfmSeverity, FlatPart,
+    bundled_profiles, check_dfm, load_profile_json, pcb_outline_v1, resolve_bundled_profile,
+    sendcutsend_laser_v1, DfmFinding, DfmProfile, DfmReport, DfmSeverity, FlatPart,
 };
 pub use dxf::{plate_with_holes_dxf, write_dxf_r12, DxfEntity, DxfLayer};
 pub use face_dxf::{face_to_dxf, FaceDxfReport, FacePick};
@@ -23,6 +23,9 @@ pub use printer::{
     ExternalLiveTransport, NullTransport, Printer, PrinterError, PrinterInfo, RecordingTransport,
     StartGate, StartRequest, CONFIRM_START,
 };
-pub use slicer::{discover_slicers, slice_command_preview, SlicerInfo, SlicerKind};
+pub use slicer::{
+    discover_slicers, run_slice, slice_command_preview, SliceGate, SliceReport, SliceRequest,
+    SlicerInfo, SlicerKind, CONFIRM_SLICE,
+};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

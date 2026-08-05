@@ -442,9 +442,11 @@ pub enum FabCmd {
     DxfFace(FabDxfFaceArgs),
     /// DFM preflight against a vendor profile.
     Check(FabCheckArgs),
+    /// List bundled DFM profile ids.
+    Profiles,
     /// Discover local slicer CLIs.
     Slicers,
-    /// Preview (or later execute) a slicer command.
+    /// Preview or gated-execute a slicer command.
     Slice(FabSliceArgs),
     /// Static G-code validation.
     GcodeCheck(FabGcodeCheckArgs),
@@ -484,7 +486,7 @@ pub struct FabDxfFaceArgs {
 
 #[derive(Debug, clap::Args)]
 pub struct FabCheckArgs {
-    /// Bundled profile id (default: sendcutsend.laser).
+    /// Bundled profile id (default: sendcutsend.laser). Also: pcb.outline
     #[arg(long, default_value = "sendcutsend.laser")]
     pub profile: String,
     /// Optional external profile JSON file.
@@ -514,13 +516,22 @@ pub struct FabSliceArgs {
     pub mesh: PathBuf,
     #[arg(long)]
     pub slicer: Option<String>,
+    /// Explicit slicer binary path (bypasses discovery; tests / custom stubs).
+    #[arg(long)]
+    pub slicer_bin: Option<PathBuf>,
     #[arg(long, short = 'o')]
     pub out: Option<PathBuf>,
     #[arg(long)]
     pub profile: Option<String>,
-    /// Attempt real slicer exec (disabled in S11 alpha).
+    /// Run the host slicer (requires `--confirm SLICE`).
     #[arg(long, default_value_t = false)]
     pub execute: bool,
+    /// Must be exactly `SLICE` when `--execute` is set.
+    #[arg(long)]
+    pub confirm: Option<String>,
+    /// Optional allowlist entry (basename or absolute path); repeatable.
+    #[arg(long = "allowlist")]
+    pub allowlist: Vec<String>,
 }
 
 #[derive(Debug, clap::Args)]

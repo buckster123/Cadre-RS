@@ -5,9 +5,10 @@ use std::fs;
 use std::path::PathBuf;
 
 use cadre_fab::{
-    check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256, load_profile_json,
-    plate_with_holes_dxf, sendcutsend_laser_v1, slice_command_preview, BambuAdapter, FacePick,
-    FlatPart, Printer, PrinterVolume, StartRequest, CONFIRM_START,
+    bundled_profiles, check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256,
+    load_profile_json, plate_with_holes_dxf, resolve_bundled_profile, run_slice, BambuAdapter,
+    FacePick, FlatPart, Printer, PrinterVolume, SliceRequest, SlicerInfo, SlicerKind, StartRequest,
+    CONFIRM_SLICE, CONFIRM_START,
 };
 use cadre_inspect::inspect_refs;
 use serde_json::json;
@@ -24,6 +25,7 @@ pub fn run_fab(cli: &Cli, args: &FabArgs) -> ExitCode {
         FabCmd::Dxf(a) => fab_dxf(cli, a),
         FabCmd::DxfFace(a) => fab_dxf_face(cli, a),
         FabCmd::Check(a) => fab_check(cli, a),
+        FabCmd::Profiles => fab_profiles(cli),
         FabCmd::Slicers => fab_slicers(cli),
         FabCmd::Slice(a) => fab_slice(cli, a),
         FabCmd::GcodeCheck(a) => fab_gcode_check(cli, a),
@@ -294,12 +296,16 @@ fn fab_check(cli: &Cli, a: &FabCheckArgs) -> ExitCode {
             }
         }
     } else {
-        match a.profile.as_str() {
-            "sendcutsend.laser" | "sendcutsend.laser@1" | "scs" => sendcutsend_laser_v1(),
-            other => {
+        match resolve_bundled_profile(&a.profile) {
+            Some(p) => p,
+            None => {
+                let ids: Vec<_> = bundled_profiles()
+                    .iter()
+                    .map(|p| format!("{}@{}", p.id, p.version))
+                    .collect();
                 emit(
                     cli.json,
-                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-USAGE","message": format!("unknown profile '{other}' (try sendcutsend.laser or --profile-file)")}]}),
+                    &json!({"ok": false, "diagnostics":[{"code":"CADRE-E-USAGE","message": format!("unknown profile '{}' (bundled: {}; or --profile-file)", a.profile, ids.join(", "))}]}),
                     false,
                 );
                 return ExitCode::Usage;
@@ -348,6 +354,26 @@ fn fab_check(cli: &Cli, a: &FabCheckArgs) -> ExitCode {
     }
 }
 
+fn fab_profiles(cli: &Cli) -> ExitCode {
+    let profiles: Vec<_> = bundled_profiles()
+        .into_iter()
+        .map(|p| {
+            json!({
+                "id": p.id,
+                "version": p.version,
+                "vendor": p.vendor,
+                "materials": p.materials.iter().map(|m| &m.name).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+    emit(
+        cli.json,
+        &json!({"ok": true, "profiles": profiles, "count": profiles.len()}),
+        true,
+    );
+    ExitCode::Ok
+}
+
 fn fab_slicers(cli: &Cli) -> ExitCode {
     let found = discover_slicers();
     emit(
@@ -359,67 +385,82 @@ fn fab_slicers(cli: &Cli) -> ExitCode {
 }
 
 fn fab_slice(cli: &Cli, a: &FabSliceArgs) -> ExitCode {
-    let slicers = discover_slicers();
-    let slicer = if let Some(name) = &a.slicer {
-        slicers.iter().find(|s| {
-            s.name.eq_ignore_ascii_case(name)
-                || s.path
-                    .file_name()
-                    .and_then(|f| f.to_str())
-                    .is_some_and(|f| f.eq_ignore_ascii_case(name))
-        })
+    let slicer = if let Some(bin) = &a.slicer_bin {
+        SlicerInfo {
+            kind: SlicerKind::Unknown,
+            name: bin
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("slicer")
+                .into(),
+            path: bin.clone(),
+            version: None,
+        }
     } else {
-        slicers.first()
-    };
-
-    let Some(slicer) = slicer else {
-        emit(
-            cli.json,
-            &json!({
-                "ok": false,
-                "diagnostics":[{"code":"CADRE-E-FAB","message":"no slicer found on PATH; install PrusaSlicer/OrcaSlicer or pass after discovery"}],
-                "slicers": slicers,
-            }),
-            false,
-        );
-        return ExitCode::Io;
+        let slicers = discover_slicers();
+        let found = if let Some(name) = &a.slicer {
+            slicers.iter().find(|s| {
+                s.name.eq_ignore_ascii_case(name)
+                    || s.path
+                        .file_name()
+                        .and_then(|f| f.to_str())
+                        .is_some_and(|f| f.eq_ignore_ascii_case(name))
+            })
+        } else {
+            slicers.first()
+        };
+        match found {
+            Some(s) => s.clone(),
+            None => {
+                emit(
+                    cli.json,
+                    &json!({
+                        "ok": false,
+                        "diagnostics":[{"code":"CADRE-E-FAB","message":"no slicer found on PATH; install PrusaSlicer/OrcaSlicer or pass --slicer-bin"}],
+                        "slicers": slicers,
+                    }),
+                    false,
+                );
+                return ExitCode::Io;
+            }
+        }
     };
 
     let out = a
         .out
         .clone()
         .unwrap_or_else(|| a.mesh.with_extension("gcode"));
-    let cmd = slice_command_preview(slicer, &a.mesh, &out, a.profile.as_deref());
 
-    if a.execute {
-        // Real execution is optional and host-dependent; still refuse silently failing.
-        emit(
-            cli.json,
-            &json!({
-                "ok": false,
-                "diagnostics":[{"code":"CADRE-E-FAB","message":"execute mode not enabled in S11 alpha (preview only); run the command manually"}],
-                "command": cmd,
-                "slicer": slicer,
-            }),
-            false,
-        );
-        return ExitCode::Usage;
-    }
-
+    let req = SliceRequest {
+        mesh: a.mesh.clone(),
+        out: out.clone(),
+        confirm: a.confirm.clone(),
+        execute: a.execute,
+        allowlist: a.allowlist.clone(),
+        profile: a.profile.clone(),
+        slicer_path: a.slicer_bin.clone(),
+    };
+    let report = run_slice(&slicer, &req);
+    let ok = report.ok;
     emit(
         cli.json,
         &json!({
-            "ok": true,
-            "preview": true,
-            "command": cmd,
+            "ok": ok,
+            "report": report,
             "slicer": slicer,
             "mesh": a.mesh,
             "out": out,
-            "note": "Cadre orchestrates real slicers; S11 prints the command only unless --execute is later enabled."
+            "required_confirm": CONFIRM_SLICE,
         }),
-        true,
+        ok,
     );
-    ExitCode::Ok
+    if ok {
+        ExitCode::Ok
+    } else if a.execute {
+        ExitCode::Validation
+    } else {
+        ExitCode::Io
+    }
 }
 
 fn fab_gcode_check(cli: &Cli, a: &FabGcodeCheckArgs) -> ExitCode {

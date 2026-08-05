@@ -1,0 +1,9 @@
+{
+  "width_mm": 80.0,
+  "height_mm": 50.0,
+  "thickness_mm": 1.6,
+  "material": "FR4",
+  "holes_dia_mm": [0.5, 0.5, 1.0],
+  "min_hole_edge_mm": 1.0,
+  "min_hole_spacing_mm": 0.8
+}

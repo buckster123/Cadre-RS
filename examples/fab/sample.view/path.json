@@ -1,0 +1,81 @@
+{
+  "points": [
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "extrude": false,
+      "line": 0
+    },
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "extrude": false,
+      "line": 2
+    },
+    {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.2,
+      "extrude": true,
+      "line": 5
+    },
+    {
+      "x": 10.0,
+      "y": 10.0,
+      "z": 0.2,
+      "extrude": true,
+      "line": 6
+    },
+    {
+      "x": 40.0,
+      "y": 10.0,
+      "z": 0.2,
+      "extrude": true,
+      "line": 7
+    },
+    {
+      "x": 40.0,
+      "y": 40.0,
+      "z": 0.2,
+      "extrude": false,
+      "line": 8
+    },
+    {
+      "x": 10.0,
+      "y": 40.0,
+      "z": 0.2,
+      "extrude": false,
+      "line": 9
+    },
+    {
+      "x": 10.0,
+      "y": 10.0,
+      "z": 0.2,
+      "extrude": false,
+      "line": 10
+    }
+  ],
+  "layers": [
+    {
+      "z": 0.0,
+      "start": 0,
+      "end": 2
+    },
+    {
+      "z": 0.2,
+      "start": 2,
+      "end": 8
+    }
+  ],
+  "bbox_mm": [
+    0.0,
+    40.0,
+    0.0,
+    40.0,
+    0.0,
+    0.2
+  ],
+  "move_count": 7
+}

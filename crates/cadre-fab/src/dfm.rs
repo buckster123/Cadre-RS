@@ -104,6 +104,45 @@ pub fn sendcutsend_laser_v1() -> DfmProfile {
     }
 }
 
+/// Bundled PCB outline profile (generic fab house, not a live API).
+/// Stricter holes / smaller webs typical of FR4 routing.
+pub fn pcb_outline_v1() -> DfmProfile {
+    DfmProfile {
+        id: "pcb.outline".into(),
+        version: "1.0.0".into(),
+        vendor: "Generic PCB outline (bundled profile)".into(),
+        materials: vec![
+            MaterialOption {
+                name: "FR4".into(),
+                thicknesses_mm: vec![0.8, 1.0, 1.2, 1.6, 2.0],
+            },
+            MaterialOption {
+                name: "Aluminum PCB".into(),
+                thicknesses_mm: vec![1.0, 1.5, 2.0],
+            },
+        ],
+        rules: DfmRules {
+            min_hole_dia_vs_thickness: 0.25,
+            min_hole_dia_mm: 0.3,
+            min_web_mm: 0.25,
+            min_part_size_mm: 5.0,
+        },
+    }
+}
+
+/// All bundled profiles (id + version).
+pub fn bundled_profiles() -> Vec<DfmProfile> {
+    vec![sendcutsend_laser_v1(), pcb_outline_v1()]
+}
+
+pub fn resolve_bundled_profile(id: &str) -> Option<DfmProfile> {
+    match id {
+        "sendcutsend.laser" | "sendcutsend.laser@1" | "scs" => Some(sendcutsend_laser_v1()),
+        "pcb.outline" | "pcb.outline@1" | "pcb" | "jlcpcb.outline" => Some(pcb_outline_v1()),
+        _ => None,
+    }
+}
+
 pub fn check_dfm(profile: &DfmProfile, part: &FlatPart) -> DfmReport {
     let mut findings = Vec::new();
 
@@ -300,5 +339,30 @@ mod tests {
             .findings
             .iter()
             .any(|f| f.rule.starts_with("hole_dia") && f.severity == DfmSeverity::Fail));
+    }
+
+    #[test]
+    fn pcb_profile_allows_small_via() {
+        let p = pcb_outline_v1();
+        assert_eq!(p.id, "pcb.outline");
+        let part = FlatPart {
+            width_mm: 50.0,
+            height_mm: 40.0,
+            thickness_mm: 1.6,
+            material: "FR4".into(),
+            holes_dia_mm: vec![0.4],
+            min_hole_edge_mm: Some(1.0),
+            min_hole_spacing_mm: Some(0.5),
+        };
+        let r = check_dfm(&p, &part);
+        assert!(r.ok, "{r:?}");
+    }
+
+    #[test]
+    fn resolve_bundled_ids() {
+        assert!(resolve_bundled_profile("scs").is_some());
+        assert!(resolve_bundled_profile("pcb").is_some());
+        assert!(resolve_bundled_profile("nope").is_none());
+        assert_eq!(bundled_profiles().len(), 2);
     }
 }

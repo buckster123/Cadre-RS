@@ -9,12 +9,18 @@ cargo run -p cadre-cli -- fab dxf --width 100 --height 50 \
 cargo run -p cadre-cli -- fab dxf-face parity/parts/01_calibration_block/part.cad.star \
   --normal 0,0,1 -o /tmp/face.dxf --json
 
-# DFM preflight (bundled SendCutSend-style profile)
+# DFM preflight (bundled profiles)
+cargo run -p cadre-cli -- fab profiles --json
 cargo run -p cadre-cli -- fab check --part-json examples/fab/plate.flat.json --json
+cargo run -p cadre-cli -- fab check --profile pcb.outline \
+  --part-json examples/fab/pcb.flat.json --json
 
-# Slicer discovery + command preview
+# Slicer discovery + gated execute
 cargo run -p cadre-cli -- fab slicers --json
 cargo run -p cadre-cli -- fab slice mesh.stl --json
+# LIVE slice (second consent):
+cargo run -p cadre-cli -- fab slice mesh.stl --execute --confirm SLICE \
+  --allowlist prusa-slicer -o out.gcode --json
 
 # G-code static check
 cargo run -p cadre-cli -- fab gcode-check examples/fab/sample.gcode --json
