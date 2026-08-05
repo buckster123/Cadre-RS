@@ -1,0 +1,9 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('Cadre local catalog stub'),'2;1');
+FILE_NAME('m6_bolt.step','2026-08-05',('cadre'),('cadre'),$,$,$);
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
+ENDSEC;
+DATA;
+ENDSEC;
+END-ISO-10303-21;
