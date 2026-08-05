@@ -36,21 +36,23 @@ just binaries.
 ```sh
 git clone https://github.com/buckster123/Cadre-RS
 cd Cadre-RS
-cargo build --release --workspace
-# later: cadre engine install   # OCCT backend component (checksummed)
+cargo build -p cadre-cli --release
+# optional OCCT kernel (local; long first build):
+# CMAKE_POLICY_VERSION_MINIMUM=3.5 cargo build -p cadre-cli --release --features occt
 ```
 
 ## Use
 
 ```sh
-# after M1 surfaces land — illustrative:
-cadre build cad/block.cad.star --json
-cadre inspect refs cad/block.step --facts --json
-cadre snapshot cad/block.step --views iso,front --gif
-cadre view cad/block.step
+cargo run -p cadre-cli -- build cad/block.cad.star --json
+cargo run -p cadre-cli -- inspect refs cad/block.cad.star --facts --json
+cargo run -p cadre-cli -- inspect measure cad/block.cad.star '#o1.1.f1' '#o1.1.f2' --kind thickness --json
+# STEP/STL with OCCT:
+# cargo run -p cadre-cli --features occt -- --kernel occt build cad/block.cad.star --json
 ```
 
-Today (bootstrap): library crate + docs/CI only — see [`BACKLOG.md`](BACKLOG.md).
+Shipped through S5: kernel · Starlark · OCCT backend · selectors/cache · CLI.
+Next: parity suite, snapshots, MCP — see [`BACKLOG.md`](BACKLOG.md).
 
 ## How it works
 

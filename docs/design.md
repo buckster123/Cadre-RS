@@ -52,8 +52,22 @@ Bootstrap shipped `crates/cadre`. **S1** added `crates/cadre-kernel` (`GeomKerne
 `MockKernel`). **S2** added `crates/cadre-lang` (hermetic Starlark → feature IR v0).
 **S3** added `crates/cadre-occt` (LGPL OCCT backend) + `execute_ir`. **S4** added
 `crates/cadre-model` (selectors + content-hash cache) and `crates/cadre-inspect`
-(refs/measure). Default workspace members exclude OCCT so CI stays fast; see
-[`occt-binding.md`](occt-binding.md).
+(refs/measure). **S5** added `crates/cadre-cli` (`cadre` binary). Default workspace
+members exclude OCCT so CI stays fast; see [`occt-binding.md`](occt-binding.md).
+
+### CLI face (v0)
+
+```sh
+cargo run -p cadre-cli -- build part.cad.star --json
+cargo run -p cadre-cli -- inspect refs part.cad.star --facts --json
+cargo run -p cadre-cli -- inspect measure part.cad.star '#o1.1.f1' '#o1.1.f2' --kind thickness --json
+cargo run -p cadre-cli --features occt -- --kernel occt build part.cad.star --json
+```
+
+Global: `--json`, `--quiet`, `--project`, `--kernel mock|occt`, `-v`.
+Exit codes: 0 ok, 2 usage, 3 eval, 4 validation, 5 kernel, 6 io, 9 internal.
+`build` refuses directories. Mock kernel writes IR + facts; STEP needs `--kernel occt`.
+S5 `export --format glb` writes JSON glTF (embedded buffers) when tessellation is available.
 
 ### Selectors (v0)
 

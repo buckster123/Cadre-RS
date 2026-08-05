@@ -18,7 +18,8 @@ split further when a slice stops being reviewable in one PR.
       calibration block → STEP + facts (OCCT local; CI excludes package) (2026-08-05)
 - [x] **S4 — M1 build cache + selectors**: `cadre-model` (selectors + content-hash cache);
       `cadre-inspect` (refs/measure); stable `#o…` tokens (2026-08-05)
-- [ ] **S5 — M1 CLI face**: `cadre-cli` `build` / `inspect` / `export step|stl|glb` with `--json`
+- [x] **S5 — M1 CLI face**: `cadre-cli` binary `cadre` — `build` / `inspect refs|measure` /
+      `export step|stl|glb` with `--json`; mock default, optional `--features occt` (2026-08-05)
 - [ ] **S6 — M1 parity parts 1–4**: deterministic suite green on Linux CI
 - [ ] **S7 — M2 snapshot + viewer alpha**: PNG packet + orbit GIF; `cadre view` deep links
 - [ ] **S8 — M2 MCP stdio + skill-pack alpha**: tools budget ≤ 4k tokens; agent part 1 with snapshot review
