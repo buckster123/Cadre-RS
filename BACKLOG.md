@@ -50,9 +50,9 @@ Priority suggestions when resuming:
 9. **Parity 5–10** — full parts1-10 mock suite + translate/rotate ✅ (PR #21)
 10. **OCCT translate/rotate + expect.occt 5–10** ✅ (PR #22)
 
-## Horizon-1 board (ordered)
+## Horizon-1 board (ordered) — COMPLETE
 
-**Source of truth:** [`docs/HORIZON.md`](docs/HORIZON.md) — cook order, exit criteria, anti-goals.
+**Archive:** [`docs/HORIZON.md`](docs/HORIZON.md). **Active:** [`docs/HORIZON2.md`](docs/HORIZON2.md).
 
 | # | Slice | Status |
 |---|-------|--------|
@@ -65,15 +65,30 @@ Priority suggestions when resuming:
 | H7 | MCP resources + write_source policy | ✅ PR #31 |
 | H8 | build123d → skeleton migrator (clean-room) | ✅ PR #32 |
 | H9 | Klipper/Moonraker gated adapter | ✅ PR #33 |
-| H10 | truck experimental non-parity lane | ✅ this slice |
+| H10 | truck experimental non-parity lane | ✅ PR #34 |
 
-Default when resuming with no pref: **board empty — pick Horizon-2 or park**.
+## Horizon-2 board (ordered)
 
-## Post-v1 parking (Horizon-2+)
+**Source of truth:** [`docs/HORIZON2.md`](docs/HORIZON2.md).
 
-- Implicit SDF CAD (FR-9xx) — experimental, STEP-first preferred; not Horizon-1
-- WASM component authoring against IR
-- truck **promotion toward default** (only after H10 seed + parity evidence)
-- STEP PMI/GD&T; drawing sheets
-- Public multi-tenant hardening of the HTTP API
-- Klipper/Moonraker/OctoPrint **beyond H9**; additional DFM vendor profiles beyond H6
+| # | Slice | Status |
+|---|-------|--------|
+| H2-1 | WASM IR component (escape hatch) | next |
+| H2-2 | MCP OQ-7 SDK decision | pending |
+| H2-3 | Fab depth (DFM + OctoPrint) | pending |
+| H2-4 | Published live harness score | pending |
+| H2-5 | Assembly joint depth | pending |
+| H2-6 | Viewer 3D depth | pending |
+| H2-7 | Migrator depth | pending |
+| H2-8 | PMI/drawing alpha | pending |
+| H2-9 | SDF secondary experimental | pending |
+| H2-10 | Truck parity bid prep (not default) | pending |
+
+Default when resuming with no pref: **H2-1**.
+
+## Post-v1 parking (Horizon-3+ / deferred)
+
+- truck **as default** — only after H2-10 prep + parity evidence (Horizon-3)
+- Public multi-tenant SaaS — needs re-charter (NG3)
+- Full PMI/drawing package beyond H2-8 alpha
+- SDF as **primary** modeling medium (forbidden; secondary only via H2-9)

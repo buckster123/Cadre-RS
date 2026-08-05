@@ -1,8 +1,9 @@
-# Cadre-RS Horizon — post foundation board
+# Cadre-RS Horizon-1 — post foundation board (COMPLETE)
 
-> **Status:** planning charter for the next cook arc.  
-> **When written:** 2026-08-05 (after PR #22; v1 S0–S12 + post-v1 #14–#22 green).  
-> **Authority:** does **not** override `docs/CHARTER.md` D1–Dn. Amends backlog ordering only.  
+> **Status:** **COMPLETE** (H1–H10 merged ~PR #24–#34).  
+> **When written:** 2026-08-05 · **closed:** 2026-08-06.  
+> **Next board:** [`docs/HORIZON2.md`](HORIZON2.md)  
+> **Authority:** does **not** override `docs/CHARTER.md` D1–Dn.  
 > **Agent id:** `CADRE`
 
 ## 0. Where we are (ground truth)
@@ -144,14 +145,11 @@ Numbered **H1..H10**. Alphabetical option lists still apply inside a slice; this
 
 ---
 
-## 4. Horizon-2 (later; do not start while H1–H4 open)
+## 4. Horizon-2
 
-- WASM component models against IR  
-- PMI/GD&T + drawing sheets  
-- Implicit SDF as **secondary** medium (never replaces STEP doctrine)  
-- truck parity bid (only with parts1-10 OCCT-class evidence)  
-- Public multi-tenant API (would need new charter decisions on auth, tenancy, telemetry=still none)  
-- Official MCP SDK migration if hand-rolled cost > benefit (revisit OQ-7)
+**Moved to separate board:** [`docs/HORIZON2.md`](HORIZON2.md) (H2-1 … H2-10).
+
+Archive note (historical one-liner list): WASM · PMI · SDF secondary · truck parity bid · multi-tenant · MCP SDK — all expanded with exit criteria on the H2 board.
 
 ---
 
@@ -165,7 +163,7 @@ Same rhythm that worked for #14–#22:
 4. You merge + prune; we immediately take next H#.  
 5. Update this file’s checklist + `BACKLOG.md` one-liner when H# merges.
 
-**Default next slice if you say “cook on” with no pref:** **H1 Live agent harness driver.**
+**Default next slice if you say “cook on” with no pref:** see **[`docs/HORIZON2.md`](HORIZON2.md)** → **H2-1**.
 
 ---
 
