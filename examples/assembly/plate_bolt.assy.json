@@ -1,0 +1,26 @@
+{
+  "name": "plate_bolt_assy",
+  "version": 1,
+  "components": [
+    {
+      "name": "plate",
+      "source": "cad/plate.cad.star",
+      "from_lock": false,
+      "placement": { "origin_mm": [0.0, 0.0, 0.0], "rpy_deg": [0.0, 0.0, 0.0] }
+    },
+    {
+      "name": "bolt",
+      "source": "m6_bolt",
+      "from_lock": true,
+      "placement": { "origin_mm": [0.0, 0.0, 10.0], "rpy_deg": [0.0, 0.0, 0.0] }
+    }
+  ],
+  "joints": [
+    {
+      "name": "bolt_fixed",
+      "a": "plate",
+      "b": "bolt",
+      "kind": "fixed"
+    }
+  ]
+}

@@ -83,3 +83,6 @@
 
 - **MCP stdout is protocol-only.** Never print human banners on stdout in `cadre mcp`.
 - **`part.cad.star` is not a repo file.** Fixtures live under `parity/parts/*/part.cad.star`.
+- **parts.lock is fail-closed.** Missing lock entry or checksum mismatch must error — never
+  silently fetch/substitute.
+- **API default is loopback.** Don't bind `0.0.0.0` without a token.

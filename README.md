@@ -55,11 +55,20 @@ Shipped through S5: kernel · Starlark · OCCT backend · selectors/cache · CLI
 S6: parity parts 1–4 (`cargo test -p cadre-bench` / `cadre bench run`).
 S7: `cadre snapshot` / `cadre view` (PNG packet + orbit GIF).
 S8: `cadre mcp` + `cadre skills export` (skill pack in `skills/cadre`).
-Next: assemblies / HTTP — see [`BACKLOG.md`](BACKLOG.md).
+S9: `cadre serve api` + `parts.lock` + assembly validate (`examples/assembly`).
+Next: robots (URDF) — see [`BACKLOG.md`](BACKLOG.md).
 
 ### Quick test snapshot
 ```sh
 cargo run -p cadre-cli -- snapshot parity/parts/01_calibration_block/part.cad.star --json
+```
+
+### Quick test API
+```sh
+cargo run -p cadre-cli -- serve api --port 7410 --project examples/assembly --token dev
+curl -s http://127.0.0.1:7410/v1/health
+curl -s -H "Authorization: Bearer dev" -H 'content-type: application/json' \
+  -d '{"path":"plate_bolt.assy.json"}' http://127.0.0.1:7410/v1/assembly/validate
 ```
 
 
