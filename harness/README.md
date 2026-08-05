@@ -64,3 +64,6 @@ cargo run -p cadre-cli -- harness run --suite agent10 \
 - Oracle driver cheats via task file — only for plumbing.  
 - Live verify uses **mock** kernel (same as scripted CI path).  
 - Snapshot packets are real software renders when not `--no-snapshot`.
+
+# In-process oracle (CI)
+cargo run -p cadre-cli -- harness run --suite agent10 --cmd '@oracle' --json
