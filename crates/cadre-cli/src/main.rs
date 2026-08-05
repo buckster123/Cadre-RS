@@ -4,6 +4,7 @@ mod bench_cmd;
 mod build_cmd;
 mod cli;
 mod export_cmd;
+mod fab_cmd;
 mod inspect_cmd;
 mod kernel_pick;
 mod mcp_cmd;
@@ -33,6 +34,8 @@ fn main() {
         Commands::Skills(args) => mcp_cmd::run_skills(&cli, args),
         Commands::Serve(args) => serve_cmd::run(&cli, args),
         Commands::Robot(args) => robot_cmd::run(&cli, args),
+        Commands::Fab(args) => fab_cmd::run_fab(&cli, args),
+        Commands::Printer(args) => fab_cmd::run_printer(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,

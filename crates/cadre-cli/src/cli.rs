@@ -64,6 +64,10 @@ pub enum Commands {
     Serve(ServeArgs),
     /// Robot description gen/validate (URDF/SRDF/SDF).
     Robot(RobotArgs),
+    /// Fabrication: DXF, DFM, slicer, gcode-check.
+    Fab(FabArgs),
+    /// Printer adapters (Bambu dry-run / gated start).
+    Printer(PrinterArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -319,4 +323,148 @@ pub struct RobotGenArgs {
     /// Also write SDF.
     #[arg(long, default_value_t = true)]
     pub sdf: bool,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabArgs {
+    #[command(subcommand)]
+    pub cmd: FabCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum FabCmd {
+    /// Write a simple plate+holes DXF (mm).
+    Dxf(FabDxfArgs),
+    /// DFM preflight against a vendor profile.
+    Check(FabCheckArgs),
+    /// Discover local slicer CLIs.
+    Slicers,
+    /// Preview (or later execute) a slicer command.
+    Slice(FabSliceArgs),
+    /// Static G-code validation.
+    GcodeCheck(FabGcodeCheckArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabDxfArgs {
+    #[arg(long, default_value_t = 100.0)]
+    pub width: f64,
+    #[arg(long, default_value_t = 50.0)]
+    pub height: f64,
+    /// Hole as cx,cy,diameter_mm (repeatable).
+    #[arg(long = "hole")]
+    pub hole: Vec<String>,
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabCheckArgs {
+    /// Bundled profile id (default: sendcutsend.laser).
+    #[arg(long, default_value = "sendcutsend.laser")]
+    pub profile: String,
+    /// Optional external profile JSON file.
+    #[arg(long)]
+    pub profile_file: Option<PathBuf>,
+    /// FlatPart JSON file (overrides width/height/…).
+    #[arg(long)]
+    pub part_json: Option<PathBuf>,
+    #[arg(long)]
+    pub width: Option<f64>,
+    #[arg(long)]
+    pub height: Option<f64>,
+    #[arg(long)]
+    pub thickness: Option<f64>,
+    #[arg(long)]
+    pub material: Option<String>,
+    #[arg(long = "hole-dia")]
+    pub hole_dia: Vec<f64>,
+    #[arg(long)]
+    pub min_edge: Option<f64>,
+    #[arg(long)]
+    pub min_spacing: Option<f64>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabSliceArgs {
+    pub mesh: PathBuf,
+    #[arg(long)]
+    pub slicer: Option<String>,
+    #[arg(long, short = 'o')]
+    pub out: Option<PathBuf>,
+    #[arg(long)]
+    pub profile: Option<String>,
+    /// Attempt real slicer exec (disabled in S11 alpha).
+    #[arg(long, default_value_t = false)]
+    pub execute: bool,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct FabGcodeCheckArgs {
+    pub gcode: PathBuf,
+    #[arg(long)]
+    pub bed_x: Option<f64>,
+    #[arg(long)]
+    pub bed_y: Option<f64>,
+    #[arg(long)]
+    pub bed_z: Option<f64>,
+    #[arg(long)]
+    pub max_hotend: Option<f64>,
+    #[arg(long)]
+    pub max_bed: Option<f64>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct PrinterArgs {
+    #[command(subcommand)]
+    pub cmd: PrinterCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum PrinterCmd {
+    /// Simulated status (no network in S11).
+    Status(PrinterStatusArgs),
+    /// Dry-run upload gates + gcode-check (no network).
+    DryRun(PrinterDryRunArgs),
+    /// Gated start (always refused for live print in S11; gates still evaluated).
+    Start(PrinterStartArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct PrinterStatusArgs {
+    #[arg(long, default_value = "bambu:x1c-01")]
+    pub id: String,
+    #[arg(long, default_value = "192.168.1.50")]
+    pub host: String,
+    #[arg(long, default_value = "X1C")]
+    pub model: String,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct PrinterDryRunArgs {
+    pub gcode: PathBuf,
+    #[arg(long, default_value = "bambu:x1c-01")]
+    pub id: String,
+    #[arg(long, default_value = "192.168.1.50")]
+    pub host: String,
+    #[arg(long, default_value = "X1C")]
+    pub model: String,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct PrinterStartArgs {
+    pub gcode: PathBuf,
+    /// SHA-256 of the gcode file (must match).
+    #[arg(long)]
+    pub sha256: String,
+    /// Must be exactly START.
+    #[arg(long)]
+    pub confirm: Option<String>,
+    #[arg(long, default_value = "bambu:x1c-01")]
+    pub id: String,
+    #[arg(long, default_value = "192.168.1.50")]
+    pub host: String,
+    /// Comma-separated allow-list of printer ids.
+    #[arg(long)]
+    pub allowlist: Option<String>,
 }

@@ -27,6 +27,7 @@ cadre-render = { workspace = true }
 cadre-mcp = { workspace = true }
 cadre-api = { workspace = true }
 cadre-robot = { workspace = true }
+cadre-fab = { workspace = true }
 clap = { version = "4", features = ["derive", "env"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

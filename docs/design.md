@@ -137,6 +137,23 @@ cargo run -p cadre-cli -- robot validate /tmp/arm/simple_arm.urdf --json
 tree integrity + positive mass/inertia; re-parsed with **urdf-rs**. SRDF group from
 non-fixed joints; minimal SDF model emit.
 
+### Fabrication (v0 / S11)
+
+```sh
+cargo run -p cadre-cli -- fab dxf --width 100 --height 50 --hole 25,25,6 -o plate.dxf --json
+cargo run -p cadre-cli -- fab check --part-json examples/fab/plate.flat.json --json
+cargo run -p cadre-cli -- fab slicers --json
+cargo run -p cadre-cli -- fab gcode-check examples/fab/sample.gcode --json
+cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode --json
+```
+
+- DXF: R12 text, mm (`$INSUNITS=4`), outline + circles
+- DFM: versioned profile data; findings cite rule + measured/limit; never claims live vendor API
+- Slicer: discover PATH CLIs; print command preview (execute deferred)
+- G-code: flavor heuristic, bbox vs bed, temp caps
+- Printer: Bambu adapter **dry-run only** (no network); `start` needs allow-list + sha256 +
+  `confirm=START`, and S11 still refuses live start by design
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).

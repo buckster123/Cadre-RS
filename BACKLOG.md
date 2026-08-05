@@ -30,7 +30,9 @@ split further when a slice stops being reviewable in one PR.
       `cadre-api` Axum `/v1` + jobs/SSE/OpenAPI; plate+bolt example; `cadre serve api` (2026-08-05)
 - [x] **S10 — M4 robots**: `cadre-robot` URDF/SRDF/SDF gen+validate+inertials; urdf-rs parse;
       `cadre robot gen|validate`; simple_arm example (2026-08-05)
-- [ ] **S11 — M5 fab path**: DXF, DFM profile, slicer orch, gcode-check, Bambu dry-run + gated start
+- [x] **S11 — M5 fab path**: `cadre-fab` DXF + DFM (SendCutSend-style) + slicer discover +
+      gcode-check + Bambu dry-run/gated start (no live print); `cadre fab` / `cadre printer`
+      (2026-08-05)
 - [ ] **S12 — M6 1.0 hardening**: Windows, fuzz, skills export both agents, licensing review, metrics table
 
 ## Post-v1 parking

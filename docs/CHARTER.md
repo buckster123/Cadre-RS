@@ -161,3 +161,6 @@ Dated entries. A decision changes here first, then in the code.
   plate+bolt assembly under `examples/assembly/`.
 - **2026-08-05** — S10: `cadre-robot` URDF writer + structural/inertial validation + urdf-rs
   parse; SRDF/SDF emit; `cadre robot gen|validate`; `examples/robots/simple_arm`.
+- **2026-08-05** — S11: `cadre-fab` DXF R12, DFM engine + bundled SendCutSend-style profile,
+  slicer discovery/command preview, gcode-check, Bambu adapter dry-run + hard start gates
+  (live MQTT start still refused); `cadre fab` / `cadre printer`.
