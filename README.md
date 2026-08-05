@@ -53,7 +53,8 @@ cargo run -p cadre-cli -- inspect measure cad/block.cad.star '#o1.1.f1' '#o1.1.f
 
 Shipped through S5: kernel · Starlark · OCCT backend · selectors/cache · CLI.
 S6: parity parts 1–4 (`cargo test -p cadre-bench` / `cadre bench run`).
-Next: snapshots, MCP — see [`BACKLOG.md`](BACKLOG.md).
+S7: `cadre snapshot` / `cadre view` (PNG packet + orbit GIF).
+Next: MCP + skill-pack — see [`BACKLOG.md`](BACKLOG.md).
 
 ## How it works
 

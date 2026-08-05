@@ -80,6 +80,23 @@ faces/edges min · selector stability · optional measures.
 Volumes are **MockKernel-calibrated** for default CI (no OCCT). True B-rep goldens
 are a later `parity-geom` lane.
 
+### Snapshots & viewer (v0 / S7)
+
+```sh
+cargo run -p cadre-cli -- snapshot part.cad.star --json
+# → part.snap/{iso,front,top,right}.png + orbit.gif + manifest.json
+
+cargo run -p cadre-cli -- view part.snap --json
+# → http://127.0.0.1:7411/v/0/  (Ctrl-C to stop)
+
+cargo run -p cadre-cli -- view part.cad.star --once --json
+# CI-friendly: builds snap packet, no server
+```
+
+Renderer is a **software z-buffer** (no GPU / wgpu yet) so CI stays headless-green.
+IR→mesh is analytic (box/cylinder); boolean **cut/intersect keep operand A** in the
+preview mesh and record that in `manifest.notes` / `preview_mesh: true`.
+
 ### Selectors (v0)
 
 Token grammar: `#o{obj}[.{solid}][.f{face}|.e{edge}|.v{vertex}]` (1-based indices).

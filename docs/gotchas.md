@@ -75,3 +75,8 @@
 
 - **Mock build is IR-first.** STEP/STL need `--kernel occt` (+ binary built `--features occt`).
   Don't treat mock STEP warnings as success in agent loops that need fab files.
+
+- **Snapshot preview ≠ B-rep.** Cut/intersect preview meshes keep A only; fillet/chamfer are
+  not shown. Agents must still trust numeric inspect, not pixels alone.
+
+- **`cadre view` blocks.** Use `--once` in CI (prepare only). Default serves until Ctrl-C.
