@@ -478,6 +478,7 @@ dependencies = [
  "cadre-mcp",
  "cadre-model",
  "cadre-occt",
+ "cadre-parts",
  "cadre-render",
  "cadre-robot",
  "clap",

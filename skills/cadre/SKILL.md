@@ -1,12 +1,11 @@
 ---
 name: cadre
 description: >
-  Cadre CAD runtime for agents — hermetic Starlark → IR → inspect → snapshot.
-  Use when the user wants parametric CAD parts, STEP-oriented design, or geometry
-  verification. Prefer cadre CLI/MCP tools over freeform guessing.
+  Cadre CAD runtime for agents — hermetic Starlark → IR → inspect → snapshot →
+  robots → fab. Use for parametric CAD, DFM, URDF, and gated printer dry-runs.
 ---
 
-# Cadre skill (alpha)
+# Cadre skill (v1)
 
 ## Defaults
 - Units: **millimeters**, XY base, **+Z up**
@@ -17,11 +16,11 @@ description: >
 
 ## Loop
 1. Clarify one question max if critical dims missing
-2. Write `part.cad.star` (`write_source` / editor)
-3. `build` → check facts (volume, bbox)
-4. `inspect_refs` / `measure` to verify holes/thickness
-5. `snapshot` and **review images** (mandatory if geometry changed)
-6. Hand off paths (`.ir.json`, `.snap/`, later STEP via OCCT)
+2. Write `part.cad.star`
+3. `build` → facts (volume, bbox)
+4. `inspect_refs` / `measure`
+5. `snapshot` and **review images** if geometry changed
+6. Optional: robot gen, DFM check, gcode-check, printer dry-run
 
 ## Starlark flavor
 ```python
@@ -33,23 +32,25 @@ def gen_step():
     return solid(cut(blk, hole), label="part")
 ```
 
-Ops: `params`, `box`, `cylinder`, `cut`/`union`/`intersect`/`union_all`, `fillet`, `chamfer`, `solid`, `CENTER`.
-
-## CLI
+## CLI (high signal)
 ```sh
-cargo run -p cadre-cli -- build path.cad.star --json
-cargo run -p cadre-cli -- inspect refs path.cad.star --facts --json
-cargo run -p cadre-cli -- snapshot path.cad.star --json
-cargo run -p cadre-cli -- mcp          # stdio MCP
+cadre build path.cad.star --json
+cadre inspect refs path.cad.star --facts --json
+cadre snapshot path.cad.star --json
+cadre robot gen arm.robot.json -o out/ --json
+cadre fab check --part-json plate.flat.json --json
+cadre fab gcode-check print.gcode --json
+cadre printer dry-run print.gcode --json
+cadre mcp
 ```
 
 ## MCP tools
 `build`, `write_source`, `read_source`, `inspect_refs`, `measure`, `snapshot`
 
-## Honesty
-- Default kernel is **mock** (IR + analytic facts). Real STEP needs OCCT feature.
-- Snapshot preview mesh is approximate (cuts keep solid A). Trust measures for truth.
-- Selectors are `#o1.1.f3` (1-based, stable sort).
+## Safety
+- Printer **start** needs allow-list + sha256 + `confirm=START` (still may refuse live start)
+- Default kernel is **mock**; STEP needs OCCT feature
+- DFM profiles are versioned data, not live vendor quotes
 
 ## Sanctioned snapshot skip
 Only if **no visible geometry change** or **no valid artifact** — report the reason.

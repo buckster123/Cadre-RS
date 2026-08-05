@@ -43,7 +43,22 @@ fn main() {
                 "kernel_default": kernel_pick::default_kernel_id(),
                 "features": {
                     "occt": cfg!(feature = "occt"),
-                }
+                },
+                "crates": {
+                    "cadre_kernel": cadre_kernel::VERSION,
+                    "cadre_lang": cadre_lang::VERSION,
+                    "cadre_model": cadre_model::VERSION,
+                    "cadre_inspect": cadre_inspect::VERSION,
+                    "cadre_render": cadre_render::VERSION,
+                    "cadre_bench": cadre_bench::VERSION,
+                    "cadre_mcp": cadre_mcp::VERSION,
+                    "cadre_parts": cadre_parts::VERSION,
+                    "cadre_api": cadre_api::VERSION,
+                    "cadre_robot": cadre_robot::VERSION,
+                    "cadre_fab": cadre_fab::VERSION,
+                },
+                "metrics_doc": "docs/METRICS.md",
+                "licensing_doc": "docs/LICENSING.md",
             });
             emit(cli.json, &v, true);
             ExitCode::Ok

@@ -25,6 +25,23 @@ jobs:
         run: cargo test
       - name: build (default members, no OCCT)
         run: cargo build
+      - name: skills export both agents
+        run: cargo run -q -p cadre-cli -- skills export --all -o /tmp/cadre-skills --json
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: clippy (default members, no OCCT)
+        run: cargo clippy -- -D warnings
+      - name: test (default members, no OCCT)
+        run: cargo test
+      - name: build (default members, no OCCT)
+        run: cargo build
 
   # Optional: enable when runners have OCCT prebuilts / cache budget.
   # occt:

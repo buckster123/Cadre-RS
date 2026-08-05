@@ -205,4 +205,24 @@ mod tests {
         let r = check_gcode(g, &PrinterVolume::default());
         assert!(!r.ok);
     }
+
+    #[test]
+    fn property_junk_gcode_no_panic() {
+        let long = "G1 X1\n".repeat(5000);
+        let samples = [
+            "",
+            "\0\0",
+            "G1 Xnotanum\n",
+            long.as_str(),
+            "M104 S9999\nG1 X1 Y1 Z1\n",
+            ";;;;;;;;\n",
+            "G1 X-1 Y-1 Z-1\n",
+        ];
+        for (i, s) in samples.iter().enumerate() {
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let _ = check_gcode(s, &PrinterVolume::default());
+            }));
+            assert!(r.is_ok(), "gcode panicked on sample {i}");
+        }
+    }
 }

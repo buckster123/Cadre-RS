@@ -303,4 +303,22 @@ mod tests {
         assert_eq!(ordered[2].4, "top");
         assert_eq!(ordered[2].0, 3);
     }
+
+    #[test]
+    fn property_selector_junk_no_panic() {
+        let long = "x".repeat(1000);
+        let samples = [
+            "",
+            "#",
+            "#o",
+            "#o9999999999",
+            "#o1.2.3.4.5",
+            "#o-1",
+            long.as_str(),
+            "#o1.f999999",
+        ];
+        for s in samples {
+            let _ = parse_selector(s); // must not panic
+        }
+    }
 }
