@@ -396,9 +396,12 @@ mod tests {
         let root = default_tasks_root();
         let driver =
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../harness/drivers/oracle_agent.py");
+        let driver = driver.canonicalize().unwrap_or_else(|_| driver.clone());
         assert!(driver.is_file(), "missing {}", driver.display());
+        // Quote path for Windows spaces; use python launcher.
+        let py = if cfg!(windows) { "python" } else { "python3" };
         let live = LiveOpts {
-            cmd: format!("python3 {}", driver.display()),
+            cmd: format!("{py} \"{}\"", driver.display()),
             timeout_secs: 60,
             part_rel: "part.cad.star".into(),
             snapshot: true,

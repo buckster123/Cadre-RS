@@ -140,11 +140,16 @@ fn run_agent_cmd(
     loop_n: u32,
     max: u32,
 ) -> Result<AgentMeta, String> {
-    let mut cmd = Command::new("sh");
-    cmd.arg("-c")
-        .arg(&live.cmd)
-        // Keep caller cwd so relative driver paths resolve; workdir is in env.
-        .env("CADRE_HARNESS_TASK_ID", &task.id)
+    let mut cmd = if cfg!(windows) {
+        let mut c = Command::new("cmd");
+        c.arg("/C").arg(&live.cmd);
+        c
+    } else {
+        let mut c = Command::new("sh");
+        c.arg("-c").arg(&live.cmd);
+        c
+    };
+    cmd.env("CADRE_HARNESS_TASK_ID", &task.id)
         .env("CADRE_HARNESS_PROMPT", &task.prompt)
         .env("CADRE_HARNESS_WORKDIR", work)
         .env("CADRE_HARNESS_PART", part_path)
