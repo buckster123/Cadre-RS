@@ -47,8 +47,31 @@ cadre mcp
 ## MCP tools
 `build`, `write_source`, `read_source`, `inspect_refs`, `measure`, `snapshot`
 
+### write_source policy (H7)
+| Transport | Default | Override |
+|-----------|---------|----------|
+| stdio (`cadre mcp`) | **OFF** | `CADRE_MCP_WRITE_SOURCE=1` |
+| HTTP (`cadre serve mcp`) | **ON** | `CADRE_MCP_WRITE_SOURCE=0` |
+
+Local agents already have FS tools — prefer those on stdio. HTTP agents need MCP write.
+
+### MCP resources
+| URI | Content |
+|-----|---------|
+| `cadre://doc/status` | live status |
+| `cadre://doc/stdlib` | stdlib depth |
+| `cadre://doc/viewer` | viewer gcode/robot |
+| `cadre://doc/slicer-dfm` | slicer gates + DFM |
+| `cadre://doc/fillet` | fillet doctrine |
+| `cadre://doc/write-source-policy` | this policy |
+| `cadre://artifact/index` | local IR/snap/gcode index |
+| `cadre://artifact/file/<rel>` | read one artifact |
+
+`resources/list` + `resources/read` JSON-RPC methods.
+
 ## Safety
-- Printer **start** needs allow-list + sha256 + `confirm=START` (still may refuse live start)
+- Printer **start** needs allow-list + sha256 + `confirm=START` (+ `--live`)
+- Slicer **execute** needs `--confirm SLICE` (+ optional allowlist)
 - Default kernel is **mock**; STEP needs OCCT feature
 - DFM profiles are versioned data, not live vendor quotes
 

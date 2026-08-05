@@ -177,7 +177,7 @@ Same rhythm that worked for #14–#22:
 - [x] **H4** Fillet/chamfer parity + diagnostics  
 - [x] **H5** Viewer G-code + URDF jog  
 - [x] **H6** Slicer execute + 2nd DFM profile  
-- [ ] **H7** MCP resources + write_source policy  
+- [x] **H7** MCP resources + write_source policy  
 - [ ] **H8** build123d skeleton migrator  
 - [ ] **H9** Klipper/Moonraker gated adapter  
 - [ ] **H10** truck experimental lane (non-parity)  

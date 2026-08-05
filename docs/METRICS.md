@@ -16,6 +16,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 28 | Fillet/chamfer H4 | OCCT diagnostics + suite | **green** | fillet_smoke + fillet-occt |
 | 29 | Viewer H5 | gcode scrub + robot jog | **green** | cli_snapshot view_once_* |
 | 30 | Slicer/DFM H6 | gated SLICE + pcb.outline | **green** | cadre-fab slicer/dfm tests |
+| 31 | MCP H7 | resources + write_source policy | **green** | cadre-mcp resources_* tests |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

@@ -130,9 +130,9 @@ From PRD §16 — still unresolved; do not silently assume answers in code:
 2. **OQ-2** Starlark dialect details: float formatting, module system for shared libraries, stdlib naming via LLM A/B.
 3. **OQ-3** Migration assistant scope/timing (M6 vs defer).
 4. **OQ-4** Depth of assembly joint model in STEP for 1.0 (kinematic AP242 vs labels+placements).
-5. **OQ-5** Whether MCP `write_source`/`read_source` default on for local stdio or HTTP-only.
+5. ~~**OQ-5** Whether MCP `write_source`/`read_source` default on for local stdio or HTTP-only.~~ **Resolved 2026-08-05 (H7):** stdio `write_source` **OFF** by default; HTTP **ON** by default; override via `CADRE_MCP_WRITE_SOURCE`. `read_source` on both. See amendments + `cadre://doc/write-source-policy`.
 6. **OQ-6** Vendor-profile governance for community DFM rulepack updates.
-7. **OQ-7** MCP transport: official SDK vs house hand-rolled (see D17) — decide at M2.
+7. **OQ-7** MCP transport: official SDK vs house hand-rolled (see D17) — decide at M2. House hand-rolled remains through H7 (resources added).
 
 ---
 
@@ -171,3 +171,6 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — Post-S12 docs sync: `docs/STATUS.md` as-built map; README/CLAUDE/design
   crate tables aligned to reality (no phantom crates); milestone table marked done with
   honesty notes on amber/red metrics.
+- **2026-08-05** — **H7 / OQ-5 resolved:** MCP `write_source` default **OFF on stdio**, **ON on HTTP**;
+  override `CADRE_MCP_WRITE_SOURCE=0|1`. `resources/list` + `resources/read` for
+  `cadre://doc/**` and `cadre://artifact/**`. `read_source` remains on both transports.
