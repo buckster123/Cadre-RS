@@ -9,6 +9,7 @@ members = [
     "crates/cadre-cli",
     "crates/cadre-bench",
     "crates/cadre-render",
+    "crates/cadre-mcp",
     "crates/cadre-occt",
 ]
 default-members = [
@@ -20,6 +21,7 @@ default-members = [
     "crates/cadre-cli",
     "crates/cadre-bench",
     "crates/cadre-render",
+    "crates/cadre-mcp",
 ]
 
 [workspace.package]
@@ -44,4 +46,5 @@ cadre-inspect = { path = "crates/cadre-inspect" }
 cadre-cli = { path = "crates/cadre-cli" }
 cadre-bench = { path = "crates/cadre-bench" }
 cadre-render = { path = "crates/cadre-render" }
+cadre-mcp = { path = "crates/cadre-mcp" }
 cadre-occt = { path = "crates/cadre-occt" }

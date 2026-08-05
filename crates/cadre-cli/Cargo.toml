@@ -24,6 +24,7 @@ cadre-lang = { workspace = true }
 cadre-model = { workspace = true }
 cadre-bench = { workspace = true }
 cadre-render = { workspace = true }
+cadre-mcp = { workspace = true }
 clap = { version = "4", features = ["derive", "env"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

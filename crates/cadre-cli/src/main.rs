@@ -6,6 +6,7 @@ mod cli;
 mod export_cmd;
 mod inspect_cmd;
 mod kernel_pick;
+mod mcp_cmd;
 mod output;
 mod snapshot_cmd;
 mod topo_from_ir;
@@ -26,6 +27,8 @@ fn main() {
         Commands::Bench(args) => bench_cmd::run(&cli, args),
         Commands::Snapshot(args) => snapshot_cmd::run(&cli, args),
         Commands::View(args) => view_cmd::run(&cli, args),
+        Commands::Mcp(args) => mcp_cmd::run_mcp(&cli, args),
+        Commands::Skills(args) => mcp_cmd::run_skills(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,
