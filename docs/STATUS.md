@@ -13,9 +13,10 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H3 OCCT transform quality**.
+See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10**. Default next: **H4 fillet/chamfer OCCT parity**.
 H1 live harness: `harness run --suite agent10 --cmd '…'` (oracle: `@oracle` or `harness/drivers/oracle_agent.py`).
 H2 stdlib: `sphere` / `cone` / `mirror` / `linear_pattern` / `polar_pattern` · IR v2 · example `examples/stdlib/pattern_hub.cad.star`.
+H3 OCCT transforms: direct BRep (`third_party/opencascade` patch) — no STEP thrash on translate/rotate/mirror/clone/sphere.
 
 ## Crate map (as-built)
 | Crate | Role |
