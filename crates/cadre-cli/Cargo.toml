@@ -28,6 +28,7 @@ cadre-mcp = { workspace = true }
 cadre-api = { workspace = true }
 cadre-robot = { workspace = true }
 cadre-fab = { workspace = true }
+cadre-harness = { workspace = true }
 cadre-parts = { workspace = true }
 clap = { version = "4", features = ["derive", "env"] }
 serde = { workspace = true }

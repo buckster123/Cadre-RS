@@ -26,7 +26,8 @@
 | cadre-api | Axum `/v1/*` + jobs/SSE/OpenAPI |
 | cadre-parts | parts.lock + LocalFsProvider + AssemblySpec |
 | cadre-robot | URDF/SRDF/SDF + urdf-rs |
-| cadre-fab | DXF, DFM, slicer discover, gcode-check, Bambu dry-run |
+| cadre-fab | DXF, DFM, slicer, gcode-check, Bambu gated live |
+| cadre-harness | scripted agent10 loops-to-success scorecard |
 | cadre-cli | clap binary |
 
 **Not built (parked names from early design):** cadre-truck, cadre-export (export lives in cli/occt/render), cadre-viewer (view is CLI loopback HTML), cadre-skills (export in cli).

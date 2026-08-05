@@ -5,6 +5,7 @@ mod build_cmd;
 mod cli;
 mod export_cmd;
 mod fab_cmd;
+mod harness_cmd;
 mod inspect_cmd;
 mod kernel_pick;
 mod mcp_cmd;
@@ -28,6 +29,7 @@ fn main() {
         Commands::Inspect(args) => inspect_cmd::run(&cli, args),
         Commands::Export(args) => export_cmd::run(&cli, args),
         Commands::Bench(args) => bench_cmd::run(&cli, args),
+        Commands::Harness(args) => harness_cmd::run(&cli, args),
         Commands::Snapshot(args) => snapshot_cmd::run(&cli, args),
         Commands::View(args) => view_cmd::run(&cli, args),
         Commands::Mcp(args) => mcp_cmd::run_mcp(&cli, args),
@@ -56,6 +58,7 @@ fn main() {
                     "cadre_api": cadre_api::VERSION,
                     "cadre_robot": cadre_robot::VERSION,
                     "cadre_fab": cadre_fab::VERSION,
+                    "cadre_harness": cadre_harness::VERSION,
                 },
                 "metrics_doc": "docs/METRICS.md",
                 "licensing_doc": "docs/LICENSING.md",

@@ -1,0 +1,36 @@
+{
+  "id": "03_plate_hole",
+  "prompt": "100\u00d760\u00d720 plate with 8mm center hole",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "P = params(w=100.0, d=60.0, h=20.0, hole_d=8.0)\ndef gen_step():\n    blk = box(P.w, P.d, P.h, at=CENTER)\n    hole = cylinder(P.hole_d/2.0, P.h+2.0, at=(0.0, 0.0, -1.0))\n    return solid(cut(blk, hole), label=\"plate\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "volume_min": 100000,
+        "volume_max": 120000,
+        "faces_min": 6,
+        "label": "plate",
+        "snapshot_ok": true
+      }
+    ]
+  ]
+}

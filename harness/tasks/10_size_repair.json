@@ -1,0 +1,67 @@
+{
+  "id": "10_size_repair",
+  "prompt": "Final brick 30\u00d720\u00d710",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    return solid(box(10.0, 10.0, 10.0, at=CENTER), label=\"brick\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "assert",
+        "volume_min": 5900,
+        "volume_max": 6100
+      }
+    ],
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    return solid(box(20.0, 20.0, 10.0, at=CENTER), label=\"brick\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "assert",
+        "volume_min": 5900,
+        "volume_max": 6100
+      }
+    ],
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    return solid(box(30.0, 20.0, 10.0, at=CENTER), label=\"brick\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "volume_min": 5900,
+        "volume_max": 6100,
+        "snapshot_ok": true,
+        "label": "brick"
+      }
+    ]
+  ]
+}

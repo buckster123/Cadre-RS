@@ -1,0 +1,50 @@
+{
+  "id": "02_repair_label",
+  "prompt": "Block must be labeled calibration",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "P = params(w=50.0, d=30.0, h=10.0)\ndef gen_step():\n    return solid(box(P.w, P.d, P.h, at=CENTER), label=\"wrong\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "assert",
+        "label": "calibration"
+      }
+    ],
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "P = params(w=50.0, d=30.0, h=10.0)\ndef gen_step():\n    return solid(box(P.w, P.d, P.h, at=CENTER), label=\"calibration\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "label": "calibration",
+        "volume_min": 14900,
+        "volume_max": 15100,
+        "snapshot_ok": true
+      }
+    ]
+  ]
+}

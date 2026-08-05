@@ -1,0 +1,37 @@
+{
+  "id": "01_block",
+  "prompt": "40\u00d720\u00d710 mm block labeled block",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "P = params(w=40.0, d=20.0, h=10.0)\ndef gen_step():\n    return solid(box(P.w, P.d, P.h, at=CENTER), label=\"block\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "volume_min": 7900,
+        "volume_max": 8100,
+        "faces_min": 6,
+        "label": "block",
+        "has_selector_prefix": "#o1",
+        "snapshot_ok": true
+      }
+    ]
+  ]
+}

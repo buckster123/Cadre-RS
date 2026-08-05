@@ -1,0 +1,29 @@
+{
+  "id": "08_selectors",
+  "prompt": "Must expose #o1 face selectors",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    return solid(box(10.0, 10.0, 10.0, at=CENTER), label=\"cube\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "assert",
+        "has_selector_prefix": "#o1",
+        "faces_min": 6,
+        "label": "cube"
+      }
+    ]
+  ]
+}

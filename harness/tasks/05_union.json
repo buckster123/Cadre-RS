@@ -1,0 +1,35 @@
+{
+  "id": "05_union",
+  "prompt": "Union two overlapping 20mm cubes",
+  "max_loops": 3,
+  "loops": [
+    [
+      {
+        "op": "write",
+        "path": "part.cad.star",
+        "content": "def gen_step():\n    a = box(20.0, 20.0, 20.0, at=CENTER)\n    b = box(20.0, 20.0, 20.0, at=(10.0, 0.0, 0.0))\n    return solid(union(a, b), label=\"union_body\")\n"
+      },
+      {
+        "op": "build",
+        "path": "part.cad.star"
+      },
+      {
+        "op": "inspect_refs",
+        "path": "part.cad.star",
+        "facts": true
+      },
+      {
+        "op": "snapshot",
+        "path": "part.cad.star",
+        "size": 64
+      },
+      {
+        "op": "assert",
+        "volume_min": 10000,
+        "volume_max": 16000,
+        "label": "union_body",
+        "snapshot_ok": true
+      }
+    ]
+  ]
+}
