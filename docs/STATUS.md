@@ -14,10 +14,10 @@
 - Binary: `cadre` (`~/.local/bin/cadre` for Hermes MCP)
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-10 truck bid**.  
+**Active:** Horizon-2 **complete** (H2-1…H2-10). See [`docs/HORIZON2.md`](HORIZON2.md).  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete.
 
-H2-1…H2-9 done · H2-9 SDF secondary (`docs/SDF.md`) · next H2-10 truck parity bid prep · …  
+H2-10 truck parity bid: **NO-GO** (`docs/TRUCK_PARITY_BID.md`). Next: Horizon-3 charter or park.  
 
 ## Crate map (as-built)
 | Crate | Role |

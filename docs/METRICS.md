@@ -30,6 +30,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 42 | Migrator H2-7 | Locations/extrude/fillet notes | **green** | migrate fixtures 04–05 + unit tests |
 | 43 | PMI H2-8 | drawing packet + inspect dims | **green** | auto 20/60/100 on pmi block |
 | 44 | SDF H2-9 | cadre-sdf analytic + NRRD | **green** | sdf sample box/cyl |
+| 45 | Truck bid H2-10 | parity evidence pack NO-GO | **green** | docs/TRUCK_PARITY_BID.md |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

@@ -182,3 +182,5 @@ Dated entries. A decision changes here first, then in the code.
   See `docs/JOINTS.md`.
 - **2026-08-06** — **H2-9 SDF secondary:** `cadre-sdf` analytic box/cyl sample + raw/NRRD;
   CLI `cadre sdf sample`. **Not a modeling path** — STEP/B-rep remains primary (`docs/SDF.md`).
+- **2026-08-06** — **H2-10 truck parity bid prep:** evidence pack `docs/TRUCK_PARITY_BID.md`.
+  Decision **NO-GO** for default/`parity_eligible`. No code default flip. Horizon-2 board complete.
