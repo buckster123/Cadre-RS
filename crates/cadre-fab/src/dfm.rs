@@ -130,15 +130,50 @@ pub fn pcb_outline_v1() -> DfmProfile {
     }
 }
 
+/// Bundled waterjet / abrasive-cut style profile (generic, not a live vendor API).
+pub fn waterjet_v1() -> DfmProfile {
+    DfmProfile {
+        id: "waterjet.generic".into(),
+        version: "1.0.0".into(),
+        vendor: "Generic waterjet (bundled profile)".into(),
+        materials: vec![
+            MaterialOption {
+                name: "Aluminum 6061".into(),
+                thicknesses_mm: vec![1.5, 3.0, 6.0, 12.0, 25.0],
+            },
+            MaterialOption {
+                name: "Stainless 304".into(),
+                thicknesses_mm: vec![1.5, 3.0, 6.0, 12.0],
+            },
+            MaterialOption {
+                name: "Mild Steel".into(),
+                thicknesses_mm: vec![3.0, 6.0, 10.0, 20.0],
+            },
+            MaterialOption {
+                name: "HDPE".into(),
+                thicknesses_mm: vec![3.0, 6.0, 12.0, 25.0],
+            },
+        ],
+        rules: DfmRules {
+            // Waterjet tolerates smaller holes vs thickness than laser in some shops
+            min_hole_dia_vs_thickness: 0.5,
+            min_hole_dia_mm: 1.5,
+            min_web_mm: 1.5,
+            min_part_size_mm: 10.0,
+        },
+    }
+}
+
 /// All bundled profiles (id + version).
 pub fn bundled_profiles() -> Vec<DfmProfile> {
-    vec![sendcutsend_laser_v1(), pcb_outline_v1()]
+    vec![sendcutsend_laser_v1(), pcb_outline_v1(), waterjet_v1()]
 }
 
 pub fn resolve_bundled_profile(id: &str) -> Option<DfmProfile> {
     match id {
         "sendcutsend.laser" | "sendcutsend.laser@1" | "scs" => Some(sendcutsend_laser_v1()),
         "pcb.outline" | "pcb.outline@1" | "pcb" | "jlcpcb.outline" => Some(pcb_outline_v1()),
+        "waterjet.generic" | "waterjet.generic@1" | "waterjet" | "wj" => Some(waterjet_v1()),
         _ => None,
     }
 }
@@ -362,7 +397,25 @@ mod tests {
     fn resolve_bundled_ids() {
         assert!(resolve_bundled_profile("scs").is_some());
         assert!(resolve_bundled_profile("pcb").is_some());
+        assert!(resolve_bundled_profile("waterjet").is_some());
         assert!(resolve_bundled_profile("nope").is_none());
-        assert_eq!(bundled_profiles().len(), 2);
+        assert_eq!(bundled_profiles().len(), 3);
+    }
+
+    #[test]
+    fn waterjet_plate_passes() {
+        let p = waterjet_v1();
+        assert_eq!(p.id, "waterjet.generic");
+        let part = FlatPart {
+            width_mm: 120.0,
+            height_mm: 80.0,
+            thickness_mm: 6.0,
+            material: "Aluminum 6061".into(),
+            holes_dia_mm: vec![4.0],
+            min_hole_edge_mm: Some(5.0),
+            min_hole_spacing_mm: Some(8.0),
+        };
+        let r = check_dfm(&p, &part);
+        assert!(r.ok, "{r:?}");
     }
 }

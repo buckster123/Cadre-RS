@@ -13,10 +13,10 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-3 fab depth**.  
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-4 live harness score**.  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete (H1–H10 / PR #24–#34).
 
-H2-1 wasm (`docs/WASM.md`) · H2-2 MCP OQ-7 stay hand-rolled (`docs/MCP_SDK.md`) · H2-3 fab/OctoPrint ·  
+H2-1 wasm · H2-2 MCP hand-rolled · H2-3 fab/OctoPrint + waterjet DFM (`docs/FAB_DEPTH.md`) ·  
 H2-4 live harness score · H2-5 joints · H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha ·  
 H2-9 SDF secondary · H2-10 truck bid prep.
 
@@ -35,7 +35,7 @@ H2-9 SDF secondary · H2-10 truck bid prep.
 | cadre-api | Axum `/v1/*` + jobs/SSE/OpenAPI |
 | cadre-parts | parts.lock + LocalFsProvider + AssemblySpec |
 | cadre-robot | URDF/SRDF/SDF + urdf-rs |
-| cadre-fab | DXF, DFM, slicer, gcode-check, Bambu gated live |
+| cadre-fab | DXF, DFM (laser/pcb/waterjet), slicer, gcode-check, Bambu/Klipper/OctoPrint |
 | cadre-harness | scripted agent10 scorecard |
 | cadre-truck | experimental pure-Rust kernel (NON-PARITY) |
 | cadre-wasm | WASM mock IR escape hatch (H2-1) |

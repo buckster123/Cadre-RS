@@ -1,0 +1,9 @@
+{
+  "width_mm": 120.0,
+  "height_mm": 80.0,
+  "thickness_mm": 6.0,
+  "material": "Aluminum 6061",
+  "holes_dia_mm": [4.0, 4.0],
+  "min_hole_edge_mm": 5.0,
+  "min_hole_spacing_mm": 10.0
+}

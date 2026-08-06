@@ -50,18 +50,25 @@ cargo run -p cadre-cli -- printer start examples/fab/sample.gcode \
 cargo run -p cadre-cli -- printer start examples/fab/sample.gcode \
   --backend klipper --id klipper:ender --host 192.168.1.60 \
   --sha256 <from dry-run> --confirm START --allowlist klipper:ender --live --json
+
+# --- OctoPrint (H2-3) ---
+cargo run -p cadre-cli -- fab check --profile waterjet \
+  --part-json examples/fab/waterjet.flat.json --json
+cargo run -p cadre-cli -- printer dry-run examples/fab/sample.gcode \
+  --id octoprint:pi --host 192.168.1.70 --json
 ```
 
 ## Safety gates (all required before any network)
 
 | Gate | How you open it |
 |------|-----------------|
-| **allowlist** | `--allowlist bambu:x1c-01` or `klipper:ender` |
+| **allowlist** | `--allowlist bambu:x1c-01` / `klipper:ender` / `octoprint:pi` |
 | **sha256** | must match file; copy from `printer dry-run` |
 | **confirm** | exactly `--confirm START` (case-sensitive) |
 | **gcode-check** | static validation must pass |
 | **`--live`** | second consent: without it, gates may pass but **no sockets** |
-| **credentials** | Bambu: access-code + serial · Klipper: optional API key |
+| **credentials** | Bambu: access-code+serial · Klipper: optional API key · OctoPrint: API key required for live |
 
 Live Bambu: `curl` FTPS + `mosquitto_pub` MQTT.  
-Live Klipper: `curl` → Moonraker upload + print/start (`docs/KLIPPER.md`).
+Live Klipper: `curl` → Moonraker upload + print/start (`docs/KLIPPER.md`).  
+Live OctoPrint: `curl` → `/api/files/local` (`docs/FAB_DEPTH.md`).
