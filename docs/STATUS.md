@@ -14,10 +14,10 @@
 - Binary: `cadre` (`~/.local/bin/cadre` for Hermes MCP)
 
 ## Next board
-**Active:** [`docs/HORIZON3.md`](HORIZON3.md). Default next: **H3-4** (H3-2 blocked backends).  
+**Active:** [`docs/HORIZON3.md`](HORIZON3.md). Default next: **H3-5** (H3-2 blocked backends).  
 **Archive:** H2 + H1 boards.
 
-H3-1 honesty · H3-3 MCP +3 tools · H3-2 skip until healthy backend · …  
+H3-1 honesty · H3-3 MCP · H3-4 assembly→kinematics/robot · …  
 
 ## Crate map (as-built)
 | Crate | Role |

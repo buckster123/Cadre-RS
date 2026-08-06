@@ -1,8 +1,7 @@
-# H2-5 — Assembly joint depth
+# Assembly joints & kinematics (H2-5 + H3-4)
 
-## What changed
+## JointSpec (assembly JSON)
 
-### Assembly `JointSpec` (v2 fields)
 | Field | Meaning |
 |-------|---------|
 | `kind` | `fixed` \| `revolute` \| `prismatic` |
@@ -11,30 +10,48 @@
 | `lower` / `upper` | **required** for revolute (rad) and prismatic (mm) |
 | `effort` / `velocity` | optional; must be ≥ 0 if set |
 
-### Fail-closed validation
-`cadre_parts::validate_assembly` + CLI:
+## Validate (fail-closed)
 
 ```sh
 cargo run -p cadre-cli -- assembly validate examples/assembly/lid_hinge.assy.json --json
 cargo run -p cadre-cli -- assembly validate examples/assembly/bad_limits.assy.json --json
-# bad_limits → ok:false (lower > upper)
 ```
 
-Also: unknown components, duplicate names, zero axis, unknown kind.
+## H3-4 — kinematics emit (OQ-4 partial)
 
-### Robot path (same doctrine)
-`validate_robot` now **errors** (not warns) when revolute/prismatic lack limits, or `lower > upper`, or negative effort/velocity.
+```sh
+# Sidecar: cadre.assembly_kinematics v1 (m / rad)
+cargo run -p cadre-cli -- assembly emit-kinematics examples/assembly/lid_hinge.assy.json --json
+# → examples/assembly/lid_hinge.kinematics.json
 
-### Examples
+# Minimal robot JSON (placeholder 50mm cubes) → URDF path
+cargo run -p cadre-cli -- assembly emit-robot examples/assembly/lid_hinge.assy.json -o /tmp/lid.robot.json --json
+cargo run -p cadre-cli -- robot gen /tmp/lid.robot.json -o /tmp/lid_urdf --json
+```
+
+| Artifact | Contents |
+|----------|----------|
+| `*.kinematics.json` | links, joints, placements_mm, unit notes |
+| `*.robot.json` | RobotSpec-shaped JSON + `_cadre` honesty tag |
+| URDF/SRDF/SDF | via existing `robot gen` |
+
+**Not AP242.** No kinematic STEP entities. Placeholder visuals/inertials — not CAD meshes.
+
+## Examples
+
 | File | Expect |
 |------|--------|
-| `plate_bolt.assy.json` | fixed joint — still valid |
-| `lid_hinge.assy.json` | good revolute with limits |
-| `bad_limits.assy.json` | inverted prismatic limits — **must fail** |
+| `plate_bolt.assy.json` | fixed joint |
+| `lid_hinge.assy.json` | revolute with limits → kinematics z=0.02 m |
+| `bad_limits.assy.json` | inverted limits — **must fail** validate |
 
-## OQ-4 honesty
+## OQ-4 status
 
-Still **not** AP242 kinematic STEP joints. This is labels + axis + limit envelope for agent fail-closed checks. Full PMI/AP242 remains Horizon parking / later.
+| Bite | Status |
+|------|--------|
+| Limit envelope (H2-5) | done |
+| Assembly → kinematics sidecar + robot IR (H3-4) | done |
+| AP242 / true STEP joint entities | **still open** |
 
 ## CHARTER
-OQ-4 remains open for STEP depth; H2-5 closes the **assembly/robot limit envelope** bite.
+OQ-4 remains open for full STEP kinematics depth; H3-4 closes the **CAD assembly ↔ robot IR bridge**.

@@ -33,6 +33,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 45 | Truck bid H2-10 | parity evidence pack NO-GO | **green** | docs/TRUCK_PARITY_BID.md |
 | 46 | Honesty H3-1 | cone refuse + suite fences | **green** | OCCT cone Unsupported; docs/KERNEL_HONESTY.md |
 | 47 | MCP H3-3 | dims + assembly + sdf tools | **green** | 9 tools tools/list |
+| 48 | Assembly H3-4 | kinematics + emit-robot | **green** | lid_hinge → URDF path |
 | A1 | OCCT cone | no silent cylinder | **green** | H3-1 fail-closed |
 | A2 | truck-seed label | version JSON tag | **green** | truck_implementation field |
 | A3 | H3-2 frontier | live LLM score | **blocked** | ApexRouter backends all down 2026-08-06 |

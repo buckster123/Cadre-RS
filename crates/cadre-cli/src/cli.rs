@@ -466,12 +466,25 @@ pub struct AssemblyArgs {
 pub enum AssemblyCmd {
     /// Validate assembly JSON (components + joints fail-closed).
     Validate(AssemblyValidateArgs),
+    /// Emit kinematics sidecar JSON (mm→m, deg→rad). Not AP242.
+    EmitKinematics(AssemblyEmitArgs),
+    /// Emit minimal robot JSON (placeholder solids) for `cadre robot gen`.
+    EmitRobot(AssemblyEmitArgs),
 }
 
 #[derive(Debug, clap::Args)]
 pub struct AssemblyValidateArgs {
     /// Path to `.assy.json` assembly spec.
     pub target: PathBuf,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct AssemblyEmitArgs {
+    /// Path to `.assy.json` assembly spec.
+    pub target: PathBuf,
+    /// Output path (default: `<stem>.kinematics.json` or `<stem>.robot.json`).
+    #[arg(short = 'o', long)]
+    pub out: Option<PathBuf>,
 }
 
 #[derive(Debug, clap::Args)]
