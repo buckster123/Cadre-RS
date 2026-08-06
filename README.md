@@ -25,9 +25,10 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 
 ## Status
 
-**v1 surface complete (S0–S12 / M0–M6)** plus post-v1 cook **#14–#22** (OCCT depth through
-parity 5–10 + transforms). Default path is mock-kernel CI-green on Linux + Windows.
-Next ordered board: [`docs/HORIZON.md`](docs/HORIZON.md) (H1–H10). Compact status:
+**v1 surface complete (S0–S12 / M0–M6)** plus post-v1 cook through **Horizon-1 H1–H10**.
+Default path is mock-kernel CI-green on Linux + Windows.
+**Active board:** [`docs/HORIZON2.md`](docs/HORIZON2.md) (H2-1…H2-10).  
+Horizon-1 archive: [`docs/HORIZON.md`](docs/HORIZON.md). Compact status:
 [`docs/STATUS.md`](docs/STATUS.md) · scorecard: [`docs/METRICS.md`](docs/METRICS.md).
 
 ## What it is

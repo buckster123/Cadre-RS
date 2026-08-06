@@ -1,0 +1,3 @@
+# WASM builds (H2-1): getrandom needs an explicit wasm backend.
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]

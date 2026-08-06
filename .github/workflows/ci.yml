@@ -28,6 +28,19 @@ jobs:
       - name: skills export both agents
         run: cargo run -q -p cadre-cli -- skills export --all -o /tmp/cadre-skills --json
 
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: wasm32 build cadre-wasm (browser)
+        run: cargo build -p cadre-wasm --target wasm32-unknown-unknown --features browser
+      - name: wasm unit tests (host)
+        run: cargo test -p cadre-wasm
+
   windows:
     runs-on: windows-latest
     steps:

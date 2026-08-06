@@ -13,17 +13,11 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-See **[`docs/HORIZON.md`](HORIZON.md)** Top-N **H1–H10** — **Horizon-1 complete**.
-H1 live harness: `harness run --suite agent10 --cmd '…'` (oracle: `@oracle` or `harness/drivers/oracle_agent.py`).
-H2 stdlib: `sphere` / `cone` / `mirror` / `linear_pattern` / `polar_pattern` · IR v2 · example `examples/stdlib/pattern_hub.cad.star`.
-H3 OCCT transforms: direct BRep (`third_party/opencascade` patch) — no STEP thrash on translate/rotate/mirror/clone/sphere.
-H4 fillet/chamfer: OCCT `CADRE-E-FILLET-FAILED` + suite `fillet-occt` · mock stays Unsupported · `docs/FILLET_CHAMFER.md`.
-H5 viewer: gcode scrub + robot jog · `docs/VIEWER.md` · `view *.gcode` / `*.robot.json`.
-H6 slicer: `--execute --confirm SLICE` · DFM `pcb.outline` · `docs/SLICER_DFM.md`.
-H7 MCP: `resources/*` + write_source policy (stdio OFF / HTTP ON) · `docs/MCP_RESOURCES.md` · OQ-5 closed.
-H8 migrate: `cadre migrate file.py` → skeleton · `fixtures/migrate/*` · `docs/MIGRATE.md`.
-H9 klipper: `--backend klipper` Moonraker gates · `docs/KLIPPER.md`.
-H10 truck: `--kernel truck` experimental NON-PARITY · `docs/TRUCK.md` · never default.
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-2 MCP OQ-7**.  
+**Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete (H1–H10 / PR #24–#34).
+
+H2-1 wasm (`docs/WASM.md`) · H2-2 MCP OQ-7 · H2-3 fab/OctoPrint · H2-4 live harness score · H2-5 joints ·  
+H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha · H2-9 SDF secondary · H2-10 truck bid prep.
 
 ## Crate map (as-built)
 | Crate | Role |
@@ -42,9 +36,11 @@ H10 truck: `--kernel truck` experimental NON-PARITY · `docs/TRUCK.md` · never 
 | cadre-robot | URDF/SRDF/SDF + urdf-rs |
 | cadre-fab | DXF, DFM, slicer, gcode-check, Bambu gated live |
 | cadre-harness | scripted agent10 scorecard |
+| cadre-truck | experimental pure-Rust kernel (NON-PARITY) |
+| cadre-wasm | WASM mock IR escape hatch (H2-1) |
 | cadre-cli | clap binary |
 
-**Parked names:** cadre-truck, standalone cadre-export/viewer/skills (logic lives in cli/occt/render).
+**Parked names:** standalone cadre-export/viewer/skills (logic lives in cli/occt/render).
 
 ## CLI surface (high signal)
 ```

@@ -645,6 +645,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cadre-wasm"
+version = "0.1.0"
+dependencies = [
+ "cadre-kernel",
+ "cadre-lang",
+ "getrandom 0.4.3",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "cc"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1365,9 +1377,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi 6.0.0",
  "rand_core 0.10.1",
+ "wasm-bindgen",
 ]
 
 [[package]]
