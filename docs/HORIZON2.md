@@ -142,7 +142,7 @@ Same as Horizon-1:
 4. Tick checklist + BACKLOG on merge  
 5. Default next = next unchecked H2-N  
 
-**Default next if “cook on” with no pref:** **H2-10 Truck parity bid prep.**
+**Default next if “cook on” with no pref:** **Horizon-2 complete** — see § archive / Horizon-3.
 
 ---
 
@@ -157,7 +157,9 @@ Same as Horizon-1:
 - [x] **H2-7** Migrator depth  
 - [x] **H2-8** PMI/drawing alpha  
 - [x] **H2-9** SDF secondary experimental  
-- [ ] **H2-10** Truck parity bid prep  
+- [x] **H2-10** Truck parity bid prep  
+
+**Horizon-2 complete (2026-08-06).** Default next: park or charter Horizon-3.
 
 ---
 
