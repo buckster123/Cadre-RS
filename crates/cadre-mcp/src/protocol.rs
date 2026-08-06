@@ -154,19 +154,18 @@ pub fn read_message(stdin: &mut impl Read) -> std::io::Result<Option<Vec<u8>>> {
 fn read_ndjson(stdin: &mut impl Read) -> std::io::Result<Option<Vec<u8>>> {
     let mut line = Vec::new();
     let mut buf = [0u8; 1];
-    let mut saw = false;
+    let mut saw_byte = false;
     loop {
         let n = stdin.read(&mut buf)?;
         if n == 0 {
-            return if !saw {
-                Ok(None)
-            } else if line.is_empty() {
+            // EOF: empty stream → None; partial line → deliver it
+            return if !saw_byte || line.is_empty() {
                 Ok(None)
             } else {
                 Ok(Some(line))
             };
         }
-        saw = true;
+        saw_byte = true;
         if buf[0] == b'\n' {
             if line.is_empty() {
                 continue; // skip blank lines
