@@ -1,4 +1,4 @@
-//! Printer adapters — Bambu LAN + Klipper/Moonraker with hard start gates; live I/O opt-in.
+//! Printer adapters — Bambu + Klipper/Moonraker + OctoPrint; hard start gates; live opt-in.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -11,9 +11,14 @@ use thiserror::Error;
 use crate::gcode::{check_gcode, GcodeReport, PrinterVolume};
 
 mod klipper;
+mod octoprint;
 pub use klipper::{
     ExternalMoonrakerTransport, KlipperAdapter, MoonrakerTransport, NullMoonrakerTransport,
     RecordingMoonrakerTransport,
+};
+pub use octoprint::{
+    ExternalOctoPrintTransport, NullOctoPrintTransport, OctoPrintAdapter, OctoPrintTransport,
+    RecordingOctoPrintTransport,
 };
 
 #[derive(Debug, Error)]

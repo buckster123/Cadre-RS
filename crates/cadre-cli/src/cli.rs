@@ -575,6 +575,7 @@ pub enum PrinterBackend {
     Bambu,
     Klipper,
     Moonraker,
+    Octoprint,
 }
 
 #[derive(Debug, clap::Args)]

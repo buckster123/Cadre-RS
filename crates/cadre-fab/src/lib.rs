@@ -12,7 +12,7 @@ mod slicer;
 
 pub use dfm::{
     bundled_profiles, check_dfm, load_profile_json, pcb_outline_v1, resolve_bundled_profile,
-    sendcutsend_laser_v1, DfmFinding, DfmProfile, DfmReport, DfmSeverity, FlatPart,
+    sendcutsend_laser_v1, waterjet_v1, DfmFinding, DfmProfile, DfmReport, DfmSeverity, FlatPart,
 };
 pub use dxf::{plate_with_holes_dxf, write_dxf_r12, DxfEntity, DxfLayer};
 pub use face_dxf::{face_to_dxf, FaceDxfReport, FacePick};
@@ -20,9 +20,11 @@ pub use gcode::{check_gcode, GcodeFlavor, GcodeReport, PrinterVolume};
 pub use gcode_path::{extract_gcode_path, GcodeLayer, GcodePath, GcodePoint};
 pub use printer::{
     evaluate_start_gates, hex_sha256, BambuAdapter, BambuTransport, DryRunReport,
-    ExternalLiveTransport, ExternalMoonrakerTransport, KlipperAdapter, MoonrakerTransport,
-    NullMoonrakerTransport, NullTransport, Printer, PrinterError, PrinterInfo,
-    RecordingMoonrakerTransport, RecordingTransport, StartGate, StartRequest, CONFIRM_START,
+    ExternalLiveTransport, ExternalMoonrakerTransport, ExternalOctoPrintTransport, KlipperAdapter,
+    MoonrakerTransport, NullMoonrakerTransport, NullOctoPrintTransport, NullTransport,
+    OctoPrintAdapter, OctoPrintTransport, Printer, PrinterError, PrinterInfo,
+    RecordingMoonrakerTransport, RecordingOctoPrintTransport, RecordingTransport, StartGate,
+    StartRequest, CONFIRM_START,
 };
 pub use slicer::{
     discover_slicers, run_slice, slice_command_preview, SliceGate, SliceReport, SliceRequest,

@@ -7,9 +7,9 @@ use std::path::PathBuf;
 use cadre_fab::{
     bundled_profiles, check_dfm, check_gcode, discover_slicers, face_to_dxf, hex_sha256,
     load_profile_json, plate_with_holes_dxf, resolve_bundled_profile, run_slice, BambuAdapter,
-    ExternalLiveTransport, ExternalMoonrakerTransport, FacePick, FlatPart, KlipperAdapter, Printer,
-    PrinterVolume, SliceRequest, SlicerInfo, SlicerKind, StartRequest, CONFIRM_SLICE,
-    CONFIRM_START,
+    ExternalLiveTransport, ExternalMoonrakerTransport, ExternalOctoPrintTransport, FacePick,
+    FlatPart, KlipperAdapter, OctoPrintAdapter, Printer, PrinterVolume, SliceRequest, SlicerInfo,
+    SlicerKind, StartRequest, CONFIRM_SLICE, CONFIRM_START,
 };
 use cadre_inspect::inspect_refs;
 use serde_json::json;
@@ -526,6 +526,29 @@ fn printer_status(cli: &Cli, a: &crate::cli::PrinterStatusArgs) -> ExitCode {
                 }
             }
         }
+        PrinterBackend::Octoprint => {
+            let p = OctoPrintAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(), // reuse --moonraker-url as generic base URL override
+            );
+            match p.status() {
+                Ok(v) => {
+                    emit(cli.json, &v, true);
+                    ExitCode::Ok
+                }
+                Err(e) => {
+                    emit(
+                        cli.json,
+                        &json!({"ok": false, "error": e.to_string()}),
+                        false,
+                    );
+                    ExitCode::Network
+                }
+            }
+        }
         PrinterBackend::Bambu => {
             let mut p = BambuAdapter::from_env(&a.id, &a.host, &a.model, a.serial.clone(), None);
             if let Some(s) = &a.serial {
@@ -555,6 +578,16 @@ fn printer_dry_run(cli: &Cli, a: &crate::cli::PrinterDryRunArgs) -> ExitCode {
     let result = match backend {
         PrinterBackend::Klipper | PrinterBackend::Moonraker => {
             let p = KlipperAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(),
+            );
+            p.dry_run(&a.gcode, &PrinterVolume::default())
+        }
+        PrinterBackend::Octoprint => {
+            let p = OctoPrintAdapter::from_env(
                 &a.id,
                 &a.host,
                 &a.model,
@@ -650,6 +683,33 @@ fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
             }
             p.start(&req, &allow)
         }
+        PrinterBackend::Octoprint => {
+            let mut p = OctoPrintAdapter::from_env(
+                &a.id,
+                &a.host,
+                &a.model,
+                a.api_key.clone(),
+                a.moonraker_url.clone(),
+            );
+            if a.live {
+                match ExternalOctoPrintTransport::detect() {
+                    Ok(t) => p = p.with_transport(Arc::new(t)),
+                    Err(e) => {
+                        emit(
+                            cli.json,
+                            &json!({
+                                "ok": false,
+                                "error": e.to_string(),
+                                "hint": "octoprint live start needs curl on PATH (or CADRE_CURL)"
+                            }),
+                            false,
+                        );
+                        return ExitCode::Usage;
+                    }
+                }
+            }
+            p.start(&req, &allow)
+        }
         PrinterBackend::Bambu => {
             let mut p = BambuAdapter::from_env(
                 &a.id,
@@ -695,6 +755,9 @@ fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
                             PrinterBackend::Klipper | PrinterBackend::Moonraker => {
                                 "live path: Moonraker upload + printer/print/start after gates"
                             }
+                            PrinterBackend::Octoprint => {
+                                "live path: OctoPrint /api/files/local upload+print after gates"
+                            }
                         }
                     } else {
                         "default is safe: gates only; pass --live to contact printer"
@@ -721,11 +784,14 @@ fn printer_start(cli: &Cli, a: &crate::cli::PrinterStartArgs) -> ExitCode {
 
 fn resolve_backend(explicit: crate::cli::PrinterBackend, id: &str) -> crate::cli::PrinterBackend {
     use crate::cli::PrinterBackend;
-    // Id prefix wins when user left default backend but used klipper: id
-    if matches!(explicit, PrinterBackend::Bambu)
-        && (id.starts_with("klipper:") || id.starts_with("moonraker:"))
-    {
-        return PrinterBackend::Klipper;
+    // Id prefix wins when user left default backend
+    if matches!(explicit, PrinterBackend::Bambu) {
+        if id.starts_with("klipper:") || id.starts_with("moonraker:") {
+            return PrinterBackend::Klipper;
+        }
+        if id.starts_with("octoprint:") || id.starts_with("octo:") {
+            return PrinterBackend::Octoprint;
+        }
     }
     explicit
 }
