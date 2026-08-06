@@ -21,6 +21,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 33 | Klipper H9 | Moonraker gated adapter | **green** | printer_klipper tests |
 | 34 | Truck H10 | experimental non-parity kernel | **green** | cadre-truck tests |
 | 35 | WASM H2-1 | mock IR in wasm32 | **green** | cadre-wasm + CI wasm job |
+| 36 | MCP H2-2 | OQ-7 stay hand-rolled | **green** | compliance matrix tests |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

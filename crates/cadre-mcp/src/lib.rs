@@ -2,6 +2,7 @@
 
 #![deny(unsafe_code)]
 
+mod compliance;
 mod http;
 mod policy;
 mod protocol;
@@ -9,6 +10,7 @@ mod resources;
 mod server;
 mod tools;
 
+pub use compliance::{PROTOCOL_VERSION, SUPPORTED_METHODS, TOOL_NAMES, UNSUPPORTED_BUT_DOCUMENTED};
 pub use http::{serve_http, HttpMcpConfig};
 pub use policy::{init_policy, policy, project_root_from_env, write_source_from_env, McpPolicy};
 pub use server::{dispatch, handle_http_body, run_stdio};
