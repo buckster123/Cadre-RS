@@ -31,6 +31,11 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 43 | PMI H2-8 | drawing packet + inspect dims | **green** | auto 20/60/100 on pmi block |
 | 44 | SDF H2-9 | cadre-sdf analytic + NRRD | **green** | sdf sample box/cyl |
 | 45 | Truck bid H2-10 | parity evidence pack NO-GO | **green** | docs/TRUCK_PARITY_BID.md |
+| 46 | Honesty H3-1 | cone refuse + suite fences | **green** | OCCT cone Unsupported; docs/KERNEL_HONESTY.md |
+| 47 | MCP H3-3 | dims + assembly + sdf tools | **green** | 9 tools tools/list |
+| A1 | OCCT cone | no silent cylinder | **green** | H3-1 fail-closed |
+| A2 | truck-seed label | version JSON tag | **green** | truck_implementation field |
+| A3 | H3-2 frontier | live LLM score | **blocked** | ApexRouter backends all down 2026-08-06 |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

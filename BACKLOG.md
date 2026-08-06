@@ -90,10 +90,10 @@ Priority suggestions when resuming:
 
 | # | Slice | Status |
 |---|-------|--------|
-| H3-1 | Honesty pass (cone + fences + truck naming) | next |
-| H3-2 | Live harness frontier score | pending |
-| H3-3 | MCP surface depth (dims/assembly/sdf) | pending |
-| H3-4 | Assembly / OQ-4 bite | pending |
+| H3-1 | Honesty pass (cone + fences + truck naming) | ✅ this slice |
+| H3-2 | Live harness frontier score | blocked — backends down |
+| H3-3 | MCP surface depth (dims/assembly/sdf) | ✅ this slice |
+| H3-4 | Assembly / OQ-4 bite | next |
 | H3-5 | PMI → viewer overlay | pending |
 | H3-6 | Truck BREP spike (bid G1) | pending |
 | H3-7 | OCCT parity depth | pending |
@@ -101,7 +101,7 @@ Priority suggestions when resuming:
 | H3-9 | Migrator / WASM polish | pending |
 | H3-10 | OQ-1 name decision packet | pending |
 
-Default when resuming with no pref: **H3-1**.
+Default when resuming with no pref: **H3-4**.
 
 ## Post-v1 parking (still deferred)
 

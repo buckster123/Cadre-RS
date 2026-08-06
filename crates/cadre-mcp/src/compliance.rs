@@ -36,6 +36,9 @@ pub const TOOL_NAMES: &[&str] = &[
     "inspect_refs",
     "measure",
     "snapshot",
+    "inspect_dims",
+    "assembly_validate",
+    "sdf_sample",
 ];
 
 #[cfg(test)]

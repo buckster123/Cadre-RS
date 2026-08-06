@@ -148,6 +148,7 @@ impl TruckKernel {
 
 impl GeomKernel for TruckKernel {
     fn backend_id(&self) -> &'static str {
+        // H3-1: name is the CLI kernel id; implementation is analytic CSG seed, not upstream truck.
         "truck"
     }
 
@@ -155,7 +156,7 @@ impl GeomKernel for TruckKernel {
         concat!(
             "cadre-truck/",
             env!("CARGO_PKG_VERSION"),
-            " (experimental pure-Rust CSG seed; NON-PARITY)"
+            " (truck-seed: analytic CSG; NOT upstream truck BREP; NON-PARITY)"
         )
     }
 

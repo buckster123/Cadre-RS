@@ -217,7 +217,7 @@ def gen_step():
         })
         .unwrap();
         let n = tools.result.unwrap()["tools"].as_array().unwrap().len();
-        assert_eq!(n, 6);
+        assert_eq!(n, crate::compliance::TOOL_NAMES.len());
     }
 
     #[test]
@@ -225,7 +225,10 @@ def gen_step():
         ensure_test_policy_write_on();
         let body = br#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#;
         let v = handle_http_body(body).unwrap().unwrap();
-        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 6);
+        assert_eq!(
+            v["result"]["tools"].as_array().unwrap().len(),
+            crate::compliance::TOOL_NAMES.len()
+        );
     }
 
     #[test]
