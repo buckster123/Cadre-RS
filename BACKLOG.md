@@ -76,7 +76,7 @@ Priority suggestions when resuming:
 | H2-1 | WASM IR component (escape hatch) | ✅ PR #35 |
 | H2-2 | MCP OQ-7 SDK decision | ✅ PR #36 |
 | H2-3 | Fab depth (DFM + OctoPrint) | ✅ PR #37 |
-| H2-4 | Published live harness score | ✅ this slice |
+| H2-4 | Published live harness score | ✅ PR #38 |
 | H2-5 | Assembly joint depth | next |
 | H2-6 | Viewer 3D depth | pending |
 | H2-7 | Migrator depth | pending |

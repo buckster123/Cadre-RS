@@ -142,7 +142,7 @@ Same as Horizon-1:
 4. Tick checklist + BACKLOG on merge  
 5. Default next = next unchecked H2-N  
 
-**Default next if “cook on” with no pref:** **H2-1 WASM IR component.**
+**Default next if “cook on” with no pref:** **H2-5 Assembly joint depth.**
 
 ---
 

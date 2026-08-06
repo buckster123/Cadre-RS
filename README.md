@@ -25,11 +25,12 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 
 ## Status
 
-**v1 surface complete (S0–S12 / M0–M6)** plus post-v1 cook through **Horizon-1 H1–H10**.
-Default path is mock-kernel CI-green on Linux + Windows.
-**Active board:** [`docs/HORIZON2.md`](docs/HORIZON2.md) (H2-1…H2-10).  
+**v1 surface complete (S0–S12 / M0–M6)** plus **Horizon-1 H1–H10** and Horizon-2 **H2-1…H2-4**.
+Default path is mock-kernel CI-green on Linux + Windows (+ wasm job).
+**Active board:** [`docs/HORIZON2.md`](docs/HORIZON2.md) (next **H2-5**).  
 Horizon-1 archive: [`docs/HORIZON.md`](docs/HORIZON.md). Compact status:
 [`docs/STATUS.md`](docs/STATUS.md) · scorecard: [`docs/METRICS.md`](docs/METRICS.md).
+Hermes MCP: [`docs/HERMES_MCP.md`](docs/HERMES_MCP.md).
 
 ## What it is
 
