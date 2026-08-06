@@ -144,7 +144,7 @@ Three pillars:
 5. Default next = next unchecked H3-N  
 6. Truck work must cite bid G-criteria in PR  
 
-**Default next if “cook on” with no pref:** **H3-4 Assembly / OQ-4 bite** (H3-2 when backends healthy).
+**Default next if “cook on” with no pref:** **H3-5 PMI → viewer overlay** (H3-2 when backends healthy).
 
 ---
 
@@ -153,7 +153,7 @@ Three pillars:
 - [x] **H3-1** Honesty pass (cone + fences + truck naming)  
 - [ ] **H3-2** Live harness frontier score *(blocked: all router backends down 2026-08-06)*  
 - [x] **H3-3** MCP surface depth  
-- [ ] **H3-4** Assembly / OQ-4 bite  
+- [x] **H3-4** Assembly / OQ-4 bite  
 - [ ] **H3-5** PMI → viewer overlay  
 - [ ] **H3-6** Truck BREP spike (G1)  
 - [ ] **H3-7** OCCT parity depth  

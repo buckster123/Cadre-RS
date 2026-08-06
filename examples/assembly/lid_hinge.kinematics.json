@@ -1,0 +1,78 @@
+{
+  "ok": true,
+  "schema": "cadre.assembly_kinematics",
+  "version": 1,
+  "name": "lid_hinge_assy",
+  "notes": [
+    "H3-4 OQ-4 partial: labels+placements+joint envelope — not AP242 STEP kinematics",
+    "units: origin_xyz_m meters, origin_rpy_rad radians, revolute limits radians, prismatic mm",
+    "inertials/meshes not in this packet — use emit-robot for placeholder URDF path"
+  ],
+  "links": [
+    {
+      "name": "base",
+      "source": "cad/plate.cad.star"
+    },
+    {
+      "name": "lid",
+      "source": "cad/plate.cad.star"
+    }
+  ],
+  "joints": [
+    {
+      "name": "lid_hinge",
+      "kind": "revolute",
+      "parent": "base",
+      "child": "lid",
+      "origin_xyz_m": [
+        0.0,
+        0.0,
+        0.02
+      ],
+      "origin_rpy_rad": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "lower": 0.0,
+      "upper": 1.57079632679,
+      "effort": 2.0,
+      "velocity": 1.0
+    }
+  ],
+  "placements_mm": [
+    {
+      "component": "base",
+      "origin_mm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "source": "cad/plate.cad.star"
+    },
+    {
+      "component": "lid",
+      "origin_mm": [
+        0.0,
+        0.0,
+        20.0
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "source": "cad/plate.cad.star"
+    }
+  ]
+}
