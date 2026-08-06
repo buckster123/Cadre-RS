@@ -76,6 +76,8 @@ pub enum Commands {
     Printer(PrinterArgs),
     /// Clean-room build123d-style Python → Cadre `.cad.star` skeleton (best-effort).
     Migrate(MigrateArgs),
+    /// Experimental secondary SDF sample (analytic box/cyl → raw/NRRD). Not modeling.
+    Sdf(SdfArgs),
     /// Print versions / feature flags.
     Version,
 }
@@ -707,4 +709,50 @@ pub struct MigrateArgs {
     /// Output `.cad.star` (default: `<stem>.cad.star` beside source).
     #[arg(short = 'o', long)]
     pub out: Option<PathBuf>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SdfArgs {
+    #[command(subcommand)]
+    pub cmd: SdfCmd,
+}
+
+#[derive(Debug, clap::Subcommand)]
+pub enum SdfCmd {
+    /// Sample analytic box/cylinder SDF → raw f32 + NRRD (secondary medium).
+    Sample(SdfSampleArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SdfSampleArgs {
+    /// Primitive: `box` or `cylinder`.
+    #[arg(long, value_enum)]
+    pub prim: SdfPrimArg,
+    /// Box dx or cylinder radius (mm).
+    #[arg(long)]
+    pub a: f64,
+    /// Box dy or cylinder height (mm).
+    #[arg(long)]
+    pub b: f64,
+    /// Box dz (required for box).
+    #[arg(long)]
+    pub c: Option<f64>,
+    /// Samples along longest axis (default 32).
+    #[arg(long, default_value_t = 32)]
+    pub res: usize,
+    /// Padding around bounds (mm).
+    #[arg(long, default_value_t = 2.0)]
+    pub pad: f64,
+    /// Output directory (default: `./sdf_out`).
+    #[arg(short = 'o', long)]
+    pub out: Option<PathBuf>,
+    /// File stem (default: prim name).
+    #[arg(long)]
+    pub stem: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum SdfPrimArg {
+    Box,
+    Cylinder,
 }

@@ -14,10 +14,10 @@
 - Binary: `cadre` (`~/.local/bin/cadre` for Hermes MCP)
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-9 SDF**.  
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-10 truck bid**.  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete.
 
-H2-1…H2-8 done · H2-8 PMI dims (`docs/PMI.md`) · next H2-9 SDF · …  
+H2-1…H2-9 done · H2-9 SDF secondary (`docs/SDF.md`) · next H2-10 truck parity bid prep · …  
 
 ## Crate map (as-built)
 | Crate | Role |
@@ -37,6 +37,7 @@ H2-1…H2-8 done · H2-8 PMI dims (`docs/PMI.md`) · next H2-9 SDF · …
 | cadre-fab | DXF, DFM (laser/pcb/waterjet), slicer, Bambu/Klipper/OctoPrint |
 | cadre-harness | agent10 scripted + live `--cmd` / `@oracle` |
 | cadre-truck | experimental pure-Rust kernel (NON-PARITY) |
+| cadre-sdf | experimental secondary SDF sample (never modeling) |
 | cadre-wasm | WASM mock IR escape hatch (H2-1) |
 | cadre-cli | clap binary |
 

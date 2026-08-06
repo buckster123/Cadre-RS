@@ -180,3 +180,5 @@ Dated entries. A decision changes here first, then in the code.
   `validate_assembly` fail-closed; robot revolute/prismatic missing or inverted limits are **errors**.
   CLI `cadre assembly validate`. Not AP242 STEP kinematics (OQ-4 still open for STEP depth).
   See `docs/JOINTS.md`.
+- **2026-08-06** — **H2-9 SDF secondary:** `cadre-sdf` analytic box/cyl sample + raw/NRRD;
+  CLI `cadre sdf sample`. **Not a modeling path** — STEP/B-rep remains primary (`docs/SDF.md`).

@@ -10,3 +10,4 @@
 !examples/**/*.step
 !examples/**/*.ir.json
 examples/**/*.view/
+sdf_out/
