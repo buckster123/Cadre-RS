@@ -13,6 +13,7 @@ mod mcp_cmd;
 mod migrate_cmd;
 mod output;
 mod robot_cmd;
+mod sdf_cmd;
 mod serve_cmd;
 mod snapshot_cmd;
 mod topo_from_ir;
@@ -42,6 +43,7 @@ fn main() {
         Commands::Fab(args) => fab_cmd::run_fab(&cli, args),
         Commands::Printer(args) => fab_cmd::run_printer(&cli, args),
         Commands::Migrate(args) => migrate_cmd::run(&cli, args),
+        Commands::Sdf(args) => sdf_cmd::run(&cli, args),
         Commands::Version => {
             let v = serde_json::json!({
                 "ok": true,
@@ -50,6 +52,7 @@ fn main() {
                 "features": {
                     "occt": cfg!(feature = "occt"),
                     "truck": true,
+                    "sdf_secondary": true,
                 },
                 "crates": {
                     "cadre_kernel": cadre_kernel::VERSION,
@@ -65,11 +68,16 @@ fn main() {
                     "cadre_fab": cadre_fab::VERSION,
                     "cadre_harness": cadre_harness::VERSION,
                     "cadre_truck": cadre_truck::VERSION,
+                    "cadre_sdf": cadre_sdf::VERSION,
                 },
                 "kernels": {
                     "default": kernel_pick::default_kernel_id(),
                     "truck_parity_eligible": false,
                     "truck_note": "experimental pure-Rust CSG seed — NON-PARITY; never default",
+                },
+                "sdf": {
+                    "primary": false,
+                    "note": "H2-9 secondary analytic SDF only — never modeling path",
                 },
                 "metrics_doc": "docs/METRICS.md",
                 "licensing_doc": "docs/LICENSING.md",
