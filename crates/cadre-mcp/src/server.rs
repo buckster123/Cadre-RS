@@ -59,7 +59,7 @@ pub fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
         "initialize" => Some(JsonRpcResponse::ok(
             id,
             json!({
-                "protocolVersion": "2024-11-05",
+                "protocolVersion": crate::compliance::PROTOCOL_VERSION,
                 "capabilities": {
                     "tools": {},
                     "resources": {}
@@ -70,6 +70,8 @@ pub fn dispatch(req: JsonRpcRequest) -> Option<JsonRpcResponse> {
                     "transports": ["stdio", "streamable-http"],
                     "write_source": crate::policy::policy().write_source,
                     "transport": crate::policy::policy().transport,
+                    "implementation": "hand-rolled",
+                    "oq7": "stay-hand-rolled-2026-08-06",
                 }
             }),
         )),

@@ -1,0 +1,90 @@
+# MCP transport decision (H2-2 / OQ-7)
+
+**Decision date:** 2026-08-06  
+**Decision:** **Stay hand-rolled** JSON-RPC MCP (`cadre-mcp`).  
+**Not:** dual stack with official SDK. Revisit only if a dated amendment re-opens OQ-7.
+
+## Why stay hand-rolled (a)
+
+| Factor | Hand-roll (now) | Official Rust MCP SDK |
+|--------|-----------------|------------------------|
+| Stdio + streamable HTTP | Shipped, tested | Would re-port transports |
+| Cadre gates (`write_source`, project root) | First-class policy | Extra glue / risk of bypass |
+| Tool budget (D12 ≤4k tokens) | Short schemas we control | Framework defaults may bloat |
+| Dep weight / audit surface | Tiny (serde_json + axum HTTP) | SDK + transitive churn |
+| Known-working (P3) | Green CI ubuntu+windows | Migration cost without new agent value |
+| Resources (H7) | `cadre://doc/**` + artifacts | Would need reimplementation anyway |
+
+**(b)** Partial SDK for stdio only — rejected: dual stacks violate H2-2 exit (“no silent dual stacks”).  
+**(c)** Full SDK migration now — rejected: payoff unclear; breaks momentum for zero agent-loop gain.
+
+## Protocol surface
+
+**Advertised:** `protocolVersion` = `2024-11-05` (`cadre_mcp::PROTOCOL_VERSION`).
+
+### Supported methods
+
+See `cadre_mcp::SUPPORTED_METHODS` (source of truth):
+
+- `initialize` / `notifications/initialized` / `initialized`
+- `ping`
+- `tools/list` / `tools/call`
+- `resources/list` / `resources/read`
+- `prompts/list` (empty list — honest)
+
+### Explicitly unsupported (method-not-found −32601)
+
+See `cadre_mcp::UNSUPPORTED_BUT_DOCUMENTED`:
+
+- `resources/subscribe` / `unsubscribe` (no live push)
+- `resources/templates/list`
+- `completion/complete`
+- `logging/setLevel`
+- `sampling/createMessage`
+- `roots/list`
+
+### Tools (6)
+
+`build` · `write_source` · `read_source` · `inspect_refs` · `measure` · `snapshot`  
+(`cadre_mcp::TOOL_NAMES`)
+
+### Transports
+
+| Transport | Entry | Auth | write_source default |
+|-----------|-------|------|----------------------|
+| stdio | `cadre mcp` | n/a | **OFF** (`CADRE_MCP_WRITE_SOURCE=1`) |
+| streamable HTTP | `cadre serve mcp` POST/GET `/mcp` | optional bearer | **ON** (`=0` to disable) |
+
+## Compliance test matrix
+
+| Check | How |
+|-------|-----|
+| Tool list stable | `cargo test -p cadre-mcp tool_defs_match` |
+| initialize caps | `initialize_advertises_protocol_and_caps` |
+| unsupported → −32601 | `unsupported_methods_are_method_not_found` |
+| core methods OK | `supported_request_methods_do_not_404` |
+| resources policy doc | `resources_read_policy_doc` |
+| write_source gate | H7 tests + policy |
+| HTTP tools/list | `http` module tests |
+| End-to-end loop | `write_build_inspect_snapshot_loop` |
+
+```sh
+cargo test -p cadre-mcp
+```
+
+## When to reopen OQ-7
+
+Re-open only with a CHARTER amendment if **all** hold:
+
+1. Official SDK is stable, small, and supports stdio + streamable HTTP without forking  
+2. Cadre policy hooks (write_source, project root) remain enforceable  
+3. Migration is one PR with dual-stack **off** (cutover, not forever parallel)  
+4. Measured agent/client pain with hand-roll exceeds migration cost  
+
+Until then: **hand-rolled is the product.**
+
+## Related
+
+- H7 resources: `docs/MCP_RESOURCES.md`
+- Skill surface: `skills/cadre/SKILL.md`
+- Charter D17 / OQ-7 amendment: `docs/CHARTER.md`

@@ -55,6 +55,9 @@ cadre mcp
 
 Local agents already have FS tools — prefer those on stdio. HTTP agents need MCP write.
 
+### MCP implementation (H2-2 / OQ-7)
+**Hand-rolled** JSON-RPC only — no official SDK dual stack. See `docs/MCP_SDK.md`.
+
 ### MCP resources
 | URI | Content |
 |-----|---------|

@@ -74,9 +74,9 @@ rationale is lost gets re-litigated within a month.
   PRD §6 (`cadre-kernel`, `cadre-lang`, `cadre-model`, faces, …). Bootstrap keeps a thin
   `cadre` facade crate so the workspace resolves from commit 0; slices split logic into the
   named crates rather than growing an unstructured monolith.
-- **D17 — House MCP default may yield here.** House stack prefers hand-rolled JSON-RPC MCP.
-  Cadre targets stdio + streamable HTTP and an official Rust MCP SDK *if* it stays small and
-  honest; final transport choice is confirmed at M2 with a dated amendment if hand-rolled wins.
+- **D17 — House MCP is hand-rolled (OQ-7 closed 2026-08-06).** Stdio + streamable HTTP stay
+  in `cadre-mcp` without the official SDK until a dated amendment re-opens OQ-7. See
+  `docs/MCP_SDK.md` for the compliance matrix and reopen criteria. D12 tool budget still binds.
 - **D18 — Working name `cadre` pending trademark/crates.io sweep.** Binary and crate
   namespace stay `cadre` until OQ-1 closes; rename is a deliberate charter amendment.
 - **D19 — OCCT bind path GO (S1).** Default parity backend will be `cadre-occt` implementing
@@ -132,7 +132,7 @@ From PRD §16 — still unresolved; do not silently assume answers in code:
 4. **OQ-4** Depth of assembly joint model in STEP for 1.0 (kinematic AP242 vs labels+placements).
 5. ~~**OQ-5** Whether MCP `write_source`/`read_source` default on for local stdio or HTTP-only.~~ **Resolved 2026-08-05 (H7):** stdio `write_source` **OFF** by default; HTTP **ON** by default; override via `CADRE_MCP_WRITE_SOURCE`. `read_source` on both. See amendments + `cadre://doc/write-source-policy`.
 6. **OQ-6** Vendor-profile governance for community DFM rulepack updates.
-7. **OQ-7** MCP transport: official SDK vs house hand-rolled (see D17) — decide at M2. House hand-rolled remains through H7 (resources added).
+7. ~~**OQ-7** MCP transport: official SDK vs house hand-rolled (see D17).~~ **Resolved 2026-08-06 (H2-2):** **stay hand-rolled**. No dual stack. Compliance matrix + reopen criteria in `docs/MCP_SDK.md`. `initialize.serverInfo.implementation = "hand-rolled"`.
 
 ---
 
@@ -174,3 +174,5 @@ Dated entries. A decision changes here first, then in the code.
 - **2026-08-05** — **H7 / OQ-5 resolved:** MCP `write_source` default **OFF on stdio**, **ON on HTTP**;
   override `CADRE_MCP_WRITE_SOURCE=0|1`. `resources/list` + `resources/read` for
   `cadre://doc/**` and `cadre://artifact/**`. `read_source` remains on both transports.
+- **2026-08-06** — **H2-2 / OQ-7 resolved:** stay **hand-rolled** MCP (no official SDK dual stack).
+  Compliance constants + tests in `cadre-mcp`; decision log `docs/MCP_SDK.md`. D17 amended.

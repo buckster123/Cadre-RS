@@ -73,9 +73,9 @@ Priority suggestions when resuming:
 
 | # | Slice | Status |
 |---|-------|--------|
-| H2-1 | WASM IR component (escape hatch) | ✅ this slice |
-| H2-2 | MCP OQ-7 SDK decision | pending |
-| H2-3 | Fab depth (DFM + OctoPrint) | pending |
+| H2-1 | WASM IR component (escape hatch) | ✅ PR #35 |
+| H2-2 | MCP OQ-7 SDK decision | ✅ this slice |
+| H2-3 | Fab depth (DFM + OctoPrint) | next |
 | H2-4 | Published live harness score | pending |
 | H2-5 | Assembly joint depth | pending |
 | H2-6 | Viewer 3D depth | pending |
@@ -84,7 +84,7 @@ Priority suggestions when resuming:
 | H2-9 | SDF secondary experimental | pending |
 | H2-10 | Truck parity bid prep (not default) | pending |
 
-Default when resuming with no pref: **H2-2**.
+Default when resuming with no pref: **H2-3**.
 
 ## Post-v1 parking (Horizon-3+ / deferred)
 
