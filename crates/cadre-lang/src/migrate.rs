@@ -111,25 +111,36 @@ pub fn migrate_build123d_skeleton(source: &str) -> MigrateReport {
         solids.push("body".into());
     }
 
-    // H2-7: Locations / Location offsets → translate on matching solids (order)
+    // H2-7: Locations / Location offsets → translate on solids after the base.
+    // Heuristic: if more solids than locations, pair locs with trailing solids
+    // (common: base then Locations{ feature }).
     let locs = extract_locations(source, &params);
     if !locs.is_empty() {
+        let start = if solids.len() > locs.len() {
+            solids.len() - locs.len()
+        } else {
+            0
+        };
         notes.push(format!(
-            "Locations/Location → translate on up to {} solid(s)",
-            locs.len().min(solids.len())
+            "Locations/Location → translate on {} solid(s) (from index {start})",
+            locs.len().min(solids.len().saturating_sub(start))
         ));
-        let n = locs.len().min(solids.len());
+        let n = locs.len().min(solids.len().saturating_sub(start));
         for i in 0..n {
             let (x, y, z) = locs[i];
             if x.abs() < 1e-12 && y.abs() < 1e-12 && z.abs() < 1e-12 {
                 continue;
             }
-            let src = solids[i].clone();
+            let si = start + i;
+            let src = solids[si].clone();
             let name = unique_name("tr", body_lines.len());
             body_lines.push(format!(
-                "    {name} = translate({src}, {x}, {y}, {z})  # from Locations"
+                "    {name} = translate({src}, {}, {}, {})  # from Locations",
+                fmt_num(x),
+                fmt_num(y),
+                fmt_num(z)
             ));
-            solids[i] = name;
+            solids[si] = name;
         }
     }
 
