@@ -1,0 +1,32 @@
+{
+  "name": "lid_hinge_assy",
+  "version": 2,
+  "components": [
+    {
+      "name": "base",
+      "source": "cad/plate.cad.star",
+      "from_lock": false,
+      "placement": { "origin_mm": [0.0, 0.0, 0.0], "rpy_deg": [0.0, 0.0, 0.0] }
+    },
+    {
+      "name": "lid",
+      "source": "cad/plate.cad.star",
+      "from_lock": false,
+      "placement": { "origin_mm": [0.0, 0.0, 20.0], "rpy_deg": [0.0, 0.0, 0.0] }
+    }
+  ],
+  "joints": [
+    {
+      "name": "lid_hinge",
+      "a": "base",
+      "b": "lid",
+      "kind": "revolute",
+      "axis": [0.0, 1.0, 0.0],
+      "origin_mm": [0.0, 0.0, 20.0],
+      "lower": 0.0,
+      "upper": 1.57079632679,
+      "effort": 2.0,
+      "velocity": 1.0
+    }
+  ]
+}

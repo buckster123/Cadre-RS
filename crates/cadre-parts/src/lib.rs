@@ -7,7 +7,8 @@ mod lock;
 mod provider;
 
 pub use assembly::{
-    align_check, AlignExpect, AlignReport, AssemblySpec, ComponentSpec, JointSpec, PlacementSpec,
+    align_check, validate_assembly, AlignExpect, AlignReport, AssemblySpec,
+    AssemblyValidationReport, ComponentSpec, JointSpec, PlacementSpec,
 };
 pub use lock::{load_parts_lock, verify_lock_entry, PartsLock, PartsLockEntry, PartsLockError};
 pub use provider::{

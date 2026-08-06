@@ -176,3 +176,7 @@ Dated entries. A decision changes here first, then in the code.
   `cadre://doc/**` and `cadre://artifact/**`. `read_source` remains on both transports.
 - **2026-08-06** — **H2-2 / OQ-7 resolved:** stay **hand-rolled** MCP (no official SDK dual stack).
   Compliance constants + tests in `cadre-mcp`; decision log `docs/MCP_SDK.md`. D17 amended.
+- **2026-08-06** — **H2-5 joint depth:** assembly `JointSpec` gains axis/origin/limits;
+  `validate_assembly` fail-closed; robot revolute/prismatic missing or inverted limits are **errors**.
+  CLI `cadre assembly validate`. Not AP242 STEP kinematics (OQ-4 still open for STEP depth).
+  See `docs/JOINTS.md`.

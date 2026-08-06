@@ -68,6 +68,8 @@ pub enum Commands {
     Serve(ServeArgs),
     /// Robot description gen/validate (URDF/SRDF/SDF).
     Robot(RobotArgs),
+    /// Assembly spec validate (joints + components).
+    Assembly(AssemblyArgs),
     /// Fabrication: DXF, DFM, slicer, gcode-check.
     Fab(FabArgs),
     /// Printer adapters (Bambu / Klipper dry-run / gated start).
@@ -430,6 +432,24 @@ pub struct RobotGenArgs {
     /// Also write SDF.
     #[arg(long, default_value_t = true)]
     pub sdf: bool,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct AssemblyArgs {
+    #[command(subcommand)]
+    pub cmd: AssemblyCmd,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum AssemblyCmd {
+    /// Validate assembly JSON (components + joints fail-closed).
+    Validate(AssemblyValidateArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct AssemblyValidateArgs {
+    /// Path to `.assy.json` assembly spec.
+    pub target: PathBuf,
 }
 
 #[derive(Debug, clap::Args)]
