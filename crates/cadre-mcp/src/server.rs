@@ -10,6 +10,7 @@ use crate::tools::{call_tool, tool_defs};
 
 /// Run until stdin EOF. Logs go to stderr only.
 pub fn run_stdio() -> io::Result<()> {
+    crate::protocol::configure_framing_from_env();
     crate::policy::init_policy(crate::policy::McpPolicy {
         // H7: stdio write_source OFF unless CADRE_MCP_WRITE_SOURCE=1
         write_source: crate::policy::write_source_from_env(false),
