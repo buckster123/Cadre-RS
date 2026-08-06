@@ -186,3 +186,5 @@ Dated entries. A decision changes here first, then in the code.
   Decision **NO-GO** for default/`parity_eligible`. No code default flip. Horizon-2 board complete.
 - **2026-08-06** — **Horizon-3 chartered:** `docs/HORIZON3.md` Top-N H3-1…H3-10 (honesty, agent loop,
   gated BREP spike). Default next **H3-1**. Does not flip D4/truck default.
+- **2026-08-06** — **H3-1 honesty pass:** OCCT `cone` is **Unsupported** (no cylinder stand-in);
+  suite/kernel fences in `docs/KERNEL_HONESTY.md`; version JSON `truck_implementation=truck-seed-analytic-csg`.

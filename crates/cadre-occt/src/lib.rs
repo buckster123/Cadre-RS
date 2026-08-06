@@ -491,9 +491,13 @@ impl GeomKernel for OcctKernel {
     }
 
     fn cone(&mut self, radius: f64, height: f64, placement: Placement) -> KernelResult<ShapeId> {
-        // No MakeCone in opencascade-sys 0.2 — approximate with cylinder of same base/height.
-        // Honesty: volume will differ from true cone (mock uses true cone volume).
-        self.cylinder(radius, height, placement)
+        // H3-1 honesty: opencascade-sys 0.2 has no MakeCone. Do **not** silently
+        // substitute a cylinder (volume would be 3× a true cone). Fail closed.
+        let _ = (radius, height, placement);
+        Err(KernelError::unsupported(
+            self.backend_id(),
+            "cone (no MakeCone in opencascade-sys 0.2; refuse cylinder stand-in — use mock for analytic cone or loft later)",
+        ))
     }
 
     fn mirror_plane(&mut self, shape: ShapeId, plane: &str) -> KernelResult<ShapeId> {

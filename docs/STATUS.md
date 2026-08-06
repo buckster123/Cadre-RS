@@ -14,10 +14,10 @@
 - Binary: `cadre` (`~/.local/bin/cadre` for Hermes MCP)
 
 ## Next board
-**Active:** [`docs/HORIZON3.md`](HORIZON3.md) Top-N **H3-1…H3-10**. Default next: **H3-1 honesty pass**.  
+**Active:** [`docs/HORIZON3.md`](HORIZON3.md) Top-N **H3-1…H3-10**. Default next: **H3-2 frontier harness**.  
 **Archive:** [`docs/HORIZON2.md`](HORIZON2.md) Horizon-2 complete · [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete.
 
-H3 pillars: honesty · agent loop · gated BREP spike. Truck bid remains **NO-GO** for default.  
+H3-1 honesty done (`docs/KERNEL_HONESTY.md`) · truck bid NO-GO · next H3-2 / H3-3 …  
 
 ## Crate map (as-built)
 | Crate | Role |

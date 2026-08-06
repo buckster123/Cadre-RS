@@ -73,7 +73,9 @@ fn main() {
                 "kernels": {
                     "default": kernel_pick::default_kernel_id(),
                     "truck_parity_eligible": false,
-                    "truck_note": "experimental pure-Rust CSG seed — NON-PARITY; never default",
+                    "truck_implementation": "truck-seed-analytic-csg",
+                    "truck_note": "experimental pure-Rust CSG seed — NOT upstream truck BREP; NON-PARITY; never default",
+                    "occt_cone": "unsupported (no silent cylinder stand-in; H3-1)",
                 },
                 "sdf": {
                     "primary": false,
