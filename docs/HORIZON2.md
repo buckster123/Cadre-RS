@@ -1,6 +1,7 @@
 # Cadre-RS Horizon-2 — mediums & distribution
 
-> **Status:** active cook board (Horizon-1 complete).  
+> **Status:** **COMPLETE** 2026-08-06 (H2-1…H2-10). **Archive.**  
+> **Successor (active):** [`docs/HORIZON3.md`](HORIZON3.md)  
 > **When written:** 2026-08-06 (after H1–H10 / PR #24–#34).  
 > **Authority:** does **not** override `docs/CHARTER.md` D1–Dn. Ordering only.  
 > **Prior board:** [`docs/HORIZON.md`](HORIZON.md) (Horizon-1 archive + principles).  

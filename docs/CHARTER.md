@@ -184,3 +184,5 @@ Dated entries. A decision changes here first, then in the code.
   CLI `cadre sdf sample`. **Not a modeling path** — STEP/B-rep remains primary (`docs/SDF.md`).
 - **2026-08-06** — **H2-10 truck parity bid prep:** evidence pack `docs/TRUCK_PARITY_BID.md`.
   Decision **NO-GO** for default/`parity_eligible`. No code default flip. Horizon-2 board complete.
+- **2026-08-06** — **Horizon-3 chartered:** `docs/HORIZON3.md` Top-N H3-1…H3-10 (honesty, agent loop,
+  gated BREP spike). Default next **H3-1**. Does not flip D4/truck default.
