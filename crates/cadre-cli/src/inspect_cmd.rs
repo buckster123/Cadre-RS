@@ -3,8 +3,8 @@
 use std::fs;
 
 use cadre_inspect::{
-    align_refs, diff_snapshots, frame_of, inspect_refs, measure, AlignExpect, MeasureKind,
-    MeasureRequest, TopologySnapshot,
+    align_refs, build_drawing_packet, diff_snapshots, frame_of, inspect_refs, measure, AlignExpect,
+    DimSpec, MeasureKind, MeasureRequest, TopologySnapshot,
 };
 #[cfg(feature = "occt")]
 use cadre_lang::execute_ir;
@@ -34,6 +34,7 @@ pub fn run(cli: &Cli, args: &InspectArgs) -> ExitCode {
         InspectCmd::Align(a) => align_cmd(cli, a),
         InspectCmd::Frame(a) => frame_cmd(cli, a),
         InspectCmd::Diff(a) => diff_cmd(cli, a),
+        InspectCmd::Dims(a) => dims_cmd(cli, a),
     }
 }
 
@@ -341,4 +342,125 @@ fn diff_cmd(cli: &Cli, a: &crate::cli::DiffArgs) -> ExitCode {
         true,
     );
     ExitCode::Ok
+}
+
+fn dims_cmd(cli: &Cli, a: &crate::cli::DimsArgs) -> ExitCode {
+    let (snap, topology) = match load_topo(cli, &a.target, &a.set) {
+        Ok(x) => x,
+        Err((c, v)) => {
+            emit(cli.json, &v, false);
+            return c;
+        }
+    };
+    let mut specs: Vec<DimSpec> = Vec::new();
+    if let Some(path) = &a.specs {
+        match fs::read_to_string(path) {
+            Ok(t) => match serde_json::from_str::<Vec<DimSpec>>(&t) {
+                Ok(v) => specs.extend(v),
+                Err(e) => {
+                    emit(
+                        cli.json,
+                        &json!({"ok": false, "error": format!("specs json: {e}")}),
+                        false,
+                    );
+                    return ExitCode::Validation;
+                }
+            },
+            Err(e) => {
+                emit(
+                    cli.json,
+                    &json!({"ok": false, "error": format!("read specs: {e}")}),
+                    false,
+                );
+                return ExitCode::Io;
+            }
+        }
+    }
+    for s in &a.dim {
+        match parse_dim_flag(s) {
+            Ok(d) => specs.push(d),
+            Err(e) => {
+                emit(cli.json, &json!({"ok": false, "error": e}), false);
+                return ExitCode::Usage;
+            }
+        }
+    }
+    let source = a
+        .target
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("part")
+        .to_string();
+    let packet = build_drawing_packet(&snap, &source, topology, &specs);
+    let out = a.output.clone().unwrap_or_else(|| {
+        let stem = a
+            .target
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("part");
+        // strip .cad if stem is foo.cad
+        let stem = stem.strip_suffix(".cad").unwrap_or(stem);
+        a.target
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
+            .join(format!("{stem}.drawing.json"))
+    });
+    if let Err(e) = fs::write(
+        &out,
+        serde_json::to_string_pretty(&packet).unwrap_or_default(),
+    ) {
+        emit(
+            cli.json,
+            &json!({"ok": false, "error": format!("write {}: {e}", out.display())}),
+            false,
+        );
+        return ExitCode::Io;
+    }
+    emit(
+        cli.json,
+        &json!({
+            "ok": packet.ok,
+            "packet": packet,
+            "out": out,
+            "note": "not a drafting package — dimension facts only (H2-8 PMI alpha)",
+        }),
+        packet.ok,
+    );
+    if packet.ok {
+        ExitCode::Ok
+    } else {
+        ExitCode::Validation
+    }
+}
+
+/// Parse `A,B,kind` or `A,kind` (diameter).
+fn parse_dim_flag(s: &str) -> Result<DimSpec, String> {
+    let parts: Vec<&str> = s
+        .split(',')
+        .map(|p| p.trim())
+        .filter(|p| !p.is_empty())
+        .collect();
+    match parts.as_slice() {
+        [a, kind] => Ok(DimSpec {
+            a: (*a).into(),
+            b: None,
+            kind: (*kind).into(),
+            label: None,
+        }),
+        [a, b, kind] => Ok(DimSpec {
+            a: (*a).into(),
+            b: Some((*b).into()),
+            kind: (*kind).into(),
+            label: None,
+        }),
+        [a, b, kind, label] => Ok(DimSpec {
+            a: (*a).into(),
+            b: Some((*b).into()),
+            kind: (*kind).into(),
+            label: Some((*label).into()),
+        }),
+        _ => Err(format!(
+            "bad --dim '{s}' (want A,B,kind or A,kind for diameter)"
+        )),
+    }
 }

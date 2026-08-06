@@ -79,12 +79,12 @@ Priority suggestions when resuming:
 | H2-4 | Published live harness score | ✅ PR #38 |
 | H2-5 | Assembly joint depth | ✅ PR #41 |
 | H2-6 | Viewer 3D depth | ✅ PR #42 |
-| H2-7 | Migrator depth | ✅ this slice |
-| H2-8 | PMI/drawing alpha | next |
-| H2-9 | SDF secondary experimental | pending |
+| H2-7 | Migrator depth | ✅ PR #43 |
+| H2-8 | PMI/drawing alpha | ✅ this slice |
+| H2-9 | SDF secondary experimental | next |
 | H2-10 | Truck parity bid prep (not default) | pending |
 
-Default when resuming with no pref: **H2-8**.
+Default when resuming with no pref: **H2-9**.
 
 ## Post-v1 parking (Horizon-3+ / deferred)
 
