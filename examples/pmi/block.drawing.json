@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "schema": "cadre.drawing_packet",
+  "version": 1,
+  "source": "block.cad.star",
+  "dims": [
+    {
+      "id": "d1",
+      "kind": "linear",
+      "a": "#o1.1.f1",
+      "b": "#o1.1.f6",
+      "value": 20.0,
+      "unit": "mm",
+      "construction": "projected distance along normal of #o1.1.f1 toward #o1.1.f6",
+      "label": "auto-opposite"
+    },
+    {
+      "id": "d2",
+      "kind": "linear",
+      "a": "#o1.1.f2",
+      "b": "#o1.1.f5",
+      "value": 60.0,
+      "unit": "mm",
+      "construction": "projected distance along normal of #o1.1.f2 toward #o1.1.f5",
+      "label": "auto-opposite"
+    },
+    {
+      "id": "d3",
+      "kind": "linear",
+      "a": "#o1.1.f3",
+      "b": "#o1.1.f4",
+      "value": 100.0,
+      "unit": "mm",
+      "construction": "projected distance along normal of #o1.1.f3 toward #o1.1.f4",
+      "label": "auto-opposite"
+    }
+  ],
+  "notes": [
+    "PMI alpha (H2-8): dimension facts only — not a drafting package",
+    "No sheets / title blocks / GD&T / STEP AP242 PMI",
+    "auto: linear dims between opposite-normal face pairs"
+  ],
+  "topology": "ir-analytic"
+}

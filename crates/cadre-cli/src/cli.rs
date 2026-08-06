@@ -116,6 +116,8 @@ pub enum InspectCmd {
     Frame(FrameArgs),
     /// Diff two builds (volume/faces + selector remap hints).
     Diff(DiffArgs),
+    /// PMI alpha: linear dimension facts → drawing packet JSON (not a drafting package).
+    Dims(DimsArgs),
 }
 
 #[derive(Debug, clap::Args)]
@@ -189,6 +191,24 @@ pub struct DiffArgs {
     pub set_old: Vec<String>,
     #[arg(long = "set-new", value_name = "KEY=VAL")]
     pub set_new: Vec<String>,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct DimsArgs {
+    /// `.cad.star` source (or IR json).
+    pub target: PathBuf,
+    /// Write drawing packet JSON here (default: `<stem>.drawing.json` next to target).
+    #[arg(short = 'o', long)]
+    pub output: Option<PathBuf>,
+    /// Explicit dim: `A,B,kind` or `A,kind` for diameter. kind=distance|thickness|diameter|angle.
+    /// Repeatable. If omitted, auto opposite-face linear dims.
+    #[arg(long = "dim", value_name = "SPEC")]
+    pub dim: Vec<String>,
+    /// Optional JSON file of DimSpec array.
+    #[arg(long = "specs")]
+    pub specs: Option<PathBuf>,
+    #[arg(long = "set", value_name = "KEY=VAL")]
+    pub set: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
