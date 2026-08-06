@@ -11,6 +11,8 @@ cadre-inspect = { workspace = true }
 cadre-kernel = { workspace = true }
 cadre-lang = { workspace = true }
 cadre-render = { workspace = true }
+cadre-parts = { workspace = true }
+cadre-sdf = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

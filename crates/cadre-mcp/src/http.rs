@@ -241,7 +241,10 @@ mod tests {
             .await
             .unwrap();
         let v: Value = serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(v["result"]["tools"].as_array().unwrap().len(), 6);
+        assert_eq!(
+            v["result"]["tools"].as_array().unwrap().len(),
+            crate::compliance::TOOL_NAMES.len()
+        );
     }
 
     #[tokio::test]

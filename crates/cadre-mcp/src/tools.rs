@@ -4,9 +4,13 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use cadre_inspect::{inspect_refs, measure, MeasureKind, MeasureRequest};
+use cadre_inspect::{
+    build_drawing_packet, inspect_refs, measure, DimSpec, MeasureKind, MeasureRequest,
+};
 use cadre_lang::{evaluate, EvalOptions};
+use cadre_parts::{validate_assembly, AssemblySpec};
 use cadre_render::{mesh_from_ir, write_snapshot_packet, SnapshotOptions, ViewName};
+use cadre_sdf::{grid_for_prim, sample_analytic, write_nrrd, write_raw, SdfPrim};
 use serde_json::{json, Value};
 
 #[derive(Debug, thiserror::Error)]
@@ -96,6 +100,52 @@ pub fn tool_defs() -> Value {
                 },
                 "required": ["path"]
             }
+        },
+        {
+            "name": "inspect_dims",
+            "description": "PMI alpha: linear dim facts → drawing packet JSON (not a drafting package). Auto opposite faces or optional dims array.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": ".cad.star"},
+                    "out": {"type": "string", "description": "optional output .drawing.json path"},
+                    "dims": {
+                        "type": "array",
+                        "description": "optional DimSpec list {a,b?,kind,label?}",
+                        "items": {"type": "object"}
+                    }
+                },
+                "required": ["path"]
+            }
+        },
+        {
+            "name": "assembly_validate",
+            "description": "Validate assembly .assy.json joints/components (fail-closed limits).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "path to .assy.json"}
+                },
+                "required": ["path"]
+            }
+        },
+        {
+            "name": "sdf_sample",
+            "description": "Secondary SDF sample (analytic box/cyl → raw+NRRD). Never a modeling path.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "prim": {"type": "string", "enum": ["box", "cylinder"]},
+                    "a": {"type": "number", "description": "box dx or cylinder r"},
+                    "b": {"type": "number", "description": "box dy or cylinder h"},
+                    "c": {"type": "number", "description": "box dz (required for box)"},
+                    "res": {"type": "integer", "default": 24},
+                    "pad": {"type": "number", "default": 2.0},
+                    "out": {"type": "string", "description": "output dir"},
+                    "stem": {"type": "string"}
+                },
+                "required": ["prim", "a", "b"]
+            }
         }
     ])
 }
@@ -108,6 +158,9 @@ pub fn call_tool(name: &str, args: &Value) -> Result<Value, ToolError> {
         "inspect_refs" => tool_inspect_refs(args),
         "measure" => tool_measure(args),
         "snapshot" => tool_snapshot(args),
+        "inspect_dims" => tool_inspect_dims(args),
+        "assembly_validate" => tool_assembly_validate(args),
+        "sdf_sample" => tool_sdf_sample(args),
         other => Err(ToolError::msg(format!("unknown tool: {other}"))),
     }
 }
@@ -312,6 +365,131 @@ fn tool_snapshot(args: &Value) -> Result<Value, ToolError> {
     Ok(json!({ "content": content }))
 }
 
+fn tool_inspect_dims(args: &Value) -> Result<Value, ToolError> {
+    let path = PathBuf::from(str_arg(args, "path")?);
+    let ir = eval_path(&path, None)?;
+    let snap = topo_from_ir(&ir)?;
+    let mut specs: Vec<DimSpec> = Vec::new();
+    if let Some(arr) = args.get("dims").and_then(|v| v.as_array()) {
+        for (i, v) in arr.iter().enumerate() {
+            let s: DimSpec = serde_json::from_value(v.clone())
+                .map_err(|e| ToolError::msg(format!("dims[{i}]: {e}")))?;
+            specs.push(s);
+        }
+    }
+    let source = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("part")
+        .to_string();
+    let packet = build_drawing_packet(&snap, &source, "ir-analytic-mcp", &specs);
+    let out = args
+        .get("out")
+        .and_then(|v| v.as_str())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("part");
+            let stem = stem.strip_suffix(".cad").unwrap_or(stem);
+            path.parent()
+                .unwrap_or_else(|| Path::new("."))
+                .join(format!("{stem}.drawing.json"))
+        });
+    fs::write(
+        &out,
+        serde_json::to_string_pretty(&packet).map_err(|e| ToolError::msg(e.to_string()))?,
+    )
+    .map_err(|e| ToolError::msg(e.to_string()))?;
+    let payload = json!({
+        "ok": packet.ok,
+        "out": out,
+        "packet": packet,
+        "note": "not a drafting package — H2-8/H3-3 PMI alpha"
+    });
+    Ok(json!({
+        "content": [{"type": "text", "text": serde_json::to_string_pretty(&payload).unwrap()}]
+    }))
+}
+
+fn tool_assembly_validate(args: &Value) -> Result<Value, ToolError> {
+    let path = PathBuf::from(str_arg(args, "path")?);
+    let text = fs::read_to_string(&path).map_err(|e| ToolError::msg(e.to_string()))?;
+    let spec: AssemblySpec =
+        serde_json::from_str(&text).map_err(|e| ToolError::msg(format!("assy json: {e}")))?;
+    let report = validate_assembly(&spec);
+    let payload = json!({
+        "ok": report.ok,
+        "path": path,
+        "report": report,
+    });
+    Ok(json!({
+        "content": [{"type": "text", "text": serde_json::to_string_pretty(&payload).unwrap()}]
+    }))
+}
+
+fn tool_sdf_sample(args: &Value) -> Result<Value, ToolError> {
+    let prim_s = str_arg(args, "prim")?;
+    let a = args
+        .get("a")
+        .and_then(|v| v.as_f64())
+        .ok_or_else(|| ToolError::msg("a number required"))?;
+    let b = args
+        .get("b")
+        .and_then(|v| v.as_f64())
+        .ok_or_else(|| ToolError::msg("b number required"))?;
+    if a <= 0.0 || b <= 0.0 {
+        return Err(ToolError::msg("a and b must be > 0"));
+    }
+    let prim = match prim_s {
+        "box" => {
+            let c = args
+                .get("c")
+                .and_then(|v| v.as_f64())
+                .filter(|c| *c > 0.0)
+                .ok_or_else(|| ToolError::msg("box requires c > 0 (dz)"))?;
+            SdfPrim::Box {
+                dx: a,
+                dy: b,
+                dz: c,
+            }
+        }
+        "cylinder" => SdfPrim::Cylinder { r: a, h: b },
+        other => {
+            return Err(ToolError::msg(format!(
+                "prim must be box|cylinder, got {other}"
+            )))
+        }
+    };
+    let res = args.get("res").and_then(|v| v.as_u64()).unwrap_or(24) as usize;
+    let pad = args.get("pad").and_then(|v| v.as_f64()).unwrap_or(2.0);
+    let out = args
+        .get("out")
+        .and_then(|v| v.as_str())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("sdf_out"));
+    let stem = args
+        .get("stem")
+        .and_then(|v| v.as_str())
+        .unwrap_or(prim_s)
+        .to_string();
+    let grid = grid_for_prim(prim, res, pad);
+    let vol = sample_analytic(prim, &grid).map_err(|e| ToolError::msg(e.to_string()))?;
+    let (raw, meta) = write_raw(&vol, &out, &stem).map_err(|e| ToolError::msg(e.to_string()))?;
+    let (nrrd, nraw) = write_nrrd(&vol, &out, &stem).map_err(|e| ToolError::msg(e.to_string()))?;
+    let payload = json!({
+        "ok": true,
+        "secondary": true,
+        "note": "experimental SDF — not a modeling path; STEP remains primary",
+        "voxel_count": vol.values.len(),
+        "raw_f32": raw,
+        "meta": meta,
+        "nrrd": nrrd,
+        "nrrd_raw": nraw,
+    });
+    Ok(json!({
+        "content": [{"type": "text", "text": serde_json::to_string_pretty(&payload).unwrap()}]
+    }))
+}
+
 fn topo_from_ir(ir: &cadre_lang::FeatureIr) -> Result<cadre_inspect::TopologySnapshot, ToolError> {
     // Duplicate thin walker (same as bench) to avoid depending on cadre-cli.
     use cadre_inspect::{box_topology, cylinder_topology, SolidRec, TopologySnapshot};
@@ -332,6 +510,7 @@ fn topo_from_ir(ir: &cadre_lang::FeatureIr) -> Result<cadre_inspect::TopologySna
                 box_topology(2.0 * r, 2.0 * r, 2.0 * r, Point3::new(at[0], at[1], at[2]))
             }
             IrNode::Cone { radius, height, at } => {
+                // H3-1: IR topology approx uses cylinder bbox — dims on cones are amber.
                 cylinder_topology(*radius, *height, Point3::new(at[0], at[1], at[2]))
             }
             IrNode::Boolean { kind, a, b } => {

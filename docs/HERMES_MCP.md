@@ -33,7 +33,8 @@ Cadre auto-detects NDJSON vs Content-Length. Override with `CADRE_MCP_FRAMING=nd
 
 ```sh
 hermes mcp test cadre
-# → Connected, 6 tools: build write_source read_source inspect_refs measure snapshot
+# → Connected, 9 tools: build write_source read_source inspect_refs measure snapshot
+#   inspect_dims assembly_validate sdf_sample
 ```
 
 ## Live session
@@ -45,6 +46,7 @@ Config changes need **`/reload-mcp`** (or a new Hermes session). Disk-green `her
 After reload, tools appear as `mcp_cadre_*` / deferred catalog names depending on Hermes version:
 
 - `build` · `write_source` · `read_source` · `inspect_refs` · `measure` · `snapshot`
+- **H3-3:** `inspect_dims` · `assembly_validate` · `sdf_sample` (secondary)
 - resources: `resources/list` · `resources/read` (`cadre://doc/**`)
 
 ## Drive example
