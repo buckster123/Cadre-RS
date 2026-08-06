@@ -67,9 +67,9 @@ Priority suggestions when resuming:
 | H9 | Klipper/Moonraker gated adapter | ✅ PR #33 |
 | H10 | truck experimental non-parity lane | ✅ PR #34 |
 
-## Horizon-2 board (ordered)
+## Horizon-2 board (ordered) — COMPLETE
 
-**Source of truth:** [`docs/HORIZON2.md`](docs/HORIZON2.md).
+**Archive:** [`docs/HORIZON2.md`](docs/HORIZON2.md). **Active:** [`docs/HORIZON3.md`](docs/HORIZON3.md).
 
 | # | Slice | Status |
 |---|-------|--------|
@@ -82,13 +82,30 @@ Priority suggestions when resuming:
 | H2-7 | Migrator depth | ✅ PR #43 |
 | H2-8 | PMI/drawing alpha | ✅ PR #44 |
 | H2-9 | SDF secondary experimental | ✅ PR #45 |
-| H2-10 | Truck parity bid prep (not default) | ✅ this slice |
+| H2-10 | Truck parity bid prep (not default) | ✅ PR #46 |
 
-Default when resuming with no pref: **Horizon-2 complete** — open Horizon-3 board or park.
+## Horizon-3 board (ordered) — ACTIVE
 
-## Post-v1 parking (Horizon-3+ / deferred)
+**Source of truth:** [`docs/HORIZON3.md`](docs/HORIZON3.md).
 
-- truck **as default** — only after H2-10 prep + parity evidence (Horizon-3)
+| # | Slice | Status |
+|---|-------|--------|
+| H3-1 | Honesty pass (cone + fences + truck naming) | next |
+| H3-2 | Live harness frontier score | pending |
+| H3-3 | MCP surface depth (dims/assembly/sdf) | pending |
+| H3-4 | Assembly / OQ-4 bite | pending |
+| H3-5 | PMI → viewer overlay | pending |
+| H3-6 | Truck BREP spike (bid G1) | pending |
+| H3-7 | OCCT parity depth | pending |
+| H3-8 | DFM / OQ-6 governance seed | pending |
+| H3-9 | Migrator / WASM polish | pending |
+| H3-10 | OQ-1 name decision packet | pending |
+
+Default when resuming with no pref: **H3-1**.
+
+## Post-v1 parking (still deferred)
+
+- truck as **default** — only after bid G1–G7 + CHARTER (post H3-6+)
 - Public multi-tenant SaaS — needs re-charter (NG3)
-- Full PMI/drawing package beyond H2-8 alpha
-- SDF as **primary** modeling medium (forbidden; secondary only via H2-9)
+- Full PMI/drawing package beyond alpha bites
+- SDF as **primary** modeling medium (forbidden)

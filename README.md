@@ -27,9 +27,9 @@ hand off to fabrication through CLI, MCP, and local HTTP. Clean-room peer to tex
 
 **v1 surface complete (S0–S12 / M0–M6)** plus **Horizon-1 H1–H10** and **Horizon-2 H2-1…H2-10**.
 Default path is mock-kernel CI-green on Linux + Windows (+ wasm job).
-**Horizon-2 complete** — board: [`docs/HORIZON2.md`](docs/HORIZON2.md). Truck bid NO-GO:
-[`docs/TRUCK_PARITY_BID.md`](docs/TRUCK_PARITY_BID.md).  
-Horizon-1 archive: [`docs/HORIZON.md`](docs/HORIZON.md). Compact status:
+**Active board:** [`docs/HORIZON3.md`](docs/HORIZON3.md) (next **H3-1** honesty pass).  
+Archives: [`docs/HORIZON2.md`](docs/HORIZON2.md) · [`docs/HORIZON.md`](docs/HORIZON.md).  
+Truck bid NO-GO: [`docs/TRUCK_PARITY_BID.md`](docs/TRUCK_PARITY_BID.md). Compact status:
 [`docs/STATUS.md`](docs/STATUS.md) · scorecard: [`docs/METRICS.md`](docs/METRICS.md).
 Hermes MCP: [`docs/HERMES_MCP.md`](docs/HERMES_MCP.md).
 
