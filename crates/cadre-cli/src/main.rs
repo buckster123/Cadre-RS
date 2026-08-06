@@ -1,5 +1,6 @@
 //! Cadre CLI binary.
 
+mod assembly_cmd;
 mod bench_cmd;
 mod build_cmd;
 mod cli;
@@ -37,6 +38,7 @@ fn main() {
         Commands::Skills(args) => mcp_cmd::run_skills(&cli, args),
         Commands::Serve(args) => serve_cmd::run(&cli, args),
         Commands::Robot(args) => robot_cmd::run(&cli, args),
+        Commands::Assembly(args) => assembly_cmd::run(&cli, args),
         Commands::Fab(args) => fab_cmd::run_fab(&cli, args),
         Commands::Printer(args) => fab_cmd::run_printer(&cli, args),
         Commands::Migrate(args) => migrate_cmd::run(&cli, args),

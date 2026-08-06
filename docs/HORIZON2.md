@@ -142,7 +142,7 @@ Same as Horizon-1:
 4. Tick checklist + BACKLOG on merge  
 5. Default next = next unchecked H2-N  
 
-**Default next if “cook on” with no pref:** **H2-5 Assembly joint depth.**
+**Default next if “cook on” with no pref:** **H2-6 Viewer 3D depth.**
 
 ---
 
@@ -152,7 +152,7 @@ Same as Horizon-1:
 - [x] **H2-2** MCP OQ-7 SDK decision  
 - [x] **H2-3** Fab depth (DFM + OctoPrint)  
 - [x] **H2-4** Published live harness score  
-- [ ] **H2-5** Assembly joint depth  
+- [x] **H2-5** Assembly joint depth  
 - [ ] **H2-6** Viewer 3D depth  
 - [ ] **H2-7** Migrator depth  
 - [ ] **H2-8** PMI/drawing alpha  

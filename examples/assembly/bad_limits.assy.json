@@ -1,0 +1,19 @@
+{
+  "name": "bad_slide_assy",
+  "version": 2,
+  "components": [
+    { "name": "rail", "source": "cad/plate.cad.star", "from_lock": false },
+    { "name": "slider", "source": "m6_bolt", "from_lock": true }
+  ],
+  "joints": [
+    {
+      "name": "slide",
+      "a": "rail",
+      "b": "slider",
+      "kind": "prismatic",
+      "axis": [1.0, 0.0, 0.0],
+      "lower": 50.0,
+      "upper": 0.0
+    }
+  ]
+}

@@ -86,8 +86,34 @@ pub fn validate_robot(robot: &RobotSpec) -> ValidationReport {
             r.errors.push(format!("joint '{}': zero axis", j.name));
         }
         if j.joint_type == JointType::Revolute && (j.lower.is_none() || j.upper.is_none()) {
-            r.warnings
-                .push(format!("joint '{}': revolute missing limits", j.name));
+            r.errors.push(format!(
+                "joint '{}': revolute requires lower and upper limits",
+                j.name
+            ));
+        }
+        if j.joint_type == JointType::Prismatic && (j.lower.is_none() || j.upper.is_none()) {
+            r.errors.push(format!(
+                "joint '{}': prismatic requires lower and upper limits",
+                j.name
+            ));
+        }
+        if let (Some(lo), Some(hi)) = (j.lower, j.upper) {
+            if lo > hi {
+                r.errors
+                    .push(format!("joint '{}': lower ({lo}) > upper ({hi})", j.name));
+            }
+        }
+        if let Some(e) = j.effort {
+            if e < 0.0 {
+                r.errors
+                    .push(format!("joint '{}': negative effort", j.name));
+            }
+        }
+        if let Some(v) = j.velocity {
+            if v < 0.0 {
+                r.errors
+                    .push(format!("joint '{}': negative velocity", j.name));
+            }
         }
     }
 
