@@ -14,10 +14,10 @@
 - Binary: `cadre` (`~/.local/bin/cadre` for Hermes MCP)
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-6 viewer 3D**.  
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-7 migrator**.  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete.
 
-H2-1…H2-5 done · H2-5 joints (`docs/JOINTS.md`) · next H2-6 viewer 3D · H2-7 migrator · …  
+H2-1…H2-6 done · H2-6 viewer mesh/gcode/robot 3D (`docs/VIEWER.md`) · next H2-7 migrator · …  
 
 ## Crate map (as-built)
 | Crate | Role |

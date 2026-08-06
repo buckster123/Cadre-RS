@@ -1,0 +1,256 @@
+{
+  "version": 2,
+  "params": {
+    "antenna_h": 12.0,
+    "antenna_r": 1.2,
+    "body_h": 16.0,
+    "body_l": 48.0,
+    "body_w": 28.0,
+    "dome_r": 9.0,
+    "eye_r": 2.2,
+    "eye_z": 18.0,
+    "leg_h": 14.0,
+    "leg_l": 10.0,
+    "leg_w": 6.0,
+    "n_legs": 6.0,
+    "wall": 3.0
+  },
+  "nodes": [
+    {
+      "op": "box",
+      "dx": 48.0,
+      "dy": 28.0,
+      "dz": 16.0,
+      "at": [
+        0.0,
+        0.0,
+        22.0
+      ]
+    },
+    {
+      "op": "box",
+      "dx": 42.0,
+      "dy": 22.0,
+      "dz": 13.0,
+      "at": [
+        0.0,
+        0.0,
+        22.75
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "cut",
+      "a": 0,
+      "b": 1
+    },
+    {
+      "op": "box",
+      "dx": 10.0,
+      "dy": 6.0,
+      "dz": 14.0,
+      "at": [
+        16.799999999999997,
+        0.0,
+        7.0
+      ]
+    },
+    {
+      "op": "rotate",
+      "of": 3,
+      "axis": "z",
+      "deg": 60.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 3,
+      "b": 4
+    },
+    {
+      "op": "rotate",
+      "of": 3,
+      "axis": "z",
+      "deg": 120.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 5,
+      "b": 6
+    },
+    {
+      "op": "rotate",
+      "of": 3,
+      "axis": "z",
+      "deg": 180.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 7,
+      "b": 8
+    },
+    {
+      "op": "rotate",
+      "of": 3,
+      "axis": "z",
+      "deg": 240.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 9,
+      "b": 10
+    },
+    {
+      "op": "rotate",
+      "of": 3,
+      "axis": "z",
+      "deg": 300.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 11,
+      "b": 12
+    },
+    {
+      "op": "sphere",
+      "radius": 9.0,
+      "at": [
+        0.0,
+        0.0,
+        33.15
+      ]
+    },
+    {
+      "op": "sphere",
+      "radius": 2.2,
+      "at": [
+        -4.0,
+        5.5,
+        36.0
+      ]
+    },
+    {
+      "op": "sphere",
+      "radius": 2.2,
+      "at": [
+        4.0,
+        5.5,
+        36.0
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 15,
+      "b": 16
+    },
+    {
+      "op": "cylinder",
+      "radius": 1.2,
+      "height": 12.0,
+      "at": [
+        -5.0,
+        -2.0,
+        32.0
+      ]
+    },
+    {
+      "op": "cylinder",
+      "radius": 1.2,
+      "height": 12.0,
+      "at": [
+        5.0,
+        -2.0,
+        32.0
+      ]
+    },
+    {
+      "op": "sphere",
+      "radius": 2.0,
+      "at": [
+        -5.0,
+        -2.0,
+        43.5
+      ]
+    },
+    {
+      "op": "sphere",
+      "radius": 2.0,
+      "at": [
+        5.0,
+        -2.0,
+        43.5
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 18,
+      "b": 19
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 20,
+      "b": 21
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 22,
+      "b": 23
+    },
+    {
+      "op": "box",
+      "dx": 10.0,
+      "dy": 8.0,
+      "dz": 6.0,
+      "at": [
+        0.0,
+        -4.2,
+        33.0
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 2,
+      "b": 13
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 14,
+      "b": 17
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 24,
+      "b": 25
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 27,
+      "b": 28
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 26,
+      "b": 29
+    },
+    {
+      "op": "label",
+      "of": 30,
+      "name": "lunar_bug"
+    }
+  ],
+  "root": 31,
+  "label": "lunar_bug"
+}

@@ -26,6 +26,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 38 | Harness H2-4 | published live score | **green** | oracle 10.0/10 2026-08-06 · no frontier (backends down) |
 | 39 | MCP NDJSON | Hermes framing | **green** | hermes mcp test cadre |
 | 40 | Joints H2-5 | assembly + robot limits | **green** | validate_assembly + assembly validate CLI |
+| 41 | Viewer H2-6 | mesh 3D + gcode/robot orbit | **green** | view --once mesh.json + cli_snapshot |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |

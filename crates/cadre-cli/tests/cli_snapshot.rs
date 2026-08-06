@@ -53,6 +53,11 @@ fn view_once_prepares_snap() {
         .stdout(predicate::str::contains("\"once\": true"));
 
     assert!(dir.path().join("box.snap/iso.png").is_file());
+    let mesh = dir.path().join("box.snap/mesh.json");
+    assert!(mesh.is_file(), "H2-6 mesh.json missing");
+    let t = fs::read_to_string(mesh).unwrap();
+    assert!(t.contains("positions"));
+    assert!(t.contains("triangle_count"));
 }
 
 #[test]
