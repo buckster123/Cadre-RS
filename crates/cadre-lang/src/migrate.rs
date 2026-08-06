@@ -126,8 +126,7 @@ pub fn migrate_build123d_skeleton(source: &str) -> MigrateReport {
             locs.len().min(solids.len().saturating_sub(start))
         ));
         let n = locs.len().min(solids.len().saturating_sub(start));
-        for i in 0..n {
-            let (x, y, z) = locs[i];
+        for (i, &(x, y, z)) in locs.iter().take(n).enumerate() {
             if x.abs() < 1e-12 && y.abs() < 1e-12 && z.abs() < 1e-12 {
                 continue;
             }
