@@ -86,10 +86,80 @@ pub fn migrate_build123d_skeleton(source: &str) -> MigrateReport {
         }
     }
 
+    // H2-7: Rectangle + extrude(amount) → box(w, d, amount)
+    for (w, d, h, label) in extract_extrude_boxes(source, &params) {
+        let name = unique_name("ext", solids.len());
+        body_lines.push(format!(
+            "    {name} = box({w}, {d}, {h}, at=CENTER)  # {label}"
+        ));
+        solids.push(name);
+        notes.push("extrude/Rectangle → box (workplane normal assumed +Z)".into());
+    }
+
+    // H2-7: Cone if present
+    for cap in cone_re().captures_iter(source) {
+        if let Some((r, h, label)) = parse_cone_cap(&cap, &params) {
+            let name = unique_name("cone", solids.len());
+            body_lines.push(format!("    {name} = cone({r}, {h}, at=CENTER)  # {label}"));
+            solids.push(name);
+        }
+    }
+
     if solids.is_empty() {
-        notes.push("no Box/Cylinder/Sphere calls recovered — placeholder box".into());
+        notes.push("no Box/Cylinder/Sphere/extrude calls recovered — placeholder box".into());
         body_lines.push("    body = box(10.0, 10.0, 10.0, at=CENTER)  # placeholder".into());
         solids.push("body".into());
+    }
+
+    // H2-7: Locations / Location offsets → translate on solids after the base.
+    // Heuristic: if more solids than locations, pair locs with trailing solids
+    // (common: base then Locations{ feature }).
+    let locs = extract_locations(source, &params);
+    if !locs.is_empty() {
+        let start = if solids.len() > locs.len() {
+            solids.len() - locs.len()
+        } else {
+            0
+        };
+        notes.push(format!(
+            "Locations/Location → translate on {} solid(s) (from index {start})",
+            locs.len().min(solids.len().saturating_sub(start))
+        ));
+        let n = locs.len().min(solids.len().saturating_sub(start));
+        for (i, &(x, y, z)) in locs.iter().take(n).enumerate() {
+            if x.abs() < 1e-12 && y.abs() < 1e-12 && z.abs() < 1e-12 {
+                continue;
+            }
+            let si = start + i;
+            let src = solids[si].clone();
+            let name = unique_name("tr", body_lines.len());
+            body_lines.push(format!(
+                "    {name} = translate({src}, {}, {}, {})  # from Locations",
+                fmt_num(x),
+                fmt_num(y),
+                fmt_num(z)
+            ));
+            solids[si] = name;
+        }
+    }
+
+    // H2-7: fillet / chamfer → notes + comment stub (do not fake mock goldens)
+    if fillet_re().is_match(source) {
+        notes.push(
+            "Fillet(...) seen — not auto-applied (mock Unsupported; use OCCT after review)".into(),
+        );
+        body_lines.push(
+            "    # TODO fillet: e.g. body = fillet(body, radius)  # requires --kernel occt".into(),
+        );
+    }
+    if chamfer_re().is_match(source) {
+        notes.push(
+            "Chamfer(...) seen — not auto-applied (mock Unsupported; use OCCT after review)".into(),
+        );
+        body_lines.push(
+            "    # TODO chamfer: e.g. body = chamfer(body, distance)  # requires --kernel occt"
+                .into(),
+        );
     }
 
     // Combine: if source has subtract/cut markers, cut later solids from first
@@ -121,7 +191,7 @@ pub fn migrate_build123d_skeleton(source: &str) -> MigrateReport {
     };
 
     let mut sk = String::new();
-    sk.push_str("# Cadre skeleton migrated from build123d-style Python (H8 clean-room).\n");
+    sk.push_str("# Cadre skeleton migrated from build123d-style Python (H8/H2-7 clean-room).\n");
     sk.push_str("# Best-effort structure + params — NOT full semantic parity.\n");
     sk.push_str("# Review numbers, placements, and booleans before fab.\n\n");
 
@@ -359,6 +429,112 @@ fn fmt_num(v: f64) -> String {
     }
 }
 
+/// H2-7: Locations((x,y,z)) / Location((x,y,z)) / Locations((x,y))
+fn extract_locations(source: &str, params: &BTreeMap<String, f64>) -> Vec<(f64, f64, f64)> {
+    let mut out = Vec::new();
+    let re = loc_re();
+    for cap in re.captures_iter(source) {
+        let a = cap.name("a").map(|m| m.as_str());
+        let b = cap.name("b").map(|m| m.as_str());
+        let c = cap.name("c").map(|m| m.as_str());
+        let (Some(a), Some(b)) = (a, b) else {
+            continue;
+        };
+        let x = match resolve_num(a, params) {
+            Some(v) => v,
+            None => continue,
+        };
+        let y = match resolve_num(b, params) {
+            Some(v) => v,
+            None => continue,
+        };
+        let z = c.and_then(|t| resolve_num(t, params)).unwrap_or(0.0);
+        out.push((x, y, z));
+    }
+    out
+}
+
+/// Rectangle(w,h) + extrude(amount) → boxes. Also bare extrude(amount) with default footprint.
+fn extract_extrude_boxes(
+    source: &str,
+    params: &BTreeMap<String, f64>,
+) -> Vec<(String, String, String, String)> {
+    let mut out = Vec::new();
+    // collect rectangles
+    let mut rects: Vec<(f64, f64)> = Vec::new();
+    for cap in rect_re().captures_iter(source) {
+        if let (Some(a), Some(b)) = (cap.name("a"), cap.name("b")) {
+            if let (Some(w), Some(d)) = (
+                resolve_num(a.as_str(), params),
+                resolve_num(b.as_str(), params),
+            ) {
+                rects.push((w, d));
+            }
+        } else if let Some(body) = cap.name("body") {
+            let w = kw_num(body.as_str(), &["width", "w", "x"], params);
+            let d = kw_num(body.as_str(), &["height", "h", "y", "length", "l"], params);
+            if let (Some(w), Some(d)) = (w, d) {
+                rects.push((w, d));
+            }
+        }
+    }
+    let mut amounts: Vec<f64> = Vec::new();
+    for cap in extrude_re().captures_iter(source) {
+        if let Some(a) = cap.name("a") {
+            if let Some(v) = resolve_num(a.as_str(), params) {
+                amounts.push(v.abs().max(1e-9));
+            }
+        } else if let Some(body) = cap.name("body") {
+            if let Some(v) = kw_num(body.as_str(), &["amount", "height", "h", "depth"], params) {
+                amounts.push(v.abs().max(1e-9));
+            }
+        }
+    }
+    if amounts.is_empty() {
+        return out;
+    }
+    if rects.is_empty() {
+        // extrude without rectangle — default 20x20 footprint once per amount
+        for h in amounts {
+            out.push((
+                "20.0".into(),
+                "20.0".into(),
+                fmt_num(h),
+                "extrude (default footprint)".into(),
+            ));
+        }
+        return out;
+    }
+    let n = amounts.len().max(rects.len());
+    for i in 0..n {
+        let (w, d) = rects[i.min(rects.len() - 1)];
+        let h = amounts[i.min(amounts.len() - 1)];
+        out.push((
+            fmt_num(w),
+            fmt_num(d),
+            fmt_num(h),
+            "Rectangle+extrude".into(),
+        ));
+    }
+    out
+}
+
+fn parse_cone_cap(
+    cap: &regex::Captures<'_>,
+    params: &BTreeMap<String, f64>,
+) -> Option<(String, String, String)> {
+    if let (Some(a), Some(b)) = (cap.name("a"), cap.name("b")) {
+        // Cone(radius, height) — ignore optional third
+        let r = resolve_num(a.as_str(), params)?;
+        let h = resolve_num(b.as_str(), params)?;
+        return Some((fmt_num(r), fmt_num(h), "Cone positional".into()));
+    }
+    let body = cap.name("body")?.as_str();
+    let r = kw_num(body, &["radius", "r", "bottom_radius"], params)?;
+    let h = kw_num(body, &["height", "h"], params)?;
+    Some((fmt_num(r), fmt_num(h), "Cone kwargs".into()))
+}
+
 fn box_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -413,6 +589,86 @@ fn sphere_re() -> &'static Regex {
     })
 }
 
+fn cone_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r"(?x)
+            \bCone\s*\(
+              (?:
+                \s*(?P<a>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)\s*,
+                \s*(?P<b>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)
+                (?:\s*,\s*(?P<c>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?))?
+              |
+                (?P<body>[^)]*)
+              )
+            \)",
+        )
+        .unwrap()
+    })
+}
+
+fn rect_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r"(?x)
+            \bRectangle\s*\(
+              (?:
+                \s*(?P<a>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)\s*,
+                \s*(?P<b>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)
+              |
+                (?P<body>[^)]*)
+              )
+            \)",
+        )
+        .unwrap()
+    })
+}
+
+fn extrude_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r"(?x)
+            \bextrude\s*\(
+              (?:
+                \s*(?P<a>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)
+              |
+                (?P<body>[^)]*)
+              )
+            \)",
+        )
+        .unwrap()
+    })
+}
+
+fn loc_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        // Locations((x, y, z)) or Location((x, y)) or Locations((x, y))
+        Regex::new(
+            r"(?x)
+            \bLocations?\s*\(\s*\(\s*
+              (?P<a>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)\s*,\s*
+              (?P<b>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?)
+              (?:\s*,\s*(?P<c>[A-Za-z_][\w.]*|-?\d+(?:\.\d+)?))?
+            \s*\)",
+        )
+        .unwrap()
+    })
+}
+
+fn fillet_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?i)\bfillet\s*\(").unwrap())
+}
+
+fn chamfer_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?i)\bchamfer\s*\(").unwrap())
+}
+
 fn assign_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -463,12 +719,63 @@ with BuildPart() as part:
     }
 
     #[test]
+    fn locations_become_translate() {
+        let src = r#"
+from build123d import *
+with BuildPart() as p:
+    Box(10, 10, 5)
+    with Locations((20, 0, 0)):
+        Cylinder(3, 8)
+"#;
+        let r = migrate_build123d_skeleton(src);
+        assert!(r.ok, "{r:?}");
+        assert!(
+            r.skeleton.contains("translate("),
+            "expected translate: {}",
+            r.skeleton
+        );
+        assert!(r.notes.iter().any(|n| n.contains("Locations")));
+    }
+
+    #[test]
+    fn extrude_rectangle_to_box() {
+        let src = r#"
+from build123d import *
+with BuildSketch() as s:
+    Rectangle(40, 20)
+with BuildPart() as p:
+    extrude(amount=12)
+"#;
+        let r = migrate_build123d_skeleton(src);
+        assert!(r.ok, "{r:?}");
+        assert!(r.skeleton.contains("box("));
+        assert!(r.notes.iter().any(|n| n.contains("extrude")));
+    }
+
+    #[test]
+    fn fillet_notes_not_applied() {
+        let src = r#"
+from build123d import *
+with BuildPart() as p:
+    Box(30, 20, 10)
+    fillet(2.0)
+"#;
+        let r = migrate_build123d_skeleton(src);
+        assert!(r.ok, "{r:?}");
+        assert!(r.skeleton.contains("TODO fillet") || r.notes.iter().any(|n| n.contains("Fillet")));
+        // must still eval (comment only)
+        assert!(r.ok);
+    }
+
+    #[test]
     fn golden_fixtures_eval() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/migrate");
         for name in [
             "01_simple_box.py",
             "02_plate_hole.py",
             "03_kwargs_sphere.py",
+            "04_locations_offset.py",
+            "05_fillet_extrude.py",
         ] {
             let p = root.join(name);
             let src = std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("{p:?}: {e}"));

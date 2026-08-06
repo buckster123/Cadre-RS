@@ -1,4 +1,4 @@
-# H8 — build123d → Cadre skeleton migrator (clean-room)
+# Migrator — build123d → Cadre skeleton (H8 + H2-7)
 
 ## Scope
 
@@ -12,9 +12,21 @@ Shaped from **public** build123d-style APIs only — never third-party private s
 
 ```sh
 cargo run -p cadre-cli -- migrate fixtures/migrate/01_simple_box.py --json
-cargo run -p cadre-cli -- migrate fixtures/migrate/02_plate_hole.py -o /tmp/plate.cad.star --json
-cargo run -p cadre-cli -- build /tmp/plate.cad.star --json
+cargo run -p cadre-cli -- migrate fixtures/migrate/04_locations_offset.py -o /tmp/loc.cad.star --json
+cargo run -p cadre-cli -- build /tmp/loc.cad.star --json
 ```
+
+## Coverage
+
+| Pattern | Cadre output |
+|---------|----------------|
+| `Box` / kwargs | `box(...)` |
+| `Cylinder` / `Sphere` / `Cone` | matching stdlib |
+| `Rectangle` + `extrude(amount)` | `box(w,d,h)` |
+| `Locations((x,y,z))` / `Location` | `translate(shape, x,y,z)` (order-paired) |
+| `fillet` / `chamfer` | **note + TODO comment** (not fake-applied on mock) |
+| `-=` / `Mode.SUBTRACT` | sequential `cut` |
+| multiple solids | sequential `union` |
 
 ## Fixtures
 
@@ -23,9 +35,12 @@ cargo run -p cadre-cli -- build /tmp/plate.cad.star --json
 | `fixtures/migrate/01_simple_box.py` | Box + params |
 | `fixtures/migrate/02_plate_hole.py` | Box + Cylinder |
 | `fixtures/migrate/03_kwargs_sphere.py` | kwargs Box + Sphere |
+| `fixtures/migrate/04_locations_offset.py` | **H2-7** Locations → translate |
+| `fixtures/migrate/05_fillet_extrude.py` | **H2-7** extrude + fillet note |
 
 ## Honesty
 
-- Placements / Locations / fillets / workplanes not reconstructed
-- Multiple solids → union (or cut if subtract markers seen)
-- Always review the skeleton before fab
+- Workplanes / full Mode stack / face selections not reconstructed  
+- Fillet/chamfer are **stubs** until OCCT review  
+- Always review the skeleton before fab  
+- Unsafe Python still refused

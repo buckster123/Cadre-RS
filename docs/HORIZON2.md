@@ -142,7 +142,7 @@ Same as Horizon-1:
 4. Tick checklist + BACKLOG on merge  
 5. Default next = next unchecked H2-N  
 
-**Default next if “cook on” with no pref:** **H2-7 Migrator depth.**
+**Default next if “cook on” with no pref:** **H2-8 PMI/drawing alpha.**
 
 ---
 
@@ -154,7 +154,7 @@ Same as Horizon-1:
 - [x] **H2-4** Published live harness score  
 - [x] **H2-5** Assembly joint depth  
 - [x] **H2-6** Viewer 3D depth  
-- [ ] **H2-7** Migrator depth  
+- [x] **H2-7** Migrator depth  
 - [ ] **H2-8** PMI/drawing alpha  
 - [ ] **H2-9** SDF secondary experimental  
 - [ ] **H2-10** Truck parity bid prep  
