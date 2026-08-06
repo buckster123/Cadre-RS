@@ -260,9 +260,14 @@ pub fn write_message(stdout: &mut impl Write, body: &[u8]) -> std::io::Result<()
 mod tests {
     use super::*;
     use std::io::Cursor;
+    use std::sync::Mutex;
+
+    // FRAMING is process-global; serialize tests that touch it.
+    static FRAMING_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn ndjson_roundtrip() {
+        let _g = FRAMING_TEST_LOCK.lock().unwrap();
         set_framing(Framing::Unknown);
         let input = b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}\n";
         let mut cur = Cursor::new(&input[..]);
@@ -272,10 +277,12 @@ mod tests {
         let mut out = Vec::new();
         write_message(&mut out, body.as_slice()).unwrap();
         assert!(out.ends_with(b"\n"));
+        set_framing(Framing::Unknown);
     }
 
     #[test]
     fn content_length_roundtrip() {
+        let _g = FRAMING_TEST_LOCK.lock().unwrap();
         set_framing(Framing::Unknown);
         let payload = br#"{"jsonrpc":"2.0","id":1,"method":"ping"}"#;
         let mut msg = format!("Content-Length: {}\r\n\r\n", payload.len()).into_bytes();
@@ -284,5 +291,6 @@ mod tests {
         let body = read_message(&mut cur).unwrap().unwrap();
         assert_eq!(body, payload);
         assert_eq!(current_framing(), Framing::ContentLength);
+        set_framing(Framing::Unknown);
     }
 }
