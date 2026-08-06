@@ -39,6 +39,18 @@ pub struct Scorecard {
     pub median_loops: f64,
     pub wall_ms: u64,
     pub tasks: Vec<TaskResult>,
+    /// Live driver command (e.g. `@oracle` or shell). Empty for scripted.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub cmd: String,
+    /// Model id when known (oracle / external LLM). Empty if unknown.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub model_id: String,
+    /// ISO-8601 UTC date of the run when set by publisher (optional).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub run_date: String,
+    /// Free-form honesty notes (frontier not run, backends down, …).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
 }
 
 impl Scorecard {
@@ -80,6 +92,22 @@ impl Scorecard {
             median_loops,
             wall_ms,
             tasks,
+            cmd: String::new(),
+            model_id: String::new(),
+            run_date: String::new(),
+            notes: Vec::new(),
         }
+    }
+
+    /// Attach live-run provenance for publication (H2-4).
+    pub fn with_provenance(mut self, cmd: impl Into<String>, model_id: impl Into<String>) -> Self {
+        self.cmd = cmd.into();
+        self.model_id = model_id.into();
+        self
+    }
+
+    pub fn with_note(mut self, note: impl Into<String>) -> Self {
+        self.notes.push(note.into());
+        self
     }
 }

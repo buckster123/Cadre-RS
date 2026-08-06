@@ -63,7 +63,8 @@ cargo run -p cadre-cli -- harness run --suite agent10 \
 - Scripted 10/10 ≠ live LLM score.  
 - Oracle driver cheats via task file — only for plumbing.  
 - Live verify uses **mock** kernel (same as scripted CI path).  
-- Snapshot packets are real software renders when not `--no-snapshot`.
+- Snapshot packets are real software renders when not `--no-snapshot`.  
+- **Published scores:** [`docs/HARNESS_LIVE.md`](../docs/HARNESS_LIVE.md) · `harness/scores/`.
 
 # In-process oracle (CI)
 cargo run -p cadre-cli -- harness run --suite agent10 --cmd '@oracle' --json
