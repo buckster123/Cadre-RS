@@ -148,7 +148,7 @@ Same as Horizon-1:
 
 ## 6. Checklist
 
-- [ ] **H2-1** WASM IR component  
+- [x] **H2-1** WASM IR component  
 - [ ] **H2-2** MCP OQ-7 SDK decision  
 - [ ] **H2-3** Fab depth (DFM + OctoPrint)  
 - [ ] **H2-4** Published live harness score  

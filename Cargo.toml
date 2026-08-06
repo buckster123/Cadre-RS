@@ -17,6 +17,7 @@ members = [
     "crates/cadre-harness",
     "crates/cadre-occt",
     "crates/cadre-truck",
+    "crates/cadre-wasm",
 ]
 default-members = [
     "crates/cadre",
@@ -34,6 +35,7 @@ default-members = [
     "crates/cadre-fab",
     "crates/cadre-harness",
     "crates/cadre-truck",
+    "crates/cadre-wasm",
 ]
 
 [workspace.package]
@@ -66,6 +68,7 @@ cadre-fab = { path = "crates/cadre-fab" }
 cadre-harness = { path = "crates/cadre-harness" }
 cadre-occt = { path = "crates/cadre-occt" }
 cadre-truck = { path = "crates/cadre-truck" }
+cadre-wasm = { path = "crates/cadre-wasm" }
 
 # H3: patched opencascade so cadre-occt can BRep-transform without STEP I/O.
 [patch.crates-io]

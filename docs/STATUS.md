@@ -13,10 +13,10 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-1 WASM IR**.  
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-2 MCP OQ-7**.  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete (H1–H10 / PR #24–#34).
 
-H2-1 wasm · H2-2 MCP OQ-7 · H2-3 fab/OctoPrint · H2-4 live harness score · H2-5 joints ·  
+H2-1 wasm (`docs/WASM.md`) · H2-2 MCP OQ-7 · H2-3 fab/OctoPrint · H2-4 live harness score · H2-5 joints ·  
 H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha · H2-9 SDF secondary · H2-10 truck bid prep.
 
 ## Crate map (as-built)
@@ -36,9 +36,11 @@ H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha · H2-9 SDF secondary · H2-10
 | cadre-robot | URDF/SRDF/SDF + urdf-rs |
 | cadre-fab | DXF, DFM, slicer, gcode-check, Bambu gated live |
 | cadre-harness | scripted agent10 scorecard |
+| cadre-truck | experimental pure-Rust kernel (NON-PARITY) |
+| cadre-wasm | WASM mock IR escape hatch (H2-1) |
 | cadre-cli | clap binary |
 
-**Parked names:** cadre-truck, standalone cadre-export/viewer/skills (logic lives in cli/occt/render).
+**Parked names:** standalone cadre-export/viewer/skills (logic lives in cli/occt/render).
 
 ## CLI surface (high signal)
 ```
