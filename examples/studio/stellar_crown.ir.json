@@ -1,0 +1,216 @@
+{
+  "version": 2,
+  "params": {
+    "base_h": 4.0,
+    "base_r": 18.0,
+    "gem_r": 7.0,
+    "hub_h": 10.0,
+    "hub_r": 14.0,
+    "n_spikes": 8.0,
+    "ring_h": 6.0,
+    "ring_r": 28.0,
+    "ring_t": 4.0,
+    "spike_h": 18.0,
+    "spike_l": 16.0,
+    "spike_w": 3.5
+  },
+  "nodes": [
+    {
+      "op": "cylinder",
+      "radius": 18.0,
+      "height": 4.0,
+      "at": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "op": "cylinder",
+      "radius": 14.0,
+      "height": 10.0,
+      "at": [
+        0.0,
+        0.0,
+        4.0
+      ]
+    },
+    {
+      "op": "cylinder",
+      "radius": 28.0,
+      "height": 6.0,
+      "at": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "op": "cylinder",
+      "radius": 24.0,
+      "height": 6.2,
+      "at": [
+        0.0,
+        0.0,
+        5.9
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "cut",
+      "a": 2,
+      "b": 3
+    },
+    {
+      "op": "box",
+      "dx": 16.0,
+      "dy": 3.5,
+      "dz": 18.0,
+      "at": [
+        22.0,
+        0.0,
+        13.0
+      ]
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 45.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 5,
+      "b": 6
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 90.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 7,
+      "b": 8
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 135.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 9,
+      "b": 10
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 180.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 11,
+      "b": 12
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 225.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 13,
+      "b": 14
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 270.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 15,
+      "b": 16
+    },
+    {
+      "op": "rotate",
+      "of": 5,
+      "axis": "z",
+      "deg": 315.0
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 17,
+      "b": 18
+    },
+    {
+      "op": "sphere",
+      "radius": 7.0,
+      "at": [
+        0.0,
+        0.0,
+        17.85
+      ]
+    },
+    {
+      "op": "cylinder",
+      "radius": 4.0,
+      "height": 16.0,
+      "at": [
+        0.0,
+        0.0,
+        -0.5
+      ]
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 0,
+      "b": 1
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 4,
+      "b": 19
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 22,
+      "b": 23
+    },
+    {
+      "op": "boolean",
+      "kind": "union",
+      "a": 24,
+      "b": 20
+    },
+    {
+      "op": "boolean",
+      "kind": "cut",
+      "a": 25,
+      "b": 21
+    },
+    {
+      "op": "label",
+      "of": 26,
+      "name": "stellar_crown"
+    }
+  ],
+  "root": 27,
+  "label": "stellar_crown"
+}
