@@ -13,12 +13,11 @@
 - Binary: `cadre` (`cadre-cli`), mock default; OCCT optional
 
 ## Next board
-**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-4 live harness score**.  
+**Active:** [`docs/HORIZON2.md`](HORIZON2.md) Top-N **H2-1…H2-10**. Default next: **H2-5 assembly joints**.  
 **Archive:** [`docs/HORIZON.md`](HORIZON.md) Horizon-1 complete (H1–H10 / PR #24–#34).
 
-H2-1 wasm · H2-2 MCP hand-rolled · H2-3 fab/OctoPrint + waterjet DFM (`docs/FAB_DEPTH.md`) ·  
-H2-4 live harness score · H2-5 joints · H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha ·  
-H2-9 SDF secondary · H2-10 truck bid prep.
+H2-1 wasm · H2-2 MCP hand-rolled · H2-3 fab/OctoPrint · H2-4 harness live score (`docs/HARNESS_LIVE.md`) ·  
+H2-5 joints · H2-6 viewer 3D · H2-7 migrator · H2-8 PMI alpha · H2-9 SDF · H2-10 truck bid.
 
 ## Crate map (as-built)
 | Crate | Role |

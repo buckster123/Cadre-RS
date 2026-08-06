@@ -23,6 +23,7 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 | 35 | WASM H2-1 | mock IR in wasm32 | **green** | cadre-wasm + CI wasm job |
 | 36 | MCP H2-2 | OQ-7 stay hand-rolled | **green** | compliance matrix tests |
 | 37 | Fab H2-3 | waterjet DFM + OctoPrint | **green** | octoprint + dfm tests |
+| 38 | Harness H2-4 | published live score | **green** | oracle 10.0/10 2026-08-06 · no frontier (backends down) |
 | 5 | Snapshot packet | multi-view PNG + orbit GIF | **green** | `cli_snapshot` tests |
 | 6 | MCP stdio | Content-Length tools | **green** | `cargo test -p cadre-mcp` |
 | 7 | HTTP API | `/v1/*` + OpenAPI + jobs | **green** | `http_api` 5 tests |
@@ -45,5 +46,6 @@ Living scorecard. A row is **green** only with evidence (command + date), not in
 
 **v1 ship bar (this table):** rows 1–16 green; 17–20 may remain amber/red with honesty notes.
 
-Last updated: 2026-08-05 (S12 merged on `main`; docs sync same day).
+Last updated: 2026-08-06 (H2-4 harness live publish).  
+Harness live log: [`HARNESS_LIVE.md`](HARNESS_LIVE.md).  
 As-built companion: [`STATUS.md`](STATUS.md).

@@ -74,12 +74,25 @@ pub fn run_suite(suite: &str, opts: &RunOpts) -> Result<Scorecard, String> {
         };
         results.push(r);
     }
-    Ok(Scorecard::from_tasks(
-        suite,
-        mode,
-        results,
-        started.elapsed().as_millis() as u64,
-    ))
+    let mut card =
+        Scorecard::from_tasks(suite, mode, results, started.elapsed().as_millis() as u64);
+    if let Some(live) = &opts.live {
+        let model = if live.cmd.trim() == "@oracle" {
+            "oracle:in-process"
+        } else if live.cmd.contains("oracle_agent") {
+            "oracle:python"
+        } else {
+            "external-cmd"
+        };
+        card = card.with_provenance(live.cmd.clone(), model);
+        if live.cmd.trim() == "@oracle" || live.cmd.contains("oracle_agent") {
+            card = card
+                .with_note("oracle cheats via task file — plumbing/control only, not an LLM score");
+        }
+    } else {
+        card = card.with_provenance("", "scripted-builtin");
+    }
+    Ok(card)
 }
 
 fn find_task_file(root: &Path, id_prefix: &str) -> Result<PathBuf, String> {
