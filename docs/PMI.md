@@ -54,8 +54,7 @@ Default output: `<stem>.drawing.json` next to the source.
 | `diameter` | A face/edge | mm |
 | `angle` | A,B faces | deg |
 
-## Honesty
+## Viewer overlay (H3-5)
 
-- Centroid / normal based (same as `inspect measure`)
-- Auto mode is a convenience heuristic, not drawing standards
-- Mock IR topology ≈ OCCT for boxes; complex cuts may differ
+`cadre view part.cad.star` embeds dim chips on the orbit canvas from `drawing.json`
+(auto or sidecar). See `docs/VIEWER.md`. Still not a drafting package.

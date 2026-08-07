@@ -83,7 +83,7 @@ pub fn run(cli: &Cli, args: &ViewArgs) -> ExitCode {
         "ok": true,
         "base": base,
         "links": links,
-        "note": "viewer H2-6 — mesh 3D / gcode scrub / robot 3D jog; Ctrl-C to stop",
+        "note": "viewer H3-5 — mesh 3D + PMI dim overlay / gcode scrub / robot 3D jog; Ctrl-C to stop",
     });
     emit(cli.json, &body, true);
     if !cli.json && !cli.quiet {
@@ -173,6 +173,8 @@ fn prepare_entry(p: &Path) -> Result<Entry, String> {
         cadre_render::write_snapshot_packet(&mesh, &snap, &opts)?;
         // H2-6: coarse triangle mesh for interactive canvas 3D
         write_mesh_json(&snap.join("mesh.json"), &mesh)?;
+        // H3-5: PMI drawing packet for canvas overlay (sidecar or auto-dims)
+        write_drawing_for_view(&p, &snap, eval.ir.as_ref().unwrap())?;
         return Ok(Entry {
             path: p,
             kind: "star",
@@ -293,6 +295,45 @@ fn write_mesh_json(path: &Path, mesh: &cadre_kernel::Mesh) -> Result<(), String>
         serde_json::to_string(&body).map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())
+}
+
+/// H3-5: place `drawing.json` in snap dir — prefer sibling `*.drawing.json`, else auto-dims.
+fn write_drawing_for_view(
+    source: &Path,
+    snap: &Path,
+    ir: &cadre_lang::FeatureIr,
+) -> Result<(), String> {
+    let dest = snap.join("drawing.json");
+    // sibling next to .cad.star: stem.drawing.json or name.drawing.json
+    let stem = source
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("part");
+    let stem = stem.strip_suffix(".cad").unwrap_or(stem);
+    let parent = source.parent().unwrap_or_else(|| Path::new("."));
+    let candidates = [
+        parent.join(format!("{stem}.drawing.json")),
+        source.with_extension("drawing.json"),
+    ];
+    for c in &candidates {
+        if c.is_file() {
+            fs::copy(c, &dest).map_err(|e| e.to_string())?;
+            return Ok(());
+        }
+    }
+    // auto opposite-face dims
+    let topo = crate::topo_from_ir::topology_from_ir(ir)?;
+    let name = source
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("part");
+    let packet = cadre_inspect::build_drawing_packet(&topo, name, "ir-analytic-view", &[]);
+    fs::write(
+        &dest,
+        serde_json::to_string_pretty(&packet).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 fn handle_client(stream: &mut TcpStream, entries: &[Entry], base: &str) -> std::io::Result<()> {
@@ -447,19 +488,26 @@ fn mesh_packet_html(ent: &Entry, idx: usize, base: &str) -> String {
     } else {
         String::new()
     };
+    let drawing_link = if ent.root.join("drawing.json").is_file() {
+        format!("{base}/v/{idx}/drawing.json")
+    } else {
+        String::new()
+    };
     let mesh_block = if mesh_link.is_empty() {
         String::new()
     } else {
         format!(
             r#"
-<h2>Interactive mesh <small style="opacity:.6">H2-6 · drag to orbit</small></h2>
-<p class="meta"><a href="{mesh}">mesh.json</a> · coarse preview, not GLB/STEP</p>
+<h2>Interactive mesh <small style="opacity:.6">H2-6 · drag to orbit · H3-5 PMI labels</small></h2>
+<p class="meta"><a href="{mesh}">mesh.json</a>{draw_a} · coarse preview, not GLB/STEP · not a drafting package</p>
 <canvas id="m3" width="720" height="480"></canvas>
+<ul id="dimlist" class="dims"></ul>
 <script>
 const meshUrl = "{mesh}";
+const drawingUrl = "{drawing}";
 const cv = document.getElementById('m3');
 const cx = cv.getContext('2d');
-let mesh=null, yaw=0.7, pitch=0.45, drag=false, lx=0, ly=0;
+let mesh=null, drawing=null, yaw=0.7, pitch=0.45, drag=false, lx=0, ly=0;
 cv.addEventListener('pointerdown', e => {{ drag=true; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId); }});
 cv.addEventListener('pointerup', () => drag=false);
 cv.addEventListener('pointermove', e => {{
@@ -493,7 +541,7 @@ function draw() {{
     const z=(A[2]+B[2]+C[2])/3;
     const e1=[B[0]-A[0],B[1]-A[1],B[2]-A[2]], e2=[C[0]-A[0],C[1]-A[1],C[2]-A[2]];
     const nx=e1[1]*e2[2]-e1[2]*e2[1], ny=e1[2]*e2[0]-e1[0]*e2[2], nz=e1[0]*e2[1]-e1[1]*e2[0];
-    if (nz<=0) continue; // backface
+    if (nz<=0) continue;
     const shade=0.35+0.65*Math.min(1, Math.max(0, nz/Math.hypot(nx,ny,nz)));
     tris.push({{A,B,C,z,shade}});
   }}
@@ -508,11 +556,56 @@ function draw() {{
     cx.lineTo(ox+t.C[0]*sc, oy-t.C[1]*sc);
     cx.closePath(); cx.fill();
   }}
+  // H3-5 PMI HUD: dim value chips (not true leader lines / drafting)
+  if (drawing && drawing.dims && drawing.dims.length) {{
+    cx.font = '13px system-ui,sans-serif';
+    cx.textBaseline = 'top';
+    let y = 10;
+    for (const d of drawing.dims) {{
+      const label = (d.label ? d.label + ': ' : '') + d.value.toFixed(2) + ' ' + (d.unit||'mm');
+      const tw = cx.measureText(label).width;
+      cx.fillStyle = 'rgba(18,20,26,0.82)';
+      cx.fillRect(10, y, tw + 16, 22);
+      cx.strokeStyle = '#fdd663';
+      cx.strokeRect(10.5, y+0.5, tw + 15, 21);
+      cx.fillStyle = '#fdd663';
+      cx.fillText(label, 18, y + 4);
+      y += 26;
+    }}
+    cx.fillStyle = 'rgba(232,234,237,0.55)';
+    cx.font = '11px system-ui,sans-serif';
+    cx.fillText('PMI alpha · not a drafting package', 10, cv.height - 18);
+  }}
 }}
-(async()=>{{ mesh=await (await fetch(meshUrl)).json(); draw(); }})().catch(e=>document.body.insertAdjacentHTML('beforeend','<pre>'+e+'</pre>'));
+function fillDimList() {{
+  const ul = document.getElementById('dimlist');
+  if (!ul || !drawing || !drawing.dims) return;
+  ul.innerHTML = '';
+  for (const d of drawing.dims) {{
+    const li = document.createElement('li');
+    li.textContent = (d.id||'') + ' · ' + (d.kind||'linear') + ' · ' +
+      d.value.toFixed(3) + ' ' + (d.unit||'mm') +
+      (d.label ? ' (' + d.label + ')' : '') +
+      (d.a ? '  ' + d.a + (d.b ? ' ↔ ' + d.b : '') : '');
+    ul.appendChild(li);
+  }}
+}}
+(async()=>{{
+  mesh = await (await fetch(meshUrl)).json();
+  if (drawingUrl) {{
+    try {{ drawing = await (await fetch(drawingUrl)).json(); fillDimList(); }} catch (_) {{}}
+  }}
+  draw();
+}})().catch(e=>document.body.insertAdjacentHTML('beforeend','<pre>'+e+'</pre>'));
 </script>
 "#,
-            mesh = mesh_link
+            mesh = mesh_link,
+            drawing = drawing_link,
+            draw_a = if drawing_link.is_empty() {
+                String::new()
+            } else {
+                format!(r#" · <a href="{drawing_link}">drawing.json</a>"#)
+            },
         )
     };
     format!(
@@ -526,6 +619,8 @@ img{{max-width:100%;background:#1a1d24;border-radius:8px}}
 figcaption{{opacity:.7;font-size:.85rem;margin-top:.35rem}}
 #m3{{background:#1a1d24;border-radius:8px;width:min(720px,100%);height:480px;display:block;touch-action:none;cursor:grab}}
 .meta{{opacity:.75;font-size:.9rem}}
+.dims{{list-style:none;padding:0;margin:1rem 0;max-width:720px}}
+.dims li{{background:#1a1d24;border-radius:6px;padding:.45rem .7rem;margin:.35rem 0;font-size:.9rem;border-left:3px solid #fdd663}}
 </style></head><body>
 <p><a href="{base}/">← all</a></p>
 <h1>{title}</h1>
