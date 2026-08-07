@@ -58,6 +58,10 @@ fn view_once_prepares_snap() {
     let t = fs::read_to_string(mesh).unwrap();
     assert!(t.contains("positions"));
     assert!(t.contains("triangle_count"));
+    let drawing = dir.path().join("box.snap/drawing.json");
+    assert!(drawing.is_file(), "H3-5 drawing.json missing");
+    let d = fs::read_to_string(drawing).unwrap();
+    assert!(d.contains("cadre.drawing_packet") || d.contains("dims"));
 }
 
 #[test]

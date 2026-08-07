@@ -42,10 +42,20 @@ cargo run -p cadre-cli -- view \
 - Full 3D stick FK (4×4 matrices, axis-angle revolute / prismatic)
 - Drag canvas to orbit; joint sliders with limits
 
-## Honesty
+## H3-5 — PMI overlay
 
-- **Not Blender / not GLB / not STEP tessellation parity**
-- Mock cut/polar preview mesh remains approximate
-- Not a physics G-code simulator (no time, no extrusion dynamics)
-- Robot is stick figure, not link meshes
-- `--once` prepares artifacts without binding a port
+On `.cad.star` prepare, viewer writes `drawing.json` into the snap dir:
+
+1. Prefer sibling `*.drawing.json` (from `inspect dims`)
+2. Else **auto** opposite-face dims (same as H2-8)
+
+The mesh canvas shows **dim value chips** (HUD) + a list under the canvas.  
+**Not** leader lines / sheets / GD&T — not a drafting package.
+
+```sh
+cargo run -p cadre-cli -- inspect dims examples/pmi/block.cad.star --json
+cargo run -p cadre-cli -- view examples/pmi/block.cad.star --once --json
+# → examples/pmi/block.snap/drawing.json + mesh
+cargo run -p cadre-cli -- view examples/pmi/block.cad.star
+# open http://127.0.0.1:7411/ → dim chips on orbit canvas
+```
